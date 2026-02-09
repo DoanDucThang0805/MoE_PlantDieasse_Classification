@@ -24,11 +24,11 @@ import seaborn as sns
 import pandas as pd
 
 from dataset.plantdoc_dataset import test_dataset
-from models.pretrained.mobilenetv4 import model
+from models.moe import model
 
 
-model_name = 'mobilenetv4'
-run_time = 'run_20260127-135508'
+model_name = 'moe'
+run_time = 'run_20260209-091118'
 data = 'plantdoc'
 num_class = 8
 test_ds = DataLoader(test_dataset, batch_size=32, shuffle=True)
@@ -36,7 +36,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # Resolve checkpoint path relative to this file (robust across CWD)
-checkpoint_path = Path(__file__).resolve().parents[2] / 'checkpoints' / data / "pretrain_weight" / model_name / run_time / 'best_checkpoint.pth'
+checkpoint_path = Path(__file__).resolve().parents[2] / 'checkpoints' / data / "pretrained" / model_name / run_time / 'best_checkpoint.pth'
 print(f"Loading checkpoint from: {checkpoint_path}")
 if not checkpoint_path.exists():
     raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
@@ -66,7 +66,7 @@ all_labels = []
 with torch.inference_mode(True):
     for images, labels in test_ds:
         images, labels = images.to(device), labels.to(device)
-        logits = model(images)
+        logits, _, _ = model(images)
         probs = torch.softmax(logits, dim=1)
         preds = torch.argmax(probs, dim=1)
         all_labels.extend(labels.cpu().numpy())

@@ -6,9 +6,10 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
 
-from .trainer import Trainer
+from .moe_trainer import MoETrainer
 from dataset.plantdoc_dataset import train_dataset, validation_dataset
-from models.mobilenetv3_large import model
+from models.moe import model
+from loss.loss_fn import MoeLoss
 
 
 BATCH_SIZE = 64
@@ -27,10 +28,10 @@ class_weights = compute_class_weight(
     y=labels
 )
 
-criterion = nn.CrossEntropyLoss()
+criterion = MoeLoss(num_experts=3, alpha=0.01)
 optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=0.001)
 
-trainer = Trainer(
+trainer = MoETrainer(
     num_epochs=200,
     device=device,
     batch_size=BATCH_SIZE,
@@ -39,7 +40,7 @@ trainer = Trainer(
     model=model,
     criterion=criterion,
     optimizer=optimizer,
-    checkpoints_dir=str(output_dir / "checkpoints" / "plantdoc" / "pretrain_weight" / "mobilenetv3_large")
+    checkpoints_dir=str(output_dir / "checkpoints" / "plantdoc" / "MoE" / "mobilenetv3small_moe")
 )
 
 if __name__ == "__main__":

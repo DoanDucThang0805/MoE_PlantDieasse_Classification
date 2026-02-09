@@ -188,7 +188,7 @@ class MoeLayer(nn.Module):
             [Expert(d_model, hiddent_scale, num_classes) for _ in range(num_experts)]
         )
     
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Forward pass của Mixture of Experts layer
         
@@ -201,7 +201,9 @@ class MoeLayer(nn.Module):
             x: Input tensor shape (batch_size, d_model)
         
         Returns:
-            final_output: Output từ MoE layer shape (batch_size, num_classes)
+            final_output: Output dự đoán từ MoE layer, shape (batch_size, num_classes)
+            router_output: Sparse routing weights, shape (batch_size, num_experts)
+            topk_indices: Indices của topk experts được chọn, shape (batch_size, topk)
         """
         # ========== Lấy thông tin từ input ==========
         # Lấy batch_size để khởi tạo output tensor
@@ -279,13 +281,31 @@ class MoeLayer(nn.Module):
             # Sau softmax từ router, tổng weights của một sample = 1, nên tổng final output hợp lý
             final_output[sample_mask] += weighted_expert_output
         
-        # ========== Trả về final output ==========
+        # ========== Trả về kết quả ==========
         # final_output shape: (batch_size, num_classes)
-        # Chứa ứng dụng kết hợp từ các experts cho mỗi sample
-        return final_output
+        #   - Kết quả dự đoán kết hợp từ các experts cho mỗi sample
+        # router_output shape: (batch_size, num_experts)
+        #   - Sparse routing weights: chỉ topk entries khác 0, còn lại = 0
+        #   - Dùng để debug, visualize routing decisions
+        # topk_indices shape: (batch_size, topk)
+        #   - Indices của topk experts được chọn cho mỗi sample
+        #   - Dùng để debug, phân tích expert utilization
+        return final_output, router_output, topk_indices
 
 
 class MobilenetMoE(nn.Module):
+    """
+    MobileNet + Mixture of Experts (MoE) model
+    
+    Quy trình:
+    1. MobileNetV3-Small trích xuất features từ ảnh input
+    2. MoE layer route features tới multiple experts và kết hợp outputs
+    
+    Lợi ích:
+    - MobileNet: Lightweight backbone, phù hợp cho inference trên device
+    - MoE: Tăng model capacity mà không tăng computational cost quá nhiều
+      (vì chỉ dùng topk experts thay vì tất cả)
+    """
     def __init__(
         self,
         num_classes: int,
@@ -295,6 +315,17 @@ class MobilenetMoE(nn.Module):
         pretrained_backbone: bool=True,
         freeze_backbone: bool = False
     ) -> None:
+        """
+        Khởi tạo MobileNet + MoE model
+        
+        Args:
+            num_classes: Số lượng output classes
+            hiddent_scale: Scale factor cho hidden layer size trong experts
+            num_experts: Tổng số experts
+            topk: Số lượng experts được route cho mỗi sample
+            pretrained_backbone: Dùng pretrained weights cho MobileNetV3
+            freeze_backbone: Freeze backbone weights (không update khi training)
+        """
         super().__init__()
         self.feature_extractor = MobileNetV3FeatureExtractor(pretrained_backbone, freeze_backbone)
         self.moe_layer = MoeLayer(
@@ -305,25 +336,36 @@ class MobilenetMoE(nn.Module):
             topk=topk
         )
     
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Forward pass của MobileNet + MoE model
+        
+        Args:
+            x: Input image tensor shape (batch_size, 3, 224, 224)
+        
+        Returns:
+            logits: Kết quả dự đoán shape (batch_size, num_classes)
+            router_output: Routing weights shape (batch_size, num_experts)
+            topk_indices: Top-k expert indices shape (batch_size, topk)
+        """
+        # Trích xuất features từ MobileNetV3
+        # feature_inputs shape: (batch_size, 576)
         feature_inputs = self.feature_extractor(x)
-        output = self.moe_layer(feature_inputs)
-        return output
+        
+        # Đưa qua MoE layer để kết hợp predictions từ multiple experts
+        # Trả về 3 giá trị: predictions, routing weights, expert indices
+        logits, router_output, topk_indices = self.moe_layer(feature_inputs)
+        return logits, router_output, topk_indices
         
 
 
-if __name__ == "__main__":
-    set_seed()
-    dummy_input = torch.rand((1, 3, 224, 224))
-    model = MobilenetMoE(
-        num_classes=10,
-        hiddent_scale=2,
-        num_experts=3,
-        topk=2,
-        pretrained_backbone=True,
-        freeze_backbone=False
-    )
-    output = model(dummy_input)
-    print(model)
-    print(output)
-    print(output.shape)
+model = MobilenetMoE(
+    num_classes=10,
+    hiddent_scale=2,
+    num_experts=3,
+    topk=2,
+    pretrained_backbone=True,
+    freeze_backbone=False
+)
+
+
