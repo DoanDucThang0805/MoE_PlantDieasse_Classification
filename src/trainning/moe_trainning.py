@@ -38,6 +38,7 @@ trainer = MoETrainer(
     train_loader=train_ds,
     val_loader=val_ds,
     model=model,
+    num_experts=4,
     criterion=criterion,
     optimizer=optimizer,
     checkpoints_dir=str(output_dir / "checkpoints" / "plantdoc" / "MoE" / "mobilenetv3small_moe")
