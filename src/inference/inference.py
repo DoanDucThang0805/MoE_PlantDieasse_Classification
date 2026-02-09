@@ -27,8 +27,8 @@ from dataset.plantdoc_dataset import test_dataset
 from models.moe import model
 
 
-model_name = 'moe'
-run_time = 'run_20260209-091118'
+model_name = 'mobilenetv3small_moe'
+run_time = 'run_20260209-095309'
 data = 'plantdoc'
 num_class = 8
 test_ds = DataLoader(test_dataset, batch_size=32, shuffle=True)
@@ -36,7 +36,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # Resolve checkpoint path relative to this file (robust across CWD)
-checkpoint_path = Path(__file__).resolve().parents[2] / 'checkpoints' / data / "pretrained" / model_name / run_time / 'best_checkpoint.pth'
+checkpoint_path = Path(__file__).resolve().parents[2] / 'checkpoints' / data / "MoE" / model_name / run_time / 'best_checkpoint.pth'
 print(f"Loading checkpoint from: {checkpoint_path}")
 if not checkpoint_path.exists():
     raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
