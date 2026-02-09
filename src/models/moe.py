@@ -362,7 +362,7 @@ class MobilenetMoE(nn.Module):
 model = MobilenetMoE(
     num_classes=10,
     hiddent_scale=2,
-    num_experts=3,
+    num_experts=4,
     topk=2,
     pretrained_backbone=True,
     freeze_backbone=False

@@ -54,6 +54,7 @@ class MoETrainer:
         train_loader: DataLoader,
         val_loader: DataLoader,
         model: nn.Module,
+        num_experts: int,
         criterion: nn.Module,
         optimizer: optim.Optimizer,
         batch_size: int,
@@ -101,6 +102,8 @@ class MoETrainer:
         self.early_stopping_patience = early_stopping_patience
         self.save_best = save_best
         self.ce = nn.CrossEntropyLoss()
+        self.num_experts = num_experts
+
 
         # scheduler: reduce LR on plateau, monitoring validation accuracy (mode='max')
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -271,5 +274,5 @@ class MoETrainer:
         plot_path = os.path.join(self.run_dir, "loss_acc_plot.png")
         plt.savefig(plot_path)
         plt.close()
+        logger.info(f"Number of Expert are: {self.num_experts}")
         logger.info(f"Saved training plot to {plot_path}")
-
