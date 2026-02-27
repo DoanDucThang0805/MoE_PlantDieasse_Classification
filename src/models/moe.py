@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
+from torchinfo import summary
 
 
 # =========================
@@ -287,7 +288,6 @@ class MoeLayer(nn.Module):
         # router_output shape: (batch_size, num_experts)
         #   - Sparse routing weights: chỉ topk entries khác 0, còn lại = 0
         #   - Dùng để debug, visualize routing decisions
-        # topk_indices shape: (batch_size, topk)
         #   - Indices của topk experts được chọn cho mỗi sample
         #   - Dùng để debug, phân tích expert utilization
         return final_output, router_output, topk_indices
@@ -363,9 +363,8 @@ model = MobilenetMoE(
     num_classes=10,
     hiddent_scale=2,
     num_experts=4,
-    topk=2,
+    topk=3,
     pretrained_backbone=True,
     freeze_backbone=False
 )
-
-
+summary(model, (1, 3, 224, 224))

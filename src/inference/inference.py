@@ -28,7 +28,7 @@ from models.moe import model
 
 
 model_name = 'mobilenetv3small_moe'
-run_time = 'run_20260209-095309'
+run_time = 'run_20260209-162048'
 data = 'plantdoc'
 num_class = 8
 test_ds = DataLoader(test_dataset, batch_size=32, shuffle=True)
