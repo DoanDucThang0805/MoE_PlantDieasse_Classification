@@ -8,7 +8,7 @@ from sklearn.utils.class_weight import compute_class_weight
 
 from .trainer import Trainer
 from dataset.plantdoc_dataset import train_dataset, validation_dataset
-from models.mobilenetv2 import model
+from models.pretrained_backbone.mobilenetv2 import model
 
 
 BATCH_SIZE = 64

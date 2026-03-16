@@ -12,3 +12,4 @@ pathlib
 pillow
 albumentations
 timm
+scikit-fuzzy

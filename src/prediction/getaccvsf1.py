@@ -7,10 +7,10 @@ import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, f1_score
 
-from models.mobilenetv2 import model as mobilenetv2
-from models.mobilenetv3_small import model as mobilenetv3_small
-from models.mobilenetv3_large import model as mobilenetv3_large
-from models.mobilenetv4 import model as mobilenetv4
+from models.pretrained_backbone.mobilenetv2 import model as mobilenetv2
+from models.pretrained_backbone.mobilenetv3_small import model as mobilenetv3_small
+from models.pretrained_backbone.mobilenetv3_large import model as mobilenetv3_large
+from models.pretrained_backbone.mobilenetv4 import model as mobilenetv4
 from dataset.plantdoc_dataset import test_dataset
 
 
