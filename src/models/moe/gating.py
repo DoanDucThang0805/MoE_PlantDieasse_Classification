@@ -191,7 +191,7 @@ if __name__ == "__main__":
     noisygating = StandardTopKgating(
         model_dim=960,
         num_experts=4,
-        top_k=3
+        top_k=1
     )
     
     # Tạo dữ liệu test: batch_size=3, model_dim=960
@@ -203,3 +203,4 @@ if __name__ == "__main__":
     # In kết quả
     print(combined_weights)  # Trọng số trơn mượt từ softmax
     print(top_k_indices)      # Chỉ số của 3 chuyên gia được chọn
+    print(clean_logits)      # Logits gốc cho tất cả chuyên gia (4)
