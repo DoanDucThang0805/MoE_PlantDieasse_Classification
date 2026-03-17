@@ -112,7 +112,6 @@ trainer = MoETrainer(
     train_loader=train_ds,
     val_loader=val_ds,
     model=model,
-    num_experts=NUM_EXPERTS,
     criterion=criterion,
     optimizer=optimizer,
     batch_size=BATCH_SIZE,

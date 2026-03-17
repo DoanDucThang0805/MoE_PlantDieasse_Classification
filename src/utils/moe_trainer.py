@@ -54,7 +54,6 @@ class MoETrainer:
         train_loader: DataLoader,
         val_loader: DataLoader,
         model: nn.Module,
-        num_experts: int,
         criterion: nn.Module,
         optimizer: optim.Optimizer,
         batch_size: int,
@@ -92,7 +91,6 @@ class MoETrainer:
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.model = model.to(device)
-        self.num_experts = num_experts
         self.criterion = criterion
         self.optimizer = optimizer
         self.checkpoint_dir = checkpoint_dir
@@ -116,7 +114,7 @@ class MoETrainer:
 
         # run_id & run_dir
         self.run_id = datetime.now().strftime("%Y%m%d-%H%M%S")
-        self.run_dir = os.path.join(self.checkpoints_dir, f"run_{self.run_id}")
+        self.run_dir = os.path.join(self.checkpoint_dir, f"run_{self.run_id}")
         os.makedirs(self.run_dir, exist_ok=True)
 
         if logger.hasHandlers():
@@ -275,5 +273,5 @@ class MoETrainer:
         plot_path = os.path.join(self.run_dir, "loss_acc_plot.png")
         plt.savefig(plot_path)
         plt.close()
-        logger.info(f"Number of Expert are: {self.num_experts}")
+        logger.info(f"Number of Expert are: {self.model.num_experts} and top_k are {self.model.top_k}")
         logger.info(f"Saved training plot to {plot_path}")
