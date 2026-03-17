@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
 
-from .moe_trainer import MoETrainer
+from utils.moe_trainer import MoETrainer
 from dataset.plantdoc_dataset import train_dataset, validation_dataset
 from models.moe.model import MoEModel
 from loss.loss_fn import MoELoss

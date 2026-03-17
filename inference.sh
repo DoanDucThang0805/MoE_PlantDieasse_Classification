@@ -3,4 +3,4 @@
 source venv/bin/activate
 
 cd src
-PYTHONPATH=src python -m inference.inference
+PYTHONPATH=src python -m inference.moe.inference
