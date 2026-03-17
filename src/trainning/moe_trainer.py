@@ -58,7 +58,7 @@ class MoETrainer:
         criterion: nn.Module,
         optimizer: optim.Optimizer,
         batch_size: int,
-        checkpoints_dir: str = 'checkpoints',
+        checkpoint_dir: str = 'checkpoints',
         lr_reduction_rate: float = 0.5,          # 50%
         min_lr: float = 1e-7,
         lr_reduction_patience: int = 10,
@@ -92,17 +92,16 @@ class MoETrainer:
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.model = model.to(device)
+        self.num_experts = num_experts
         self.criterion = criterion
         self.optimizer = optimizer
-        self.checkpoints_dir = checkpoints_dir
+        self.checkpoint_dir = checkpoint_dir
         self.lr_reduction_rate = lr_reduction_rate
         self.min_lr = min_lr
         self.lr_reduction_patience = lr_reduction_patience
         self.val_acc_threshold = val_acc_threshold
         self.early_stopping_patience = early_stopping_patience
         self.save_best = save_best
-        self.ce = nn.CrossEntropyLoss()
-        self.num_experts = num_experts
 
 
         # scheduler: reduce LR on plateau, monitoring validation accuracy (mode='max')
@@ -134,6 +133,7 @@ class MoETrainer:
         self.train_acc_history = []
         self.val_acc_history = []
 
+
     def _save_checkpoint(self, path: str, epoch: int):
         """
         Save model checkpoint.
@@ -154,6 +154,7 @@ class MoETrainer:
             "val_acc_history": self.val_acc_history
         }, path)
         logger.info(f"Saved checkpoint: {path}")
+
 
     def train(self):
         """
@@ -182,10 +183,10 @@ class MoETrainer:
             train_running_correct = 0.0
             for images, labels in self.train_loader:
                 images, labels = images.to(self.device), labels.to(self.device)
-                logits, router_output, topk_indices = self.model(images)
+                logits, combined_weight, topk_indices = self.model(images)
                 probs = torch.softmax(logits, dim=1)
                 preds = torch.argmax(probs, dim=1)
-                loss = self.criterion(logits, labels, router_output, topk_indices)
+                loss = self.criterion(logits, labels, combined_weight, topk_indices)
                 acc = accuracy(preds, labels)
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -206,10 +207,10 @@ class MoETrainer:
             with torch.inference_mode():
                 for images, labels in self.val_loader:
                     images, labels = images.to(self.device), labels.to(self.device)
-                    logits, router_output, topk_indices = self.model(images)
+                    logits, combined_weight, topk_indices = self.model(images)
                     probs = torch.softmax(logits, dim=1)
                     preds = torch.argmax(probs, dim=1)
-                    loss = self.ce(logits, labels)
+                    loss = self.criterion(logits, labels, combined_weight, topk_indices)
                     acc = accuracy(preds, labels)
                     val_running_loss += loss.item()
                     val_running_correct += acc

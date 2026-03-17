@@ -11,4 +11,4 @@ cd src
 
 # PYTHONPATH=src python -m trainning.mobilenetv3_small_train
 
-PYTHONPATH=src python -m trainning.moe_trainning
+PYTHONPATH=src python -m trainning.moe_train

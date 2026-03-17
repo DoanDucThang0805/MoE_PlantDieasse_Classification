@@ -3,63 +3,51 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class MoeLoss(nn.Module):
-    """
-    Production-ready MoE loss:
-        L_total = L_task + alpha * L_aux
-
-    Inputs:
-        logits:         (B, num_classes)
-        targets:        (B,)
-        router_output:  (B, num_experts)   # softmax probs
-        topk_indices:   (B, topk)
-
-    Usage:
-        loss_fn = MoeLoss(num_experts=3, alpha=0.01)
-        loss = loss_fn(logits, y, router_output, topk_indices)
-        loss.backward()
-    """
-
-    def __init__(self, num_experts: int, alpha: float = 0.01):
+class MoELoss(nn.Module):
+    def __init__(self, alpha: float = 0.01):
         super().__init__()
-        self.num_experts = num_experts
         self.alpha = alpha
         self.ce = nn.CrossEntropyLoss()
 
-    def forward(self, logits, targets, router_output, topk_indices):
+
+    def forward(self, logits, targets, clean_logits, top_k_indices):
+        """
+        logits:         (B, num_classes)
+        targets:        (B,)
+        clean_logits:   (B, N)
+        top_k_indices:  (B, K)
+        """
+
         # ===== Task loss =====
         task_loss = self.ce(logits, targets)
 
-        # ===== Load balancing loss =====
-        aux_loss = self._load_balance_loss(router_output, topk_indices)
+        # ===== Auxiliary loss =====
+        aux_loss = self._load_balance_loss(clean_logits, top_k_indices)
 
+        # ===== Total =====
         total_loss = task_loss + self.alpha * aux_loss
+
         return total_loss
 
-    def _load_balance_loss(self, router_output, topk_indices):
-        """
-        router_output: (B, N)
-        topk_indices:  (B, K)
-        """
 
-        B, N = router_output.shape
+    def _load_balance_loss(self, clean_logits, top_k_indices):
+        B, N = clean_logits.shape
+        K = top_k_indices.shape[1]
 
-        # ----- P_i: average router probability per expert -----
-        # (N,)
-        P = router_output.mean(dim=0)
+        # ----- P_i: router intention -----
+        probs = torch.softmax(clean_logits, dim=-1)  # (B, N)
+        P = probs.mean(dim=0)
+        P = P / (P.sum() + 1e-9)
 
-        # ----- f_i: fraction of tokens sent to each expert -----
-        # Convert topk indices -> one-hot mask
-        # (B, K, N)
-        expert_mask = F.one_hot(topk_indices, num_classes=N)
+        # ----- f_i: actual routing -----
+        expert_mask = F.one_hot(top_k_indices, num_classes=N)  # (B, K, N)
+        expert_mask = expert_mask.sum(dim=1).float()           # (B, N)
 
-        # Sum over topk -> (B, N)
-        expert_mask = expert_mask.sum(dim=1).float()
+        f = expert_mask.mean(dim=0) / K
+        f = f / (f.sum() + 1e-9)
 
-        # Average over batch -> (N,)
-        f = expert_mask.mean(dim=0)
+        # ----- loss -----
+        loss = N * torch.sum(f * P)
 
-        # ----- Aux loss -----
-        aux_loss = N * torch.sum(f * P)
-
-        return aux_loss
+        return loss
+    
