@@ -24,7 +24,7 @@ import seaborn as sns
 import pandas as pd
 
 from dataset.plantdoc_dataset import test_dataset
-from models.moe.model import MoEModel
+from models.pretrained_model.mobilenetv3_large import model
 
 
 # ============================================================================
@@ -32,14 +32,10 @@ from models.moe.model import MoEModel
 # ============================================================================
 
 # Thông tin mô hình và checkpoint
-MODEL_NAME = 'mobilenetv3small_moe'
-RUN_TIME = 'run_20260317-224514'  # Timestamp của lần chạy huấn luyện
+MODEL_NAME = 'mobilenetv3_large'
+MODEL_TYPE = 'pretrain_weight'
+RUN_TIME = 'run_20260126-122233'  # Timestamp của lần chạy huấn luyện
 DATASET_NAME = 'plantdoc'
-
-# Tham số mô hình kiến trúc
-NUM_CLASSES = 8
-NUM_EXPERTS = 4
-TOP_K = 3
 
 # Tham số tải dữ liệu
 BATCH_SIZE = 32
@@ -59,13 +55,13 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Xác định đường dẫn checkpoint (tương đối với vị trí file này, bao gồm các CWD khác)
 checkpoint_path = (
-    Path(__file__).resolve().parents[3] / 'checkpoints' / DATASET_NAME / "MoE" / 
+    Path(__file__).resolve().parents[3] / 'checkpoints' / DATASET_NAME / MODEL_TYPE / 
     MODEL_NAME / RUN_TIME / 'best_checkpoint.pth'
 )
 
 # Xác định thư mục lưu báo cáo
 report_dir = (
-    Path(__file__).resolve().parents[3] / 'reports' / DATASET_NAME / 'MoE' / MODEL_NAME / RUN_TIME
+    Path(__file__).resolve().parents[3] / 'reports' / DATASET_NAME / MODEL_TYPE / MODEL_NAME / RUN_TIME
 )
 
 # ============================================================================
@@ -79,16 +75,6 @@ test_ds = DataLoader(
     shuffle=SHUFFLE_TEST
 )
 
-# ============================================================================
-# Khởi Tạo Mô Hình
-# ============================================================================
-
-# Khởi tạo mô hình MoE với kiến trúc được chỉ định
-model = MoEModel(
-    num_classes=NUM_CLASSES,
-    num_experts=NUM_EXPERTS,
-    top_k=TOP_K
-)
 
 # ============================================================================
 # Tải Checkpoint
@@ -132,7 +118,7 @@ with torch.inference_mode(True):
         images, labels = images.to(device), labels.to(device)
         
         # Thực hiện suy luận (mô hình trả về logits, auxiliary loss và expert assignment)
-        logits, _, _ = model(images)
+        logits = model(images)
         
         # Tính toán xác suất và dự đoán nhãn
         probs = torch.softmax(logits, dim=1)
