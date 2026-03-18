@@ -33,7 +33,7 @@ from models.moe.model import MoEModel
 
 # Thông tin mô hình và checkpoint
 MODEL_NAME = 'mobilenetv3large_moe'
-RUN_TIME = 'run_20260318-002715'  # Timestamp của lần chạy huấn luyện
+RUN_TIME = 'run_20260318-150249'  # Timestamp của lần chạy huấn luyện
 DATASET_NAME = 'plantdoc'
 
 # Tham số mô hình kiến trúc
