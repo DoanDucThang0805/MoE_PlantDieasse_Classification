@@ -32,14 +32,14 @@ from models.moe.model import MoEModel
 # ============================================================================
 
 # Thông tin mô hình và checkpoint
-MODEL_NAME = 'mobilenetv3small_moe'
-RUN_TIME = 'run_20260317-224514'  # Timestamp của lần chạy huấn luyện
+MODEL_NAME = 'mobilenetv3large_moe'
+RUN_TIME = 'run_20260318-002715'  # Timestamp của lần chạy huấn luyện
 DATASET_NAME = 'plantdoc'
 
 # Tham số mô hình kiến trúc
 NUM_CLASSES = 8
 NUM_EXPERTS = 4
-TOP_K = 3
+TOP_K = 2
 
 # Tham số tải dữ liệu
 BATCH_SIZE = 32

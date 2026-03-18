@@ -26,14 +26,14 @@ class MoELayer(nn.Module):
         self.top_k: int = top_k
         
         # Gating network: quyết định chuyên gia nào xử lý từng mẫu
-        self.gating: NoisyTopKGating = NoisyTopKGating(
+        self.gating = NoisyTopKGating(
             model_dim=model_dim, 
             num_experts=num_experts, 
             top_k=top_k
         )
         
         # Danh sách các chuyên gia - mỗi chuyên gia là một feed-forward network
-        self.experts: nn.ModuleList = nn.ModuleList([
+        self.experts = nn.ModuleList([
             nn.Sequential(
                 nn.Linear(model_dim, model_dim * 2),  # Mở rộng thành 2x
                 nn.ReLU(),                             # Activation function
@@ -56,33 +56,30 @@ class MoELayer(nn.Module):
                 - top_k_indices: [batch_size, top_k] - top-k expert indices
         """
         # Bước 1: Lấy routing decisions từ Gating Network
-        combined_weights: torch.Tensor
-        top_k_indices: torch.Tensor
-        clean_logits: torch.Tensor
         combined_weights, top_k_indices, clean_logits = self.gating(x)
         
         # Bước 2: Khởi tạo output tensor - sẽ cộng dồn đóng góp từ các experts
-        moe_output: torch.Tensor = torch.zeros_like(x)
+        moe_output = torch.zeros_like(x)
         
         # Bước 3: Routing & Expert Forward - gửi data tới từng expert
         for expert_idx in range(self.num_experts):
             # Tạo mask để tìm mẫu được gửi tới expert hiện tại
-            expert_mask: torch.Tensor = (top_k_indices == expert_idx)      # [batch_size, top_k]
-            sample_mask: torch.Tensor = expert_mask.any(dim=1)             # [batch_size] - mẫu nào được chọn
+            expert_mask = (top_k_indices == expert_idx)      # [batch_size, top_k]
+            sample_mask = expert_mask.any(dim=1)             # [batch_size] - mẫu nào được chọn
             
             # Tối ưu: skip nếu không có mẫu nào được gửi tới expert
             if sample_mask.sum() == 0:
                 continue
             
             # Lấy features của mẫu được gửi tới expert này
-            selected_features: torch.Tensor = x[sample_mask]
+            selected_features = x[sample_mask]
             
             # Xử lý qua expert feed-forward network
-            expert_output: torch.Tensor = self.experts[expert_idx](selected_features)
+            expert_output = self.experts[expert_idx](selected_features)
             
             # Tính weighted sum - trọng số của expert này từ gating network
-            expert_weights: torch.Tensor = (combined_weights * expert_mask).sum(dim=1)
-            selected_weights: torch.Tensor = expert_weights[sample_mask]
+            expert_weights = (combined_weights * expert_mask).sum(dim=1)
+            selected_weights = expert_weights[sample_mask]
             
             # Cộng đóng góp của expert vào output cuối cùng (weighted combination)
             moe_output[sample_mask] += expert_output * selected_weights.unsqueeze(-1)
@@ -115,20 +112,20 @@ class MoEModel(nn.Module):
 
         
         # Trích xuất features từ ảnh input bằng MobileNetV3 Large
-        self.feature_extractor: Mobilenetv3LargeFeatureExtractor = Mobilenetv3LargeFeatureExtractor()
+        self.feature_extractor = Mobilenetv3LargeFeatureExtractor(pretrained=True, freeze_backbone=False)
         
         # Lớp MoE để xử lý features với nhiều chuyên gia
-        self.moe_layer: MoELayer = MoELayer(
+        self.moe_layer = MoELayer(
             model_dim=self.feature_extractor.output_dim,
             num_experts=num_experts,
             top_k=top_k
         )
         
         # Chuẩn hóa batch để ổn định quá trình huấn luyện
-        self.normalizer: nn.BatchNorm1d = nn.BatchNorm1d(self.feature_extractor.output_dim)
+        self.normalizer = nn.BatchNorm1d(self.feature_extractor.output_dim)
         
         # Lớp phân loại: ánh xạ features vào num_classes
-        self.classifier: nn.Linear = nn.Linear(self.feature_extractor.output_dim, num_classes)
+        self.classifier = nn.Linear(self.feature_extractor.output_dim, num_classes)
 
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
@@ -147,7 +144,7 @@ class MoEModel(nn.Module):
         """
         # Bước 1: Feature Extraction - trích xuất semantic features từ ảnh
         # Input: [batch_size, 3, 224, 224] → Output: [batch_size, 960]
-        x: torch.Tensor = self.feature_extractor(x)
+        x = self.feature_extractor(x)
         
         # Bước 2: BatchNorm - chuẩn hóa để ổn định MoE layer
         x = self.normalizer(x)
@@ -161,7 +158,7 @@ class MoEModel(nn.Module):
         
         # Bước 5: Classifier - ánh xạ features sang class predictions
         # Input: [batch_size, 960] → Output: [batch_size, num_classes]
-        logits: torch.Tensor = self.classifier(x)
+        logits = self.classifier(x)
         
         return logits, clean_logits, top_k_indices
 

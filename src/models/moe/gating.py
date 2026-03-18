@@ -177,6 +177,7 @@ class NoisyTopKGating(nn.Module):
         # Trả về trọng số, chỉ số chuyên gia, và logits gốc sạch
         return combined_weights, top_k_indices, clean_logits    
 
+
 if __name__ == "__main__":
     """
     Khối kiểm tra (test block) để xác minh hoạt động của gating modules.
