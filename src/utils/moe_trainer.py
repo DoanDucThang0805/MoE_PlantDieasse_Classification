@@ -101,6 +101,8 @@ class MoETrainer:
         self.early_stopping_patience = early_stopping_patience
         self.save_best = save_best
 
+        self.expert_sample_count = torch.zeros(self.model.num_experts)
+        self.expert_class_count = torch.zeros(self.model.num_experts, self.model.num_classes)
 
         # scheduler: reduce LR on plateau, monitoring validation accuracy (mode='max')
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -152,6 +154,49 @@ class MoETrainer:
             "val_acc_history": self.val_acc_history
         }, path)
         logger.info(f"Saved checkpoint: {path}")
+
+
+    def _monitor_expert_usage(self, topk_indices: torch.Tensor, labels: torch.Tensor):
+        """
+        Monitor how experts are utilized in the MoE (Mixture of Experts) model.
+        
+        This function counts:
+        1. How many times each expert is used (expert_sample_count)
+        2. How many samples from each class are processed by each expert (expert_class_count)
+        
+        Args:
+            topk_indices (Tensor): Indices of K experts selected for each sample, shape (B, K)
+                                   B = batch size, K = number of experts selected
+            labels (Tensor): Class labels of the samples, shape (B,)
+        """
+        # ===== Get the number of experts and classes =====
+        N = self.model.num_experts  # Number of experts
+        C = self.model.num_classes  # Number of classes
+
+        # ===== Step 1: Convert indices to one-hot and count expert usage =====
+        # topk_indices shape: (B, K) 
+        # one_hot (B, K, N): Each position (b, k) becomes a one-hot vector of size N
+        # sum(dim=1) (B, N): Aggregate by sample, creating a binary matrix (B, N)
+        expert_mask = torch.nn.functional.one_hot(topk_indices, num_classes=N).float()
+        expert_mask = expert_mask.sum(dim=1)  # shape: (B, N)
+
+        # ===== Step 2: Update the count of how many times each expert is used =====
+        # Sum over batch (dim=0): Add all samples to get (N,)
+        # Result: Number of times each expert is used in the batch
+        self.expert_sample_count += expert_mask.sum(dim=0).cpu()
+
+        # ===== Step 3: Count samples of each class processed by each expert =====
+        # Convert labels to one-hot (B,) → (B, C)
+        # Position (b, c) = 1 if sample b belongs to class c, otherwise = 0
+        label_onehot = torch.nn.functional.one_hot(labels, num_classes=C).float()
+
+        # ===== Step 4: Expert × Class matrix =====
+        # (B, N)^T @ (B, C) = (N, C)
+        # Result: (i, j) = number of class j samples processed by expert i
+        class_count = expert_mask.T @ label_onehot
+
+        # Update the cumulative counter
+        self.expert_class_count += class_count.cpu()     
 
 
     def train(self):
@@ -273,5 +318,39 @@ class MoETrainer:
         plot_path = os.path.join(self.run_dir, "loss_acc_plot.png")
         plt.savefig(plot_path)
         plt.close()
+
+
+        # =========================================================
+        # 🔥 NEW: Expert Usage Plot
+        # =========================================================
+        plt.figure()
+        plt.bar(range(self.model.num_experts), self.expert_sample_count.numpy())
+        plt.title("Expert Usage (Number of Samples)")
+        plt.xlabel("Expert ID")
+        plt.ylabel("Count")
+        plt.xticks(range(self.model.num_experts))
+
+        usage_path = os.path.join(self.run_dir, "expert_usage.png")
+        plt.savefig(usage_path)
+        plt.close()
+
+
+        # =========================================================
+        # 🔥 NEW: Expert-Class Heatmap
+        # =========================================================
+        plt.figure(figsize=(8, 6))
+        plt.imshow(self.expert_class_count.numpy())
+        plt.colorbar()
+
+        plt.title("Expert vs Class Distribution")
+        plt.xlabel("Class ID")
+        plt.ylabel("Expert ID")
+
+        plt.xticks(range(self.model.num_classes))
+        plt.yticks(range(self.model.num_experts))
+
+        heatmap_path = os.path.join(self.run_dir, "expert_class_heatmap.png")
+        plt.savefig(heatmap_path)
+        plt.close()
         logger.info(f"Number of Expert are: {self.model.num_experts} and top_k are {self.model.top_k}")
-        logger.info(f"Saved training plot to {plot_path}")
+        logger.info(f"Saved training plot to {plot_path}, expert usage plot to {usage_path}, and expert-class heatmap to {heatmap_path}.")
