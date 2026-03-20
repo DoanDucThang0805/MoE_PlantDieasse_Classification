@@ -227,6 +227,7 @@ class MoETrainer:
             for images, labels in self.train_loader:
                 images, labels = images.to(self.device), labels.to(self.device)
                 logits, combined_weight, topk_indices = self.model(images)
+                self._monitor_expert_usage(topk_indices, labels)
                 probs = torch.softmax(logits, dim=1)
                 preds = torch.argmax(probs, dim=1)
                 loss = self.criterion(logits, labels, combined_weight, topk_indices)
