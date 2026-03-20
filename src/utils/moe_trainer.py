@@ -339,17 +339,26 @@ class MoETrainer:
         # =========================================================
         # 🔥 NEW: Expert-Class Heatmap
         # =========================================================
-        plt.figure(figsize=(8, 6))
-        plt.imshow(self.expert_class_count.numpy())
-        plt.colorbar()
+        heatmap = self.expert_class_count.numpy()
+        heatmap_norm = heatmap / (heatmap.sum(axis=1, keepdims=True) + 1e-9)
 
-        plt.title("Expert vs Class Distribution")
+        plt.figure(figsize=(10, 6))
+        im = plt.imshow(heatmap_norm, cmap="Blues")  # 👈 đổi ở đây
+        plt.colorbar(im)
+        plt.title("Expert vs Class Distribution (Normalized)")
         plt.xlabel("Class ID")
         plt.ylabel("Expert ID")
-
         plt.xticks(range(self.model.num_classes))
-        plt.yticks(range(self.model.num_experts))
+        plt.yticks(range(self.model.moe_layer.num_experts))
 
+        # hiển thị số
+        for i in range(heatmap_norm.shape[0]):
+            for j in range(heatmap_norm.shape[1]):
+                value = heatmap_norm[i, j]
+                color = "white" if value > 0.5 else "black"
+                plt.text(j, i, f"{value:.2f}",
+                        ha="center", va="center", color=color, fontsize=8)
+                
         heatmap_path = os.path.join(self.run_dir, "expert_class_heatmap.png")
         plt.savefig(heatmap_path)
         plt.close()
