@@ -24,7 +24,7 @@ import seaborn as sns
 import pandas as pd
 
 from dataset.plantdoc_dataset import test_dataset
-from models.pretrained_model.mobilenetv3_large import model
+from models.pretrained_model.mobilenetv3_small import model
 
 
 # ============================================================================
@@ -32,9 +32,9 @@ from models.pretrained_model.mobilenetv3_large import model
 # ============================================================================
 
 # Thông tin mô hình và checkpoint
-MODEL_NAME = 'mobilenetv3_large'
+MODEL_NAME = 'mobilenetv3_small'
 MODEL_TYPE = 'pretrain_weight'
-RUN_TIME = 'run_20260320-162607'  # Timestamp của lần chạy huấn luyện
+RUN_TIME = 'run_20260126-124333'  # Timestamp của lần chạy huấn luyện
 DATASET_NAME = 'plantdoc'
 
 # Tham số tải dữ liệu
