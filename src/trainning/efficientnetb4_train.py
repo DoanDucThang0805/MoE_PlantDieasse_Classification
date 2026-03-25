@@ -11,7 +11,7 @@ from dataset.plantdoc_dataset import train_dataset, validation_dataset
 from models.pretrained_model.efficientnet_b4 import model
 
 
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 train_ds = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 val_ds = DataLoader(validation_dataset, batch_size=BATCH_SIZE, shuffle=False)
 

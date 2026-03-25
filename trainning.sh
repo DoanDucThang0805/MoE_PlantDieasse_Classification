@@ -13,12 +13,6 @@ PYTHONPATH=src python -m trainning.efficientnetb4_train
 clear
 PYTHONPATH=src python -m trainning.efficientnetb4_train
 
-clear
-PYTHONPATH=src python -m trainning.shufflenet_train
-clear
-PYTHONPATH=src python -m trainning.shufflenet_train
-clear
-PYTHONPATH=src python -m trainning.shufflenet_train
 
 
 # PYTHONPATH=src python -m trainning.mobilenetv3_small_train
