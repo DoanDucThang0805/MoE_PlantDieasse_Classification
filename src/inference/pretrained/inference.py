@@ -24,7 +24,7 @@ import seaborn as sns
 import pandas as pd
 
 from dataset.plantdoc_dataset import test_dataset
-from models.pretrained_model.mobilenetv3_small import model
+from models.pretrained_model.shufflenet import model
 
 
 # ============================================================================
@@ -32,9 +32,9 @@ from models.pretrained_model.mobilenetv3_small import model
 # ============================================================================
 
 # Thông tin mô hình và checkpoint
-MODEL_NAME = 'mobilenetv3_small'
+MODEL_NAME = 'shufflenet'  # Tên mô hình (phù hợp với tên thư mục checkpoint)
 MODEL_TYPE = 'pretrain_weight'
-RUN_TIME = 'run_20260126-124333'  # Timestamp của lần chạy huấn luyện
+RUN_TIME = 'run_20260325-124056'  # Timestamp của lần chạy huấn luyện
 DATASET_NAME = 'plantdoc'
 
 # Tham số tải dữ liệu
