@@ -32,14 +32,14 @@ SHUFFLE_TRAIN = True
 SHUFFLE_VAL = False
 
 # Tham số kiến trúc mô hình
-NUM_EXPERTS = 4
-TOP_K = 2  # Số lượng expert được chọn cho mỗi input
+NUM_EXPERTS = 8
+TOP_K = 4  # Số lượng expert được chọn cho mỗi input
 
 # Siêu tham số huấn luyện
-NUM_EPOCHS = 200
+NUM_EPOCHS = 300
 LEARNING_RATE = 0.001
 WEIGHT_DECAY = 0.001
-MOE_LOSS_ALPHA = 0.01  # Hệ số cân bằng cho hàm loss phụ
+MOE_LOSS_ALPHA = 0.05  # Hệ số cân bằng cho hàm loss phụ
 
 # ============================================================================
 # Cấu Hình Thiết Bị và Đường Dẫn

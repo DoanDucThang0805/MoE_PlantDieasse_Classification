@@ -8,7 +8,7 @@ from sklearn.utils.class_weight import compute_class_weight
 
 from utils.trainer import Trainer
 from dataset.plantdoc_dataset import train_dataset, validation_dataset
-from models.pretrained_model.mobilenetv3_large import model
+from models.pretrained_model.resnet50 import model
 
 
 BATCH_SIZE = 64
@@ -39,7 +39,7 @@ trainer = Trainer(
     model=model,
     criterion=criterion,
     optimizer=optimizer,
-    checkpoints_dir=str(output_dir / "checkpoints" / "plantdoc" / "pretrain_weight" / "mobilenetv3_large")
+    checkpoints_dir=str(output_dir / "checkpoints" / "plantdoc" / "pretrain_weight" / "resnet50")
 )
 
 if __name__ == "__main__":
