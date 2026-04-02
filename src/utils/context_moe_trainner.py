@@ -371,7 +371,7 @@ class ContextAwareMoETrainer:
         plt.xlabel("Class ID")
         plt.ylabel("Expert ID")
         plt.xticks(range(self.model.num_classes))
-        plt.yticks(range(self.model.moe_layer.num_experts))
+        plt.yticks(range(self.model.num_experts))
 
         # hiển thị số
         for i in range(heatmap_norm.shape[0]):

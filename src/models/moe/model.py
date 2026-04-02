@@ -48,8 +48,8 @@ class MoELayer(nn.Module):
     ) -> None:
         """Initialize the MoE layer with specified configuration."""
         super().__init__()
-        self.num_experts: int = num_experts
-        self.top_k: int = top_k
+        self.num_experts = num_experts
+        self.top_k = top_k
         self.router_mode = router_mode
         if not (0 < self.top_k <= self.num_experts):
             raise ValueError("top_k must be a positive integer less than or equal to num_experts")
