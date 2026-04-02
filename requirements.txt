@@ -3,8 +3,8 @@ numpy
 matplotlib
 seaborn
 scikit-learn
-torch
-torchvision
+torch --index-url https://download.pytorch.org/whl/cu128
+torchvision --index-url https://download.pytorch.org/whl/cu128
 torchinfo
 tqdm
 ipykernel

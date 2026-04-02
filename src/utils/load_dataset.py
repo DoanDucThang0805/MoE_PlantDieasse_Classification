@@ -13,7 +13,7 @@ Key Features:
 """
 
 import os
-from typing import List, Tuple, Dict, Literal, Optional
+from typing import List, Tuple, Dict, Literal, Optional, Callable
 from pathlib import Path
 
 import numpy as np
@@ -55,6 +55,8 @@ class LoadDataset(Dataset):
         root_dir: Path,
         split: Literal['train', 'validation', 'test'],
         train_ratio: float = 0.8,
+        return_context: bool = False,
+        context_extractor: Optional[Callable] = None,
         transform: transforms.Compose = None
     ) -> None:
         """
@@ -70,6 +72,8 @@ class LoadDataset(Dataset):
         self.transform = transform
         self.split = split
         self.train_ratio = train_ratio
+        self.return_context = return_context
+        self.context_extractor = context_extractor
         self.image_paths, self.labels, self.class_to_idx, self.idx_to_class = self._split_dataset()
 
     def _load_image(self, root_dir: Path) -> Tuple[List[str], List[int], Dict[str, int], Dict[int, str]]:
@@ -99,10 +103,10 @@ class LoadDataset(Dataset):
         image_paths = []
         labels = []
         for class_name in class_names:
-            dir = os.path.join(root_dir, class_name)
-            for fname in os.listdir(dir):
+            class_dir = os.path.join(root_dir, class_name)
+            for fname in os.listdir(class_dir):
                 if fname.lower().endswith(('.png', '.jpg', '.jpeg')):
-                    image_paths.append(os.path.join(dir, fname))
+                    image_paths.append(os.path.join(class_dir, fname))
                     labels.append(class_to_idx[class_name])
         return image_paths, labels, class_to_idx, idx_to_class
 
@@ -152,7 +156,7 @@ class LoadDataset(Dataset):
         """
         return len(self.image_paths)
     
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int, Optional[torch.Tensor]]:
         """
         Get a single sample from the dataset by index.
         
@@ -170,8 +174,14 @@ class LoadDataset(Dataset):
         image_path = self.image_paths[idx]
         label = self.labels[idx]
         image = Image.open(image_path).convert('RGB')
-        image = np.array(image)
+        image_np = np.array(image)
+
         if self.transform:
-            augumented = self.transform(image=image)
-            image = augumented["image"]
-        return image, label
+            augumented = self.transform(image=image_np)
+            image_np = augumented["image"]
+        
+        context_features = None
+        if self.return_context and self.context_extractor is not None:
+            context_features = torch.tensor(self.context_extractor(np.array(image)), dtype=torch.float32)
+        
+        return image_np, label, context_features

@@ -7,11 +7,8 @@ cd src
 
 # PYTHONPATH=src python -m trainning.mobilenetv2_train
 clear
-PYTHONPATH=src python -m trainning.efficientnetb4_train
-clear
-PYTHONPATH=src python -m trainning.efficientnetb4_train
-clear
-PYTHONPATH=src python -m trainning.efficientnetb4_train
+PYTHONPATH=src python -m trainning.context_moe_train --router_mode="context_aware" --use_context=True
+
 
 
 

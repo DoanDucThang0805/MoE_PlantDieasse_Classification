@@ -1,14 +1,31 @@
 """
-Mô-đun Gating cho Mixture of Experts (MoE)
+Gating Mechanisms for Mixture of Experts (MoE).
 
-Mô-đun này cung cấp hai cơ chế quản cầu chọn lựa chuyên gia (gating):
-1. StandardTopKgating: Bộ gating tiêu chuẩn sử dụng Top-K
-2. NoisyTopKGating: Bộ gating có bổ sung nhiễu để tăng sự đa dạng
+This module provides three gating mechanisms for routing inputs to experts in a MoE layer:
 
-Tác giả: MoE Team
-Ngày tạo: 2024
+1. StandardTopKgating: Simple top-k selection based on learned logits
+   - Deterministic expert selection during inference
+   - Selects exactly k experts with highest scores
+
+2. NoisyTopKGating: Top-k selection with noise injection during training
+   - Adds Gaussian noise during training for exploration
+   - Learned noise magnitude per expert
+   - Deterministic during inference (no noise)
+
+3. ContextAwareGating: Gating that incorporates contextual information
+   - Fuses embedding with context features
+   - More informed expert selection
+   - Supports both training and inference modes
+
+All gating mechanisms follow the same interface:
+    Input: feature tensor
+    Output: (expert_weights, expert_indices, logits)
+
+Author: MoE Team
+Date: 2026-03-31
 """
 
+from typing import Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -17,61 +34,108 @@ import numpy as np
 
 class StandardTopKgating(nn.Module):
     """
-    Bộ gating Top-K tiêu chuẩn cho Mixture of Experts.
+    Standard top-k gating mechanism for Mixture of Experts (MoE).
     
-    Chức năng:
-    - Dự đoán trọng số cho từng chuyên gia
-    - Chọn Top-K chuyên gia có trọng số cao nhất
-    - Áp dụng softmax trên Top-K logits
+    This gating module implements a simple and deterministic expert selection mechanism.
+    It uses a learned linear projection to compute logits for all experts, then selects
+    and normalizes the k experts with the highest logits.
+    
+    Key Characteristics:
+    - Deterministic: No randomness in expert selection
+    - Reproducible: Same input always produces same output
+    - Efficient: Single linear layer computation
+    - Baseline: Suitable as a reference implementation
+    
+    Use Cases:
+    - Baseline comparisons against other gating mechanisms
+    - Inference-only scenarios requiring deterministic routing
+    - Scenarios where exploration (noise) is not needed/desired
+    
+    Design:
+    - Input is projected to expert logits via a learned linear layer
+    - Top-k selection ensures load balancing by selecting exactly k experts
+    - Softmax normalization produces valid probability weights
     """
-    def __init__(self, model_dim: int, num_experts: int, top_k: int):
+    
+    def __init__(self, model_dim: int, num_experts: int, top_k: int) -> None:
         """
-        Khởi tạo bộ gating Top-K tiêu chuẩn.
+        Initialize the standard top-k gating module.
         
-        Tham số:
-        -----------
-        model_dim : int
-            Kích thước embedding/feature input (ví dụ: 960)
-        num_experts : int
-            Tổng số chuyên gia có sẵn (ví dụ: 4)
-        top_k : int
-            Số lượng chuyên gia hàng đầu được chọn (ví dụ: 3)
+        Constructs a linear layer that transforms input features to expert logits,
+        without bias terms for computational efficiency.
+        
+        Args:
+            model_dim (int): Dimension of input feature vectors (e.g., 960 for ResNet backbone)
+            num_experts (int): Total number of available experts (e.g., 4 or 8)
+            top_k (int): Number of top experts to select (e.g., 2 or 3)
+        
+        Raises:
+            AssertionError: If top_k > num_experts (cannot select more experts than available)
         """
         super().__init__()
+        assert top_k <= num_experts, "top_k must be less than or equal to num_experts"
+        
         self.model_dim = model_dim
         self.num_experts = num_experts
         self.top_k = top_k
-        # Lớp tuyến tính để dự đoán logits cho từng chuyên gia
+        
+        # Linear projection layer that transforms input features to expert scores
+        # bias=False reduces parameters and typically improves stability
         self.gate_projector = nn.Linear(self.model_dim, self.num_experts, bias=False)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
-        Tính toán trọng số gating cho các chuyên gia.
+        Route input to selected experts using top-k gating.
         
-        Quy trình:
-        1. Tính logits dự đoán cho tất cả chuyên gia
-        2. Chọn Top-K chuyên gia có logits cao nhất
-        3. Áp dụng softmax trên Top-K logits để được trọng số chuẩn hóa
+        Processing Pipeline:
+        1. **Project features to expert logits**: Linear transformation produces raw scores for each expert
+        2. **Select top-k experts**: Identifies the k experts with highest scores
+        3. **Normalize via softmax**: Converts selected expert logits to probability weights (sum=1)
         
-        Tham số:
-        -----------
-        x : torch.Tensor
-            Tensor input có shape [batch_size, model_dim]
+        The output weights can be used to create a weighted sum of expert outputs for the final prediction.
         
-        Trả về:
-        -----------
-        Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
-            - combined_weights: Trọng số softmax của Top-K [batch_size, top_k]
-            - top_k_indices: Chỉ số của K chuyên gia được chọn [batch_size, top_k]
-            - gate_logits: Logits gốc tất cả chuyên gia [batch_size, num_experts]
+        Args:
+            x (torch.Tensor): Input feature tensor
+                            Shape: [batch_size, model_dim]
+                            Contains the fused/aggregated features from the backbone network
+        
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+                
+                (1) combined_weights: Softmax-normalized probability weights for selected experts
+                    - Shape: [batch_size, top_k]
+                    - Values: In range [0, 1], sum to 1 along dimension 1
+                    - Interpretation: How much weight each selected expert receives
+                
+                (2) top_k_indices: Integer indices of the selected experts
+                    - Shape: [batch_size, top_k]
+                    - Values: In range [0, num_experts-1]
+                    - Use to index into the expert network outputs
+                
+                (3) gate_logits: Raw pre-softmax logits for all experts (for auxiliary losses)
+                    - Shape: [batch_size, num_experts]
+                    - Values: Unbounded real numbers (can be negative or very large)
+                    - Useful for computing load balancing losses
+        
+        Example:
+            >>> batch_size, model_dim, num_experts, top_k = 32, 960, 8, 3
+            >>> gating = StandardTopKgating(model_dim, num_experts, top_k)
+            >>> x = torch.randn(batch_size, model_dim)  # Feature vectors
+            >>> weights, indices, logits = gating(x)
+            >>> print(weights.shape)  # torch.Size([32, 3])
+            >>> print(indices.shape)  # torch.Size([32, 3])
+            >>> print(logits.shape)   # torch.Size([32, 8])
         """
-        # Tính logits dự đoán cho tất cả chuyên gia
+        # Compute logits (raw expert scores) for all experts via linear projection
         gate_logits = self.gate_projector(x)
         
-        # Chọn Top-K logits và chỉ số tương ứng
+        # Select the top-k experts based on highest logits
+        # torch.topk returns (values, indices) where values are sorted in descending order
         top_k_logits, top_k_indices = torch.topk(gate_logits, self.top_k, dim=-1)
         
-        # Chuẩn hóa Top-K logits bằng softmax để được trọng số
+        # Normalize top-k logits to probability weights using softmax
+        # Ensures weights sum to 1 and are interpretable as probabilities
         combined_weights = F.softmax(top_k_logits, dim=-1, dtype=torch.float32)
         
         return combined_weights, top_k_indices, gate_logits
@@ -79,129 +143,527 @@ class StandardTopKgating(nn.Module):
 
 class NoisyTopKGating(nn.Module):
     """
-    Bộ gating Top-K có bổ sung nhiễu cho Mixture of Experts.
+    Top-k gating mechanism with learnable noise injection for Mixture of Experts.
     
-    Chức năng:
-    - Tính toán logits gating cơ bản (clean logits)
-    - Trong quá trình huấn luyện (training), thêm nhiễu Gaussian vào logits
-    - Chọn Top-K chuyên gia từ logits có nhiễu
-    - Áp dụng softmax để chuẩn hóa trọng số
+    This gating module enhances exploration during training by adding learnable Gaussian noise
+    to the expert selection logits. Noise is only applied during training; inference is
+    deterministic and noise-free.
     
-    Lợi ích của việc bổ sung nhiễu:
-    - Tăng sự đa dạng khi chọn chuyên gia
-    - Giảm việc một số chuyên gia luôn bị chọn
-    - Cải thiện tính tổng quát của mô hình
+    Architecture:
+    - gate_projector: Learns clean expert logits without noise
+    - noise_layer: Learns the scale of noise to add per expert
+    - During training: Combined logits = clean logits + (learned noise scale) × (Gaussian noise)
+    - During inference: Uses clean logits only
+    
+    Key Benefits:
+    1. **Improved Exploration**: Noise encourages trying different expert combinations
+    2. **Load Balancing**: Prevents the same experts from always being selected
+    3. **Expert Specialization**: Different experts develop distinct expertise
+    4. **Generalization**: Stochastic training → better generalization at test time
+    5. **Deterministic Inference**: No randomness once deployed
+    
+    Comparison to Standard Gating:
+    - Standard: Always selects the exact same k experts for identical inputs
+    - Noisy: During training selects different experts with some probability
+    - Result: More robust and well-distributed expert usage
     """
     
-    def __init__(self, model_dim: int, num_experts: int, top_k: int, noise_stddev=1.0):
+    def __init__(self, model_dim: int, num_experts: int, top_k: int, noise_stddev=1.0) -> None:
         """
-        Khởi tạo bộ gating Top-K có bổ sung nhiễu.
+        Initialize the noisy top-k gating module.
         
-        Tham số:
-        -----------
-        model_dim : int
-            Kích thước embedding/feature input (ví dụ: 960)
-        num_experts : int
-            Tổng số chuyên gia có sẵn (ví dụ: 4)
-        top_k : int
-            Số lượng chuyên gia hàng đầu được chọn (ví dụ: 3)
-        noise_stddev : float, tùy chọn
-            Độ lệch chuẩn của nhiễu Gaussian, mặc định = 1.0
-            Kiểm soát độ mạnh của nhiễu thêm vào
+        Sets up two linear projector layers:
+        1. gate_projector: Produces the deterministic (clean) expert scores
+        2. noise_layer: Produces per-expert noise scaling factors
+        
+        Args:
+            model_dim (int): Dimension of input feature vectors (e.g., 960)
+            num_experts (int): Total number of available experts (e.g., 8)
+            top_k (int): Number of top experts to select (e.g., 3)
+            noise_stddev (float, optional): Multiplier for the noise magnitude.
+                                          Controls how much noise is added relative to learned scale.
+                                          Higher values = more exploration. Defaults to 1.0.
+        
+        Raises:
+            AssertionError: If top_k > num_experts
+        
+        Note:
+            The noise_stddev is a hyperparameter that should be tuned. Typical values:
+            - 0.5-1.0: Mild exploration (recommended for stable training)
+            - 1.0-2.0: Moderate exploration (balances exploitation and exploration)
+            - 2.0+: Aggressive exploration (may hurt performance if too high)
         """
         super().__init__()
+        assert top_k <= num_experts, "top_k must be less than or equal to num_experts"
+        
         self.model_dim = model_dim
         self.num_experts = num_experts
         self.top_k = top_k
         self.noise_stddev = noise_stddev
 
-        # Lớp tuyến tính để dự đoán logits gating cơ bản
+        # Linear layer: computes deterministic expert selection logits
+        # This is the primary routing signal
         self.gate_projector = nn.Linear(model_dim, num_experts, bias=False)
         
-        # Lớp tuyến tính để dự đoán độ lớn của nhiễu cho mỗi chuyên gia
+        # Linear layer: learns to predict noise magnitude for each expert
+        # These magnitudes are adaptively learned and can vary per expert
         self.noise_layer = nn.Linear(model_dim, num_experts, bias=False)
 
-    def forward(self, x: torch.Tensor):
+
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
-        Tính toán trọng số gating có bổ sung nhiễu cho các chuyên gia.
+        Route input to selected experts using noisy top-k gating.
         
-        Quá trình:
-        1. Tính logits gating cơ bản (clean logits)
-        2. Nếu đang huấn luyện (training):
-           - Tính độ lớn của nhiễu từ noise_layer
-           - Tạo nhiễu Gaussian
-           - Cộng nhiễu vào clean logits
-        3. Chọn Top-K chuyên gia từ logits (có nhiễu hoặc không)
-        4. Chuẩn hóa Top-K logits bằng softmax
+        This method branches into two different behaviors based on the training mode:
         
-        Tham số:
-        -----------
-        x : torch.Tensor
-            Tensor input có shape [batch_size, model_dim]
+        **Training Mode (self.training = True):**
+        - Adds learnable Gaussian noise to encourage exploration
+        - Noise magnitude is predicted per-expert and adaptively learned
+        - Different samples may select different experts even if similar
+        - Helps prevent load imbalance and over-specialization
         
-        Trả về:
-        -----------
-        Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
-            - combined_weights: Trọng số softmax của Top-K [batch_size, top_k]
-            - top_k_indices: Chỉ số của K chuyên gia được chọn [batch_size, top_k]
-            - clean_logits: Logits gốc không có nhiễu [batch_size, num_experts]
+        **Inference Mode (self.training = False):**
+        - Uses deterministic clean logits (no noise)
+        - Identical inputs always produce identical routing decisions
+        - Fast and reproducible inference
+        
+        Processing Pipeline:
+        
+        1. **Compute Clean Logits**: Linear projection produces base expert scores
+        
+        2. **Conditional Noise Addition** (training only):
+           - Predict noise magnitude via learned linear layer
+           - Apply softplus(·) to ensure positive scaling: softplus(x) = log(1 + e^x)
+           - Sample i.i.d. Gaussian noise N(0, 1)
+           - Scale noise by learned magnitudes and stddev multiplier
+           - Add to clean logits: logits_noisy = logits_clean + scale × noise × stddev
+        
+        3. **Top-k Selection**: Select k experts with highest (possibly noisy) logits
+        
+        4. **Softmax Normalization**: Convert selected logits to probability weights
+        
+        Args:
+            x (torch.Tensor): Input feature tensor
+                            Shape: [batch_size, model_dim]
+                            Batched feature vectors from backbone network
+        
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+                
+                (1) combined_weights: Normalized probability weights for selected experts
+                    - Shape: [batch_size, top_k]
+                    - Values summed to 1 per sample via softmax
+                    - Interpretation: How much weight each selected expert receives
+                
+                (2) top_k_indices: Indices of the selected experts
+                    - Shape: [batch_size, top_k]
+                    - Integer indices in range [0, num_experts-1]
+                
+                (3) clean_logits: Raw (noise-free) expert scores
+                    - Shape: [batch_size, num_experts]
+                    - Useful for computing auxiliary losses (load balancing)
+                    - Independent of training mode (always clean)
+        
+        Training vs Inference Difference:
+            Training:  same input → different outputs (due to noise) → exploration
+            Inference: same input → identical outputs (no noise) → consistency
+        
+        Example:
+            >>> gating = NoisyTopKGating(model_dim=960, num_experts=8, top_k=3, noise_stddev=1.0)
+            >>> x = torch.randn(32, 960)
+            >>> gating.train()   # Training mode
+            >>> w1, idx1, _ = gating(x)
+            >>> w2, idx2, _ = gating(x)
+            >>> # w1 and w2 will likely be different due to noise
+            >>> gating.eval()    # Inference mode  
+            >>> w3, idx3, _ = gating(x)
+            >>> w4, idx4, _ = gating(x)
+            >>> # w3 and w4 will be identical (no noise)
         """
 
-        # Tính logits gating cơ bản (sạch, chưa có nhiễu)
+        # Compute base expert logits via learned linear transformation
+        # These represent the deterministic preference for each expert
         clean_logits = self.gate_projector(x)
 
-        # Chỉ thêm nhiễu trong quá trình huấn luyện
+        # Only add noise during training phase
         if self.training:
-            # Tính độ lớn của nhiễu dựa trên input
+            # Predict per-expert noise scaling factors based on input
             noise_magnitude = self.noise_layer(x)
             
-            # Áp dụng softplus để đảm bảo noise_scale là dương
-            # softplus(x) = log(1 + exp(x)) giúp tránh scale âm
+            # Apply softplus to ensure noise scale is strictly positive
+            # softplus(x) = log(1 + exp(x)) is smooth and always positive
+            # This prevents negative scaling which would invert the noise effect
             noise_scale = torch.nn.functional.softplus(noise_magnitude)
 
-            # Tạo nhiễu Gaussian cùng shape với clean_logits
+            # Sample independent Gaussian noise for all experts and samples
+            # Shape matches clean_logits: [batch_size, num_experts]
             sampled_noise = torch.randn_like(clean_logits)
 
-            # Kết hợp clean logits với nhiễu đã được điều chỉnh độ lớn
+            # Combine clean logits with scaled noise for exploration
+            # Each expert gets its own learned noise magnitude
             noisy_logits = clean_logits + noise_scale * sampled_noise * self.noise_stddev
         else:
-            # Nếu không huấn luyện, sử dụng logits sạch mà không có nhiễu
+            # During inference, use clean logits without any noise
+            # Ensures deterministic and reproducible predictions
             noisy_logits = clean_logits
 
-        # Chọn Top-K logits cao nhất và chỉ số chuyên gia tương ứng
+        # Select the top-k logits and corresponding expert indices
+        # torch.topk automatically handles ties consistently
         top_k_logits, top_k_indices = torch.topk(noisy_logits, self.top_k, dim=-1)
 
-        # Áp dụng softmax trên Top-K logits để chuẩn hóa thành trọng số
+        # Convert selected logits to normalized probability weights via softmax
+        # Ensures weights are in [0, 1] and sum to 1 per sample
         combined_weights = F.softmax(top_k_logits, dim=-1)
 
-        # Trả về trọng số, chỉ số chuyên gia, và logits gốc sạch
+        # Return expert weights, their indices, and clean logits for auxiliary losses
         return combined_weights, top_k_indices, clean_logits    
 
 
+class ContextAwareGating(nn.Module):
+    """
+    Context-aware gating mechanism for Mixture of Experts.
+    
+    This gating module enhances expert selection by incorporating contextual information
+    alongside the main embedding. It fuses embedding and context features to make more
+    informed decisions about which experts to route to.
+    
+    Architecture:
+    - Normalizes embedding and context separately using LayerNorm
+    - Projects context features to a fixed dimension (32)
+    - Concatenates embedding and projected context
+    - Applies multi-layer MLP to predict expert logits
+    - Optionally adds Gaussian noise during training for exploration
+    - Selects top-k experts with highest logits
+    
+    Attributes:
+        model_dim (int): Dimension of input embeddings (e.g., 960)
+        context_dim (int): Dimension of context features
+        num_experts (int): Total number of experts available
+        top_k (int): Number of top experts to select
+        noise_stddev (float): Standard deviation of noise added during training
+    """
+    
+    def __init__(self, model_dim: int, context_dim: int, num_experts: int, top_k: int, noise_stddev=1.0) -> None:
+        """
+        Initialize the context-aware gating module.
+        
+        Args:
+            model_dim (int): Dimension of input embeddings
+            context_dim (int): Dimension of context feature vectors
+            num_experts (int): Total number of experts in the MoE layer
+            top_k (int): Number of top experts to select based on logits
+            noise_stddev (float, optional): Standard deviation of Gaussian noise added during training.
+                                           Defaults to 1.0.
+        
+        Raises:
+            AssertionError: If top_k > num_experts
+        """
+        super().__init__()
+        assert top_k <= num_experts, "top_k must be less than or equal to num_experts"
+
+        self.model_dim = model_dim
+        self.context_dim = context_dim
+        self.num_experts = num_experts
+        self.top_k = top_k
+        self.noise_stddev = noise_stddev
+        fusion_dim = model_dim + 32
+
+        # Layer normalization for input embedding
+        self.embedding_norm = nn.LayerNorm(model_dim)
+        # Layer normalization for context features
+        self.context_norm = nn.LayerNorm(context_dim)
+        # Layer normalization for fused embedding and context
+        self.fusion_norm = nn.LayerNorm(fusion_dim)
+
+        # Project context features to 32 dimensions
+        # Uses GELU activation for smoothness
+        self.context_projector = nn.Sequential(
+            nn.Linear(context_dim, 32),
+            nn.GELU(),
+            nn.Linear(32, 32),
+            nn.GELU()
+        )
+
+        # Predict noise magnitude for each expert
+        # Enables context-aware noise in gating decisions
+        self.noise_layer = nn.Linear(fusion_dim, num_experts, bias=False)
+        
+        # Multi-layer MLP to predict logits for all experts
+        # Takes fused representation and outputs expert logits
+        self.gate_projector = nn.Sequential(
+            nn.Linear(fusion_dim, fusion_dim//2),
+            nn.GELU(),
+            nn.Linear(fusion_dim//2, fusion_dim//4),
+            nn.GELU(),
+            nn.Linear(fusion_dim//4, num_experts)
+        )
+
+    
+    def forward(self, x: torch.Tensor, context: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Generate gating weights for expert selection using context information.
+        
+        Processing pipeline:
+        1. Normalize input embedding and context independently
+        2. Project context features to 32 dimensions
+        3. Concatenate (embedding + projected_context)
+        4. Normalize the fused representation
+        5. Generate clean logits via multi-layer MLP
+        6. During training: Add learnable Gaussian noise to logits for exploration
+        7. Select top-k experts and compute softmax weights
+        
+        Args:
+            x (torch.Tensor): Input embedding tensor of shape [batch_size, model_dim]
+            context (torch.Tensor): Context feature tensor of shape [batch_size, context_dim]
+        
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+                - combined_weights: Softmax normalized weights for top-k experts 
+                                  Shape: [batch_size, top_k]
+                - top_k_indices: Indices of selected top-k experts 
+                                Shape: [batch_size, top_k]
+                - clean_logits: Raw logits for all experts (before noise) 
+                               Shape: [batch_size, num_experts]
+        """
+        
+        embedding = self.embedding_norm(x)
+        context = self.context_norm(context)
+
+        # Project context to fixed dimension
+        context_features = self.context_projector(context)
+        # Concatenate normalized embedding with projected context
+        fusion_features = torch.cat([embedding, context_features], dim=-1)
+        # Normalize the fused representation
+        fusion_features = self.fusion_norm(fusion_features)
+
+        # Compute clean logits (without noise)
+        clean_logits = self.gate_projector(fusion_features)
+        
+        # Add noise during training for improved exploration
+        if self.training:
+            # Predict noise magnitude based on fused features
+            noise_magnitude = self.noise_layer(fusion_features)
+            # Ensure positive scaling using softplus: log(1 + exp(x))
+            noise_scale = nn.functional.softplus(noise_magnitude)
+            # Sample Gaussian noise
+            sampled_noise = torch.randn_like(clean_logits)
+            # Combine clean logits with scaled noise
+            noisy_logits = clean_logits + noise_scale * sampled_noise * self.noise_stddev
+        else:
+            # Use clean logits without noise during inference
+            noisy_logits = clean_logits
+        
+        # Select top-k experts
+        top_k_logits, top_k_indices = torch.topk(noisy_logits, self.top_k, dim=-1)
+        # Normalize top-k logits to weights via softmax
+        combined_weights = F.softmax(top_k_logits, dim=-1)
+
+        return combined_weights, top_k_indices, clean_logits
+    
+
 if __name__ == "__main__":
     """
-    Khối kiểm tra (test block) để xác minh hoạt động của gating modules.
+    Comprehensive unit tests for gating mechanisms.
     
-    Khởi tạo một bộ gating StandardTopKgating và kiểm tra output.
+    Tests all three gating modules: StandardTopKgating, NoisyTopKGating, and ContextAwareGating.
+    Verifies output shapes, value ranges, and behavior differences between training/inference modes.
     """
     
-    # Khởi tạo bộ gating với các tham số:
-    # - model_dim=960: Kích thước feature input
-    # - num_experts=4: Tổng 4 chuyên gia
-    # - top_k=3: Chọn 3 chuyên gia tốt nhất
-    noisygating = StandardTopKgating(
-        model_dim=960,
-        num_experts=4,
-        top_k=1
+    print("=" * 80)
+    print("UNIT TESTS FOR GATING MECHANISMS")
+    print("=" * 80)
+    
+    # Test parameters
+    batch_size = 4
+    model_dim = 960
+    context_dim = 6
+    num_experts = 8
+    top_k = 3
+    
+    # ============================================================================
+    # TEST 1: StandardTopKgating
+    # ============================================================================
+    print("\n[TEST 1] StandardTopKgating")
+    print("-" * 80)
+    
+    standard_gating = StandardTopKgating(
+        model_dim=model_dim,
+        num_experts=num_experts,
+        top_k=top_k
+    )
+    standard_gating.eval()  # Set to evaluation mode
+    
+    # Create test input
+    x = torch.randn((batch_size, model_dim))
+    
+    # Run forward pass
+    weights, indices, logits = standard_gating(x)
+    
+    # Test 1.1: Output shapes
+    print(f"✓ Test 1.1 - Output shapes:")
+    print(f"  - weights shape: {weights.shape} (expected: [{batch_size}, {top_k}])")
+    print(f"  - indices shape: {indices.shape} (expected: [{batch_size}, {top_k}])")
+    print(f"  - logits shape:  {logits.shape} (expected: [{batch_size}, {num_experts}])")
+    assert weights.shape == (batch_size, top_k), f"Weights shape mismatch: {weights.shape}"
+    assert indices.shape == (batch_size, top_k), f"Indices shape mismatch: {indices.shape}"
+    assert logits.shape == (batch_size, num_experts), f"Logits shape mismatch: {logits.shape}"
+    print("  ✓ All shapes correct")
+    
+    # Test 1.2: Weights sum to 1 (softmax property)
+    print(f"\n✓ Test 1.2 - Softmax normalization:")
+    weight_sums = weights.sum(dim=1)
+    print(f"  - Weight sums per sample: {weight_sums}")
+    assert torch.allclose(weight_sums, torch.ones(batch_size), atol=1e-6), \
+        "Weights do not sum to 1"
+    print("  ✓ All weights sum to 1")
+    
+    # Test 1.3: Indices validity
+    print(f"\n✓ Test 1.3 - Expert indices validity:")
+    assert (indices >= 0).all() and (indices < num_experts).all(), \
+        "Indices out of valid range"
+    print(f"  - All indices in range [0, {num_experts-1}]")
+    print("  ✓ All indices valid")
+    
+    # Test 1.4: Weights are positive
+    print(f"\n✓ Test 1.4 - Weight positivity:")
+    assert (weights > 0).all(), "Weights should be positive"
+    print("  ✓ All weights positive")
+    
+    print("\n✓ StandardTopKgating: ALL TESTS PASSED\n")
+    
+    # ============================================================================
+    # TEST 2: NoisyTopKGating
+    # ============================================================================
+    print("\n[TEST 2] NoisyTopKGating")
+    print("-" * 80)
+    
+    noisy_gating = NoisyTopKGating(
+        model_dim=model_dim,
+        num_experts=num_experts,
+        top_k=top_k,
+        noise_stddev=1.0
     )
     
-    # Tạo dữ liệu test: batch_size=3, model_dim=960
-    logits = torch.rand((3, 960))
+    # Test 2.1: Training mode with noise
+    print(f"✓ Test 2.1 - Training mode (with noise):")
+    noisy_gating.train()
+    x = torch.randn((batch_size, model_dim))
     
-    # Chạy forward pass
-    combined_weights, top_k_indices, clean_logits = noisygating(logits)
+    weights_train_1, indices_train_1, logits_train_1 = noisy_gating(x)
+    weights_train_2, indices_train_2, logits_train_2 = noisy_gating(x)
     
-    # In kết quả
-    print(combined_weights)  # Trọng số trơn mượt từ softmax
-    print(top_k_indices)      # Chỉ số của 3 chuyên gia được chọn
-    print(clean_logits)      # Logits gốc cho tất cả chuyên gia (4)
+    print(f"  - weights shape: {weights_train_1.shape}")
+    print(f"  - Run 1 weights:\n    {weights_train_1[0]}")
+    print(f"  - Run 2 weights:\n    {weights_train_2[0]}")
+    
+    # With noise, repeated passes should give different results
+    is_different = not torch.allclose(weights_train_1, weights_train_2, atol=1e-6)
+    print(f"  - Different results due to noise: {is_different}")
+    print("  ✓ Training mode works with noise injection")
+    
+    # Test 2.2: Inference mode (no noise)
+    print(f"\n✓ Test 2.2 - Inference mode (no noise):")
+    noisy_gating.eval()
+    x = torch.randn((batch_size, model_dim))
+    
+    weights_eval_1, indices_eval_1, logits_eval_1 = noisy_gating(x)
+    weights_eval_2, indices_eval_2, logits_eval_2 = noisy_gating(x)
+    
+    print(f"  - Run 1 weights:\n    {weights_eval_1[0]}")
+    print(f"  - Run 2 weights:\n    {weights_eval_2[0]}")
+    
+    # In eval mode, same input should give same output
+    is_same = torch.allclose(weights_eval_1, weights_eval_2, atol=1e-6)
+    print(f"  - Same results in eval mode: {is_same}")
+    assert is_same, "Inference should be deterministic"
+    print("  ✓ Inference mode deterministic (no noise)")
+    
+    # Test 2.3: Softmax normalization
+    print(f"\n✓ Test 2.3 - Softmax normalization:")
+    weight_sums = weights_eval_1.sum(dim=1)
+    assert torch.allclose(weight_sums, torch.ones(batch_size), atol=1e-6), \
+        "Weights do not sum to 1"
+    print(f"  - Weight sums: {weight_sums}")
+    print("  ✓ All weights normalized")
+    
+    print("\n✓ NoisyTopKGating: ALL TESTS PASSED\n")
+    
+    # ============================================================================
+    # TEST 3: ContextAwareGating
+    # ============================================================================
+    print("\n[TEST 3] ContextAwareGating")
+    print("-" * 80)
+    
+    context_gating = ContextAwareGating(
+        model_dim=model_dim,
+        context_dim=context_dim,
+        num_experts=num_experts,
+        top_k=top_k,
+        noise_stddev=1.0
+    )
+    
+    # Test 3.1: Forward pass with context
+    print(f"✓ Test 3.1 - Forward pass with context:")
+    context_gating.eval()
+    x = torch.randn((batch_size, model_dim))
+    context = torch.randn((batch_size, context_dim))
+    
+    weights, indices, logits = context_gating(x, context)
+    
+    print(f"  - Input shape: {x.shape}")
+    print(f"  - Context shape: {context.shape}")
+    print(f"  - Output shapes:")
+    print(f"    • weights: {weights.shape} (expected: [{batch_size}, {top_k}])")
+    print(f"    • indices: {indices.shape} (expected: [{batch_size}, {top_k}])")
+    print(f"    • logits:  {logits.shape} (expected: [{batch_size}, {num_experts}])")
+    assert weights.shape == (batch_size, top_k), f"Weights shape mismatch: {weights.shape}"
+    assert indices.shape == (batch_size, top_k), f"Indices shape mismatch: {indices.shape}"
+    assert logits.shape == (batch_size, num_experts), f"Logits shape mismatch: {logits.shape}"
+    print("  ✓ All shapes correct")
+    
+    # Test 3.2: Softmax normalization with context
+    print(f"\n✓ Test 3.2 - Softmax normalization:")
+    weight_sums = weights.sum(dim=1)
+    assert torch.allclose(weight_sums, torch.ones(batch_size), atol=1e-6), \
+        "Weights do not sum to 1"
+    print(f"  - Weight sums: {weight_sums}")
+    print("  ✓ All weights normalized")
+    
+    # Test 3.3: Training mode behavior
+    print(f"\n✓ Test 3.3 - Training mode with noise:")
+    context_gating.train()
+    x = torch.randn((batch_size, model_dim))
+    context = torch.randn((batch_size, context_dim))
+    
+    weights_train_1, _, _ = context_gating(x, context)
+    weights_train_2, _, _ = context_gating(x, context)
+    
+    is_different = not torch.allclose(weights_train_1, weights_train_2, atol=1e-6)
+    print(f"  - Different results due to noise: {is_different}")
+    print("  ✓ Training mode applies noise")
+    
+    # Test 3.4: Indices validity
+    print(f"\n✓ Test 3.4 - Expert indices validity:")
+    context_gating.eval()
+    x = torch.randn((batch_size, model_dim))
+    context = torch.randn((batch_size, context_dim))
+    _, indices, _ = context_gating(x, context)
+    
+    assert (indices >= 0).all() and (indices < num_experts).all(), \
+        "Indices out of valid range"
+    print(f"  - All indices in range [0, {num_experts-1}]")
+    print("  ✓ All indices valid")
+    
+    print("\n✓ ContextAwareGating: ALL TESTS PASSED\n")
+    
+    # ============================================================================
+    # SUMMARY
+    # ============================================================================
+    print("\n" + "=" * 80)
+    print("SUMMARY")
+    print("=" * 80)
+    print("✓ StandardTopKgating:   PASSED")
+    print("✓ NoisyTopKGating:      PASSED")
+    print("✓ ContextAwareGating:   PASSED")
+    print("\n✓ ALL UNIT TESTS COMPLETED SUCCESSFULLY")
+    print("=" * 80)

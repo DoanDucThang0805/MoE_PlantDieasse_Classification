@@ -1,9 +1,16 @@
+"""
+Mixture of Experts (MoE) model for plant disease classification.
+
+This module implements a MoE architecture that routes input features through
+multiple specialized experts using a learned gating mechanism.
+"""
+
 import torch
 import torch.nn as nn
 from torchinfo import summary
-from typing import Tuple
+from typing import Tuple, Literal, Optional
 from .backbone import Mobilenetv3LargeFeatureExtractor
-from .gating import NoisyTopKGating
+from .gating import NoisyTopKGating, ContextAwareGating
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -11,206 +18,347 @@ warnings.filterwarnings("ignore")
 
 class MoELayer(nn.Module):
     """
-    Lớp Mixture of Experts (MoE) - cho phép mô hình sử dụng nhiều chuyên gia (experts)
-    và gating network để định tuyến dữ liệu đến các chuyên gia phù hợp.
+    Mixture of Experts (MoE) layer with expert routing and selective combination.
+
+    This layer enables the model to use multiple specialist experts and a gating
+    network to intelligently route data to the most relevant experts for each input.
+    
+    The architecture includes:
+    - A gating network that learns to route inputs to appropriate experts
+    - Multiple feed-forward expert networks that specialize on different features
+    - A combination mechanism to merge expert outputs based on gating weights
     
     Args:
-        model_dim (int): Kích thước của feature vector
-        num_experts (int): Số lượng chuyên gia
-        top_k (int): Số lượng chuyên gia hàng đầu được lựa chọn cho mỗi input
+        context_dim (int): Dimension of context features for context-aware gating.
+        model_dim (int): Hidden feature dimension from the backbone network.
+        num_experts (int): Number of expert networks in the mixture.
+        top_k (int): Number of top experts to select for each input sample.
+        router_mode (Literal["noisy", "context_aware"]): Routing strategy to use.
+            - "noisy": Uses noisy top-k gating with auxiliary loss.
+            - "context_aware": Uses context information for adaptive routing.
     """
     
-    def __init__(self, model_dim: int, num_experts: int, top_k: int) -> None:
+    def __init__(
+        self, 
+        context_dim: int, 
+        model_dim: int, 
+        num_experts: int, 
+        top_k: int, 
+        router_mode: Literal["noisy", "context_aware"]
+    ) -> None:
+        """Initialize the MoE layer with specified configuration."""
         super().__init__()
         self.num_experts: int = num_experts
         self.top_k: int = top_k
-        
-        # Gating network: quyết định chuyên gia nào xử lý từng mẫu
-        self.gating = NoisyTopKGating(
-            model_dim=model_dim, 
-            num_experts=num_experts, 
-            top_k=top_k
-        )
-        
-        # Danh sách các chuyên gia - mỗi chuyên gia là một feed-forward network
+        self.router_mode = router_mode
+        if not (0 < self.top_k <= self.num_experts):
+            raise ValueError("top_k must be a positive integer less than or equal to num_experts")
+
+        # Initialize gating network based on routing strategy
+        if self.router_mode == "noisy":
+            self.gating = NoisyTopKGating(
+                model_dim=model_dim,
+                num_experts=num_experts, 
+                top_k=top_k
+            )
+        elif self.router_mode == "context_aware":
+            self.gating = ContextAwareGating(
+                model_dim=model_dim,
+                context_dim=context_dim,
+                num_experts=num_experts, 
+                top_k=top_k
+            )
+        else:
+            raise ValueError(
+                f"Invalid router_mode: {self.router_mode}. "
+                "Must be 'noisy' or 'context_aware'."
+            )
+
+        # Create list of expert networks - each is a feed-forward network
         self.experts = nn.ModuleList([
             nn.Sequential(
-                nn.Linear(model_dim, model_dim * 2),  # Mở rộng thành 2x
-                nn.ReLU(),                             # Activation function
-                nn.Linear(model_dim * 2, model_dim)   # Thu nhỏ về kích thước gốc
+                nn.Linear(model_dim, model_dim * 2),      # Expand to 2x dimension
+                nn.GELU(),                                 # Non-linear activation
+                nn.Dropout(0.1),                           # Regularization
+                nn.Linear(model_dim * 2, model_dim)       # Contract back to original dimension
             ) 
             for _ in range(num_experts)
         ])
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor, context: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
-        Tiến propagation qua lớp MoE với routing dựa trên Gating Network.
+        Forward pass through MoE layer with intelligent router-based expert selection.
+
+        Performs the following steps:
+        1. Route inputs through gating network to get expert selection weights
+        2. Initialize output tensor for accumulating expert contributions
+        3. For each expert: select relevant samples, process through expert network,
+           scale by routing weights, and accumulate in output
+        4. Apply residual connection to preserve input information
         
         Args:
-            x (torch.Tensor): Input features có shape [batch_size, model_dim]
-            
+            x (torch.Tensor): Input features of shape [batch_size, model_dim].
+            context (Optional[torch.Tensor]): Context features of shape [batch_size, context_dim].
+                Required when router_mode is "context_aware". Defaults to None.
+
         Returns:
-            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]: (moe_output, clean_logits, top_k_indices)
-                - moe_output: [batch_size, model_dim] - output từ experts
-                - clean_logits: [batch_size, num_experts] - gating logits
-                - top_k_indices: [batch_size, top_k] - top-k expert indices
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+                - moe_output (torch.Tensor): Expert-processed features [batch_size, model_dim].
+                - clean_router_logits (torch.Tensor): Gating network logits [batch_size, num_experts].
+                - top_k_indices (torch.Tensor): Indices of selected experts [batch_size, top_k].
         """
-        # Bước 1: Lấy routing decisions từ Gating Network
-        combined_weights, top_k_indices, clean_logits = self.gating(x)
-        
-        # Bước 2: Khởi tạo output tensor - sẽ cộng dồn đóng góp từ các experts
+        # Step 1: Obtain routing decisions from gating network
+        if self.router_mode == "noisy":
+            combined_weights, top_k_indices, clean_router_logits = self.gating(x)
+        elif self.router_mode == "context_aware":
+            combined_weights, top_k_indices, clean_router_logits = self.gating(x, context)
+        else:
+            raise ValueError(
+                f"Invalid router_mode: {self.router_mode}. "
+                "Must be 'noisy' or 'context_aware'."
+            )
+
+        # Step 2: Initialize output tensor for accumulating expert contributions
         moe_output = torch.zeros_like(x)
         
-        # Bước 3: Routing & Expert Forward - gửi data tới từng expert
+        # Step 3: Route inputs through selected experts and combine outputs
         for expert_idx in range(self.num_experts):
-            # Tạo mask để tìm mẫu được gửi tới expert hiện tại
+            # Create mask to identify samples routed to this expert
             expert_mask = (top_k_indices == expert_idx)      # [batch_size, top_k]
-            sample_mask = expert_mask.any(dim=1)             # [batch_size] - mẫu nào được chọn
+            sample_mask = expert_mask.any(dim=1)             # [batch_size] - which samples are routed
             
-            # Tối ưu: skip nếu không có mẫu nào được gửi tới expert
+            # Skip if no samples are routed to this expert (optimization)
             if sample_mask.sum() == 0:
                 continue
             
-            # Lấy features của mẫu được gửi tới expert này
+            # Extract features for samples routed to this expert
             selected_features = x[sample_mask]
             
-            # Xử lý qua expert feed-forward network
+            # Process through expert feed-forward network
             expert_output = self.experts[expert_idx](selected_features)
             
-            # Tính weighted sum - trọng số của expert này từ gating network
+            # Calculate expert weights from gating network
             expert_weights = (combined_weights * expert_mask).sum(dim=1)
             selected_weights = expert_weights[sample_mask]
             
-            # Cộng đóng góp của expert vào output cuối cùng (weighted combination)
+            # Accumulate weighted expert contribution to final output
             moe_output[sample_mask] += expert_output * selected_weights.unsqueeze(-1)
         
-        return moe_output, clean_logits, top_k_indices
+        return moe_output, clean_router_logits, top_k_indices
 
 
 class MoEModel(nn.Module):
     """
-    Mô hình Mixture of Experts cho phân loại ảnh bệnh lá cây.
+    Mixture of Experts model for plant disease leaf classification.
+
+    This model combines a backbone feature extractor (MobileNetV3 Large) with a
+    Mixture of Experts layer to enable adaptive, specialized feature processing.
     
-    Cấu trúc:
-    1. Feature Extractor: MobileNetV3 Large để trích xuất features từ ảnh
-    2. MoE Layer: Định tuyến và xử lý features qua các chuyên gia
-    3. Batch Normalization: Chuẩn hóa dữ liệu
-    4. Classifier: Lớp fully-connected để phân loại
+    Architecture pipeline:
+    1. Feature Extractor: MobileNetV3 Large to extract semantic features from images
+    2. Pre-MoE Normalization: Layer normalization to stabilize inputs to MoE layer
+    3. MoE Layer: Route features through multiple experts based on gating mechanism
+    4. Residual Connection: Add expert-processed features back to input features
+    5. Post-MoE Normalization: Layer normalization before classification head
+    6. Classifier: Linear layer to produce class predictions
     
     Args:
-        num_classes (int): Số lớp để phân loại
-        num_experts (int): Số lượng chuyên gia trong MoE layer
-        top_k (int): Số lượng chuyên gia hàng đầu được sử dụng
+        context_dim (int): Dimension of context features for adaptive routing.
+        num_classes (int): Number of plant disease classes to predict.
+        num_experts (int): Number of expert networks in the MoE layer.
+        top_k (int): Number of top experts to select for each sample.
+        router_mode (Literal["noisy", "context_aware"]): Type of routing mechanism.
+            Defaults to "noisy". Use "context_aware" for context-dependent routing.
     """
     
-    def __init__(self, num_classes: int, num_experts: int, top_k: int) -> None:
+    def __init__(
+        self, 
+        context_dim: int, 
+        num_classes: int, 
+        num_experts: int, 
+        top_k: int, 
+        router_mode: Literal["noisy", "context_aware"] = "noisy"
+    ) -> None:
+        """Initialize MoE model with specified configuration."""
         super().__init__()
-
+        self.context_dim = context_dim
         self.num_classes = num_classes
         self.num_experts = num_experts
         self.top_k = top_k
+        self.router_mode = router_mode
 
-        
-        # Trích xuất features từ ảnh input bằng MobileNetV3 Large
-        self.feature_extractor = Mobilenetv3LargeFeatureExtractor(pretrained=True, freeze_backbone=False)
-        
-        # Lớp MoE để xử lý features với nhiều chuyên gia
-        self.moe_layer = MoELayer(
-            model_dim=self.feature_extractor.output_dim,
-            num_experts=num_experts,
-            top_k=top_k
+        # Create feature extractor from MobileNetV3 Large backbone
+        self.feature_extractor = Mobilenetv3LargeFeatureExtractor(
+            pretrained=True, 
+            freeze_backbone=False
         )
-        
-        # Chuẩn hóa batch để ổn định quá trình huấn luyện
-        self.normalizer = nn.BatchNorm1d(self.feature_extractor.output_dim)
-        
-        # Lớp phân loại: ánh xạ features vào num_classes
-        self.classifier = nn.Linear(self.feature_extractor.output_dim, num_classes)
+        model_dim = self.feature_extractor.output_dim
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """
-        Tiến propagation qua toàn bộ mô hình Mixture of Experts.
+        # Normalization layers to stabilize feature distributions
+        self.pre_moe_norm = nn.LayerNorm(model_dim)   # Before MoE routing
+        self.post_moe_norm = nn.LayerNorm(model_dim)  # After expert processing
+
+        # Initialize MoE layer based on selected routing strategy
+        if router_mode == "noisy":
+            self.moe_layer = MoELayer(
+                context_dim=context_dim,
+                model_dim=model_dim, 
+                num_experts=num_experts, 
+                top_k=top_k, 
+                router_mode="noisy"
+            )
+        elif router_mode == "context_aware":
+            self.moe_layer = MoELayer(
+                context_dim=context_dim,
+                model_dim=model_dim, 
+                num_experts=num_experts, 
+                top_k=top_k, 
+                router_mode="context_aware"
+            )
+        else:
+            raise ValueError(
+                f"Invalid router_mode: {router_mode}. "
+                "Must be 'noisy' or 'context_aware'."
+            )
         
-        Pipeline: Image → Feature Extraction → BatchNorm → MoE → BatchNorm → Classifier
+        # Classification head: maps features to class logits
+        self.classifier = nn.Linear(model_dim, num_classes)
+
+    def forward(self, x: torch.Tensor, context: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Forward pass through the complete Mixture of Experts classification pipeline.
+
+        Processing pipeline:
+        Image Input → Feature Extraction → Pre-MoE Norm → MoE Layer → Residual Addition →
+        Post-MoE Norm → Classification → Logits
+
+        The model extracts semantic features from images, routes them through experts
+        based on learned gating, and combines expert outputs for final classification.
         
         Args:
-            x (torch.Tensor): Ảnh input [batch_size, 3, 224, 224]
-            
+            x (torch.Tensor): Input images of shape [batch_size, 3, 224, 224].
+            context (Optional[torch.Tensor]): Context features of shape [batch_size, context_dim].
+                Required when router_mode is "context_aware". Defaults to None.
+
         Returns:
-            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]: (logits, clean_logits, top_k_indices)
-                - logits: [batch_size, num_classes] - classification output
-                - clean_logits: [batch_size, num_experts] - gating routing info
-                - top_k_indices: [batch_size, top_k] - which experts used
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+                - logits (torch.Tensor): Classification logits [batch_size, num_classes].
+                - clean_logits (torch.Tensor): Gating network logits [batch_size, num_experts].
+                - top_k_indices (torch.Tensor): Selected expert indices [batch_size, top_k].
         """
-        # Bước 1: Feature Extraction - trích xuất semantic features từ ảnh
-        # Input: [batch_size, 3, 224, 224] → Output: [batch_size, 960]
+        # Step 1: Extract semantic features from input images
+        # Input:  [batch_size, 3, 224, 224]
+        # Output: [batch_size, model_dim] (typically 960 for MobileNetV3 Large)
         x = self.feature_extractor(x)
         
-        # Bước 2: BatchNorm - chuẩn hóa để ổn định MoE layer
-        x = self.normalizer(x)
+        # Step 2: Normalize features to stabilize MoE layer inputs
+        x_norm = self.pre_moe_norm(x)
         
-        # Bước 3: Mixture of Experts - routing features qua multiple experts
-        # Return: features + routing metadata cho analysis
-        moe_output, clean_logits, top_k_indices = self.moe_layer(x)
+        # Step 3: Route features through expert networks based on gating mechanism
+        # This step adaptively selects and combines expert outputs for feature enhancement
+        if self.router_mode == "noisy":
+            moe_output, clean_router_logits, top_k_indices = self.moe_layer(x_norm)
+        elif self.router_mode == "context_aware":
+            moe_output, clean_router_logits, top_k_indices = self.moe_layer(x_norm, context)
         
-        # Bước 4: BatchNorm - chuẩn hóa output sau MoE trước classifier
-        x = self.normalizer(moe_output)
-        
-        # Bước 5: Classifier - ánh xạ features sang class predictions
-        # Input: [batch_size, 960] → Output: [batch_size, num_classes]
-        logits = self.classifier(x)
-        
-        return logits, clean_logits, top_k_indices
+        # Step 4: Apply residual connection to preserve original feature information
+        # while combining with expert-enhanced features
+        x = x + moe_output
 
+        # Step 5: Normalize expert-combined features before classification
+        x = self.post_moe_norm(x)
+        
+        # Step 6: Classify normalized features into disease categories
+        # Input:  [batch_size, model_dim]
+        # Output: [batch_size, num_classes]
+        class_logits = self.classifier(x)
+        
+        return class_logits, clean_router_logits, top_k_indices
 
 # ============================================================================
-# KIỂM TRA VÀ TEST MÔ HÌNH
+# Model Testing and Validation
 # ============================================================================
+
 if __name__ == "__main__":
-    # Cấu hình MoE Layer
-    model_dim: int = 960          # Kích thước features từ MobileNetV3 Large
-    num_experts: int = 4          # Số lượng chuyên gia
-    top_k: int = 3                # Chọn top-3 chuyên gia tốt nhất
+    """Test and validate MoE architecture with synthetic data."""
     
-    print("=" * 60)
+    # Configuration parameters for testing
+    model_dim: int = 960          # Feature dimension from MobileNetV3 Large
+    num_experts: int = 6          # Number of expert networks
+    top_k: int = 2                # Number of selected experts per sample
+    context_dim: int = 6          # Dimension of context features for routing
+    router_mode = "context_aware"  # Use context-aware routing for testing
+
+    
+    print("=" * 70)
     print("TEST 1: Mixture of Experts Layer")
-    print("=" * 60)
+    print("=" * 70)
     
-    # Tạo MoE Layer và test với dummy input
+    # Create MoE layer instance with synthetic input
     dummy_input: torch.Tensor = torch.randn(3, model_dim)
-    moe_layer: MoELayer = MoELayer(model_dim=model_dim, num_experts=num_experts, top_k=top_k)
+    dummy_context: torch.Tensor = torch.randn(3, context_dim)
+
+    moe_layer: MoELayer = MoELayer(
+        context_dim=context_dim,
+        model_dim=model_dim, 
+        num_experts=num_experts, 
+        top_k=top_k,
+        router_mode=router_mode
+    )
     
-    # Forward pass: trả về output, gating logits, và expert indices
+    # Forward pass through MoE layer
     moe_output: torch.Tensor
-    gating_logits: torch.Tensor
+    clean_router_logits: torch.Tensor
     expert_indices: torch.Tensor
-    moe_output, gating_logits, expert_indices = moe_layer(dummy_input)
+    moe_output, clean_router_logits, expert_indices = moe_layer(dummy_input, dummy_context)
     
-    print(f"Input shape:            {dummy_input.shape}")
-    print(f"MoE Output shape:       {moe_output.shape}")      # [3, 960]
-    print(f"Gating Logits shape:    {gating_logits.shape}")   # [3, 4]
-    print(f"Top-k Indices shape:    {expert_indices.shape}")  # [3, 3]
+    # Validate output shapes
+    print(f"Input shape:            {dummy_input.shape}")         # Expected: [3, 960]
+    print(f"MoE Output shape:       {moe_output.shape}")           # Expected: [3, 960]
+    print(f"Clean Router Logits shape: {clean_router_logits.shape}")  # Expected: [3, 4]
+    print(f"Top-k Indices shape:    {expert_indices.shape}")       # Expected: [3, 3]
     print("✓ MoE Layer test passed!\n")
     
-    print("=" * 60)
-    print("TEST 2: Full MoE Model")
-    print("=" * 60)
+    print("=" * 70)
+    print("TEST 2: Full MoE Classification Model")
+    print("=" * 70)
     
-    # Tạo full MoE Model và test với ảnh giả lập
-    model: MoEModel = MoEModel(num_classes=8, num_experts=num_experts, top_k=top_k)
-    dummy_image: torch.Tensor = torch.randn(32, 3, 224, 224)  # Batch 32 ảnh 224x224 RGB
+    # Create full MoE model and test with synthetic image batch
+    model: MoEModel = MoEModel(
+        context_dim=6,
+        num_classes=8, 
+        num_experts=num_experts, 
+        top_k=top_k,
+        router_mode=router_mode
+    )
     
-    # Forward pass: trả về classification logits + routing metadata
+    # Create synthetic image batch (32 RGB images of 224x224)
+    dummy_image: torch.Tensor = torch.randn(32, 3, 224, 224)
+    dummy_context: torch.Tensor = torch.randn(32, context_dim)  # Context features for routing
+    
+    # Forward pass through full model pipeline
     class_logits: torch.Tensor
-    gating_logits: torch.Tensor
+    clean_router_logits: torch.Tensor
     expert_indices: torch.Tensor
-    class_logits, gating_logits, expert_indices = model(dummy_image)
+    class_logits, clean_router_logits, expert_indices = model(dummy_image, dummy_context)
     
-    print(f"Input shape:            {dummy_image.shape}")     # [32, 3, 224, 224]
-    print(f"Class Logits shape:     {class_logits.shape}")    # [32, 8]
-    print(f"Gating Logits shape:    {gating_logits.shape}")   # [32, 4]
-    print(f"Top-k Indices shape:    {expert_indices.shape}")  # [32, 3]
+    # Validate output shapes
+    print(f"Input image shape:      {dummy_image.shape}")         # Expected: [32, 3, 224, 224]
+    print(f"Class Logits shape:     {class_logits.shape}")        # Expected: [32, 8]
+    print(f"Clean Router Logits shape: {clean_router_logits.shape}")  # Expected: [32, 4]
+    print(f"Top-k Indices shape:    {expert_indices.shape}")      # Expected: [32, 3]
     print("\n✓ Full MoE Model pipeline test passed!")
-    print("=" * 60)
-    summary(model, input_size=(1, 3, 224, 224), col_names=["input_size", "output_size", "num_params", "trainable"])
+    print("=" * 70)
+    
+    print("\nModel Architecture Summary:")
+    print("=" * 70)
+    summary(
+        model,
+        input_data=(
+            torch.randn(1, 3, 224, 224),
+            torch.randn(1, context_dim)
+        ),
+        col_names=["input_size", "output_size", "num_params", "trainable"]
+    )
     print(model)
+    print("\nFull Model Structure with router mode:", router_mode)
