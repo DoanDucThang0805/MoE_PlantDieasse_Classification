@@ -3,4 +3,5 @@
 source venv/bin/activate
 
 cd src
-PYTHONPATH=src python -m inference.moe.inference
+clear
+PYTHONPATH=src python -m inference.moe.context_aware_moe_inference --use_context=True --router_mode="context_aware"
