@@ -59,11 +59,13 @@ class Config:
     
     Attributes:
         model_name (str): Name of the model architecture (default: 'mobilenetv3large_moe')
-        run_time (str): Timestamp identifier of the training run (default: 'run_20260320-155951')
+        type_model (str): Type of model (default: 'MoE')
+        run_time (str): Timestamp identifier of the training run (default: 'run_20260402-170406')
         dataset_name (str): Name of the dataset (default: 'plantdoc')
-        num_classes (int): Number of classification classes (default: 8)
-        num_experts (int): Number of experts in MoE model (default: 8)
-        top_k (int): Number of experts selected per input (default: 4)
+        num_classes (int): Number of classification classes (extracted from checkpoint)
+        num_experts (int): Number of experts in MoE model (extracted from checkpoint)
+        context_dim (int): Dimension of context features (extracted from checkpoint)
+        top_k (int): Number of experts selected per input (extracted from checkpoint)
         batch_size (int): Batch size for inference (default: 32)
         shuffle_test (bool): Whether to shuffle test data (default: True)
         confusion_matrix_figsize (tuple): Figure size for confusion matrix plot (default: (12, 10))
@@ -72,6 +74,7 @@ class Config:
         device (str): Computing device ('cuda' or 'cpu')
         
     Methods:
+        update_from_args(): Update config from CLI arguments
         get_checkpoint_path(): Get the path to model checkpoint
         get_report_dir(): Get the directory for saving reports
     """
@@ -79,14 +82,15 @@ class Config:
     # Model configuration
     model_name: str = 'mobilenetv3large_moe'
     type_model: str = 'MoE'
-    run_time: str = 'run_20260402-135005'
+    run_time: str = 'run_20260402-170406'
     dataset_name: str = 'plantdoc'
     
-    # Model architecture parameters
+    # Model architecture parameters (extracted from checkpoint)
     num_classes: int = 8
-    num_experts: int = 6
+    num_experts: int = 8
     context_dim: int = 6
     top_k: int = 2
+    router_mode: str = 'context_aware'
     
     # Data loading parameters
     batch_size: int = 32
@@ -99,6 +103,29 @@ class Config:
     
     # Device configuration
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    @classmethod
+    def update_from_args(cls, args: argparse.Namespace) -> None:
+        """
+        Update configuration from CLI arguments.
+        
+        Args:
+            args (argparse.Namespace): Parsed CLI arguments
+        """
+        if hasattr(args, 'model_name') and args.model_name:
+            cls.model_name = args.model_name
+        if hasattr(args, 'type_model') and args.type_model:
+            cls.type_model = args.type_model
+        if hasattr(args, 'run_time') and args.run_time:
+            cls.run_time = args.run_time
+        if hasattr(args, 'dataset_name') and args.dataset_name:
+            cls.dataset_name = args.dataset_name
+        
+        logger.info(f"Configuration updated from CLI arguments:")
+        logger.info(f"  Model Name: {cls.model_name}")
+        logger.info(f"  Model Type: {cls.type_model}")
+        logger.info(f"  Run Time: {cls.run_time}")
+        logger.info(f"  Dataset Name: {cls.dataset_name}")
     
     @classmethod
     def get_checkpoint_path(cls) -> Path:
@@ -152,6 +179,10 @@ def parse_arguments() -> argparse.Namespace:
     
     Returns:
         argparse.Namespace: Parsed arguments containing:
+            - model_name (str): Model architecture name
+            - type_model (str): Model type (default: MoE)
+            - run_time (str): Training run timestamp
+            - dataset_name (str): Dataset name
             - use_context (bool): Whether to use context features
             - router_mode (str): Router mode for MoE gating
             
@@ -160,14 +191,47 @@ def parse_arguments() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(
         description="Evaluate trained MoE model on test dataset",
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python context_aware_moe_inference.py --run_time run_20260320-155951
+  python context_aware_moe_inference.py --model_name mobilenetv3small_moe --run_time run_20260317-224514
+  python context_aware_moe_inference.py --run_time run_20260320-155951 --router_mode noisy --use_context False
+        """
     )
     
+    # Model configuration arguments
+    parser.add_argument(
+        "--model_name",
+        type=str,
+        default=None,
+        help="Model architecture name (default: mobilenetv3large_moe)"
+    )
+    parser.add_argument(
+        "--type_model",
+        type=str,
+        default=None,
+        help="Model type (default: MoE)"
+    )
+    parser.add_argument(
+        "--run_time",
+        type=str,
+        default=None,
+        required=True,
+        help="Training run timestamp (e.g., run_20260320-155951) - REQUIRED"
+    )
+    parser.add_argument(
+        "--dataset_name",
+        type=str,
+        default=None,
+        help="Dataset name (default: plantdoc)"
+    )
+    
+    # Inference mode arguments
     parser.add_argument(
         "--use_context",
-        type=bool,
+        type=lambda x: x.lower() == 'true',
         default=True,
-        choices=[True, False],
         help="Whether to use context features (default: True)"
     )
     parser.add_argument(
@@ -247,13 +311,15 @@ def get_class_names(test_dataset: object) -> List[str]:
 # Model Loading Functions
 # ============================================================================
 
-def create_model(num_experts: int, top_k: int, router_mode: str) -> MoEModel:
+def create_model(num_classes: int, num_experts: int, top_k: int, context_dim: int, router_mode: str) -> MoEModel:
     """
     Create and initialize MoE model architecture.
     
     Args:
+        num_classes (int): Number of output classes
         num_experts (int): Number of experts in MoE model
         top_k (int): Number of experts selected per input
+        context_dim (int): Dimension of context features
         router_mode (str): Router mode ('context_aware' or 'noisy')
     
     Returns:
@@ -267,8 +333,8 @@ def create_model(num_experts: int, top_k: int, router_mode: str) -> MoEModel:
         logger.info(f"  Num Experts: {num_experts}, Top-K: {top_k}, Router Mode: {router_mode}")
         
         model = MoEModel(
-            context_dim=Config.context_dim,
-            num_classes=Config.num_classes,
+            context_dim=context_dim,
+            num_classes=num_classes,
             num_experts=num_experts,
             top_k=top_k,
             router_mode=router_mode
@@ -284,14 +350,14 @@ def extract_checkpoint_metadata(checkpoint_path: Path) -> Dict[str, any]:
     """
     Extract model hyperparameters from checkpoint metadata.
     
-    Loads checkpoint and extracts num_experts, top_k, and router_mode
+    Loads checkpoint and extracts num_classes, num_experts, context_dim, top_k and router_mode
     with fallback to Config defaults if not available.
     
     Args:
         checkpoint_path (Path): Path to checkpoint file
         
     Returns:
-        Dict: Dictionary containing 'num_experts', 'top_k', 'router_mode'
+        Dict: Dictionary containing 'num_classes', 'num_experts', 'context_dim', 'top_k', 'router_mode'
         
     Raises:
         FileNotFoundError: If checkpoint doesn't exist
@@ -306,16 +372,26 @@ def extract_checkpoint_metadata(checkpoint_path: Path) -> Dict[str, any]:
         
         # Extract metadata with fallbacks
         metadata = {
+            'num_classes': Config.num_classes,
             'num_experts': Config.num_experts,
+            'context_dim': Config.context_dim,
             'top_k': Config.top_k,
             'router_mode': 'context_aware'
         }
         
         # Check for metadata in checkpoint
         if isinstance(checkpoint, dict):
+            if 'num_classes' in checkpoint:
+                metadata['num_classes'] = checkpoint['num_classes']
+                logger.info(f"Loaded num_classes from checkpoint: {metadata['num_classes']}")
+            
             if 'num_experts' in checkpoint:
                 metadata['num_experts'] = checkpoint['num_experts']
                 logger.info(f"Loaded num_experts from checkpoint: {metadata['num_experts']}")
+            
+            if 'context_dim' in checkpoint:
+                metadata['context_dim'] = checkpoint['context_dim']
+                logger.info(f"Loaded context_dim from checkpoint: {metadata['context_dim']}")
             
             if 'top_k' in checkpoint:
                 metadata['top_k'] = checkpoint['top_k']
@@ -325,7 +401,13 @@ def extract_checkpoint_metadata(checkpoint_path: Path) -> Dict[str, any]:
                 metadata['router_mode'] = checkpoint['router_mode']
                 logger.info(f"Loaded router_mode from checkpoint: {metadata['router_mode']}")
         
-        logger.info(f"Using model configuration: {metadata}")
+        logger.info(f"Using model configuration:")
+        logger.info(f"  Num Classes: {metadata['num_classes']}")
+        logger.info(f"  Num Experts: {metadata['num_experts']}")
+        logger.info(f"  Context Dim: {metadata['context_dim']}")
+        logger.info(f"  Top-K: {metadata['top_k']}")
+        logger.info(f"  Router Mode: {metadata['router_mode']}")
+        
         return metadata
         
     except FileNotFoundError as e:
@@ -619,10 +701,12 @@ def main():
     
     Pipeline:
         1. Parse command-line arguments
-        2. Setup data loader and dataset
-        3. Create and load model
-        4. Run inference
-        5. Generate and save reports
+        2. Update Config from CLI arguments
+        3. Setup data loader and dataset
+        4. Extract model hyperparameters from checkpoint
+        5. Create and load model
+        6. Run inference
+        7. Generate and save reports
     
     Raises:
         RuntimeError: If any step in the pipeline fails
@@ -631,14 +715,20 @@ def main():
         logger.info("=" * 80)
         logger.info("Starting MoE Model Evaluation")
         logger.info("=" * 80)
-        logger.info(f"Configuration:")
-        logger.info(f"  Model: {Config.model_name}")
-        logger.info(f"  Run: {Config.run_time}")
-        logger.info(f"  Device: {Config.device}")
-        logger.info(f"  Num Classes: {Config.num_classes}")
         
-        # Parse arguments
+        # Parse CLI arguments
         args = parse_arguments()
+        
+        # Update Config from CLI arguments
+        Config.update_from_args(args)
+        
+        # Display configuration
+        logger.info(f"Inference Configuration:")
+        logger.info(f"  Model: {Config.model_name}")
+        logger.info(f"  Model Type: {Config.type_model}")
+        logger.info(f"  Run: {Config.run_time}")
+        logger.info(f"  Dataset: {Config.dataset_name}")
+        logger.info(f"  Device: {Config.device}")
         logger.info(f"  Use Context: {args.use_context}")
         logger.info(f"  Router Mode: {args.router_mode}")
         
@@ -646,14 +736,23 @@ def main():
         test_loader, test_dataset = setup_test_dataloader(args.use_context)
         target_names = get_class_names(test_dataset)
         
-        # Load checkpoint metadata
+        # Load checkpoint metadata and update Config
         checkpoint_path = Config.get_checkpoint_path()
         metadata = extract_checkpoint_metadata(checkpoint_path)
         
+        # Update Config with extracted hyperparameters
+        Config.num_classes = metadata['num_classes']
+        Config.num_experts = metadata['num_experts']
+        Config.context_dim = metadata['context_dim']
+        Config.top_k = metadata['top_k']
+        Config.router_mode = metadata['router_mode']
+        
         # Create model with parameters from checkpoint
         model = create_model(
+            num_classes=metadata['num_classes'],
             num_experts=metadata['num_experts'],
             top_k=metadata['top_k'],
+            context_dim=metadata['context_dim'],
             router_mode=metadata['router_mode']
         )
         

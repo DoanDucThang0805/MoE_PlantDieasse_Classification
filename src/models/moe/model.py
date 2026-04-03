@@ -8,8 +8,8 @@ multiple specialized experts using a learned gating mechanism.
 import torch
 import torch.nn as nn
 from torchinfo import summary
-from typing import Tuple, Literal, Optional
-from .backbone import Mobilenetv3LargeFeatureExtractor
+from typing import Tuple, Literal, Optional, Union
+from .backbone import Mobilenetv3LargeFeatureExtractor, Mobilenetv3SmallFeatureExtractor
 from .gating import NoisyTopKGating, ContextAwareGating
 import warnings
 
@@ -40,12 +40,13 @@ class MoELayer(nn.Module):
     
     def __init__(
         self, 
-        context_dim: int, 
+        context_dim: Union[int, None],
         model_dim: int, 
         num_experts: int, 
         top_k: int, 
         router_mode: Literal["noisy", "context_aware"]
     ) -> None:
+        
         """Initialize the MoE layer with specified configuration."""
         super().__init__()
         self.num_experts = num_experts
@@ -173,12 +174,13 @@ class MoEModel(nn.Module):
     
     def __init__(
         self, 
-        context_dim: int, 
+        context_dim: Union[int, None],
         num_classes: int, 
         num_experts: int, 
         top_k: int, 
-        router_mode: Literal["noisy", "context_aware"] = "noisy"
+        router_mode: Literal["noisy", "context_aware"]
     ) -> None:
+        
         """Initialize MoE model with specified configuration."""
         super().__init__()
         self.context_dim = context_dim
@@ -223,6 +225,7 @@ class MoEModel(nn.Module):
         
         # Classification head: maps features to class logits
         self.classifier = nn.Linear(model_dim, num_classes)
+
 
     def forward(self, x: torch.Tensor, context: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
@@ -272,93 +275,4 @@ class MoEModel(nn.Module):
         # Input:  [batch_size, model_dim]
         # Output: [batch_size, num_classes]
         class_logits = self.classifier(x)
-        
         return class_logits, clean_router_logits, top_k_indices
-
-# ============================================================================
-# Model Testing and Validation
-# ============================================================================
-
-if __name__ == "__main__":
-    """Test and validate MoE architecture with synthetic data."""
-    
-    # Configuration parameters for testing
-    model_dim: int = 960          # Feature dimension from MobileNetV3 Large
-    num_experts: int = 6          # Number of expert networks
-    top_k: int = 2                # Number of selected experts per sample
-    context_dim: int = 6          # Dimension of context features for routing
-    router_mode = "context_aware"  # Use context-aware routing for testing
-
-    
-    print("=" * 70)
-    print("TEST 1: Mixture of Experts Layer")
-    print("=" * 70)
-    
-    # Create MoE layer instance with synthetic input
-    dummy_input: torch.Tensor = torch.randn(3, model_dim)
-    dummy_context: torch.Tensor = torch.randn(3, context_dim)
-
-    moe_layer: MoELayer = MoELayer(
-        context_dim=context_dim,
-        model_dim=model_dim, 
-        num_experts=num_experts, 
-        top_k=top_k,
-        router_mode=router_mode
-    )
-    
-    # Forward pass through MoE layer
-    moe_output: torch.Tensor
-    clean_router_logits: torch.Tensor
-    expert_indices: torch.Tensor
-    moe_output, clean_router_logits, expert_indices = moe_layer(dummy_input, dummy_context)
-    
-    # Validate output shapes
-    print(f"Input shape:            {dummy_input.shape}")         # Expected: [3, 960]
-    print(f"MoE Output shape:       {moe_output.shape}")           # Expected: [3, 960]
-    print(f"Clean Router Logits shape: {clean_router_logits.shape}")  # Expected: [3, 4]
-    print(f"Top-k Indices shape:    {expert_indices.shape}")       # Expected: [3, 3]
-    print("✓ MoE Layer test passed!\n")
-    
-    print("=" * 70)
-    print("TEST 2: Full MoE Classification Model")
-    print("=" * 70)
-    
-    # Create full MoE model and test with synthetic image batch
-    model: MoEModel = MoEModel(
-        context_dim=6,
-        num_classes=8, 
-        num_experts=num_experts, 
-        top_k=top_k,
-        router_mode=router_mode
-    )
-    
-    # Create synthetic image batch (32 RGB images of 224x224)
-    dummy_image: torch.Tensor = torch.randn(32, 3, 224, 224)
-    dummy_context: torch.Tensor = torch.randn(32, context_dim)  # Context features for routing
-    
-    # Forward pass through full model pipeline
-    class_logits: torch.Tensor
-    clean_router_logits: torch.Tensor
-    expert_indices: torch.Tensor
-    class_logits, clean_router_logits, expert_indices = model(dummy_image, dummy_context)
-    
-    # Validate output shapes
-    print(f"Input image shape:      {dummy_image.shape}")         # Expected: [32, 3, 224, 224]
-    print(f"Class Logits shape:     {class_logits.shape}")        # Expected: [32, 8]
-    print(f"Clean Router Logits shape: {clean_router_logits.shape}")  # Expected: [32, 4]
-    print(f"Top-k Indices shape:    {expert_indices.shape}")      # Expected: [32, 3]
-    print("\n✓ Full MoE Model pipeline test passed!")
-    print("=" * 70)
-    
-    print("\nModel Architecture Summary:")
-    print("=" * 70)
-    summary(
-        model,
-        input_data=(
-            torch.randn(1, 3, 224, 224),
-            torch.randn(1, context_dim)
-        ),
-        col_names=["input_size", "output_size", "num_params", "trainable"]
-    )
-    print(model)
-    print("\nFull Model Structure with router mode:", router_mode)

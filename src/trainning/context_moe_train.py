@@ -12,26 +12,39 @@ Tổng quan:
     - Lưu checkpoint mô hình tốt nhất trong quá trình huấn luyện
 
 Cách sử dụng:
-    python context_moe_train.py --router_mode context_aware --use_context True
+    python context_moe_train.py \
+        --batch_size 32 \
+        --epochs 300 \
+        --num_experts 8 \
+        --top_k 4 \
+        --model_name mobilenetv3large_moe \
+        --type_model MoE \
+        --router_mode context_aware \
+        --use_context True
 
 Các tham số:
+    --batch_size: Kích thước batch cho huấn luyện (mặc định: 32)
+    --epochs: Số epoch để huấn luyện (mặc định: 300)
+    --num_experts: Số lượng experts trong mô hình MoE (mặc định: 8)
+    --top_k: Số lượng experts được chọn cho mỗi input (mặc định: 4)
+    --model_name: Tên kiến trúc mô hình (mặc định: mobilenetv3large_moe)
+    --type_model: Loại mô hình (mặc định: MoE)
     --router_mode: Chế độ router cho MoE gating ('noisy' hoặc 'context_aware')
     --use_context: Có sử dụng context features hay không (True/False)
 
 Tác giả: MoE Team
-Phiên bản: 1.0
+Phiên bản: 2.0
 """
 
 from pathlib import Path
-import numpy as np
 import argparse
 import warnings
+import logging
 
 import torch
 from torchinfo import summary
 from torch.utils.data import DataLoader
 import torch.optim as optim
-from sklearn.utils.class_weight import compute_class_weight
 
 from utils.context_moe_trainner import ContextAwareMoETrainer
 from dataset.plantdoc_dataset import build_datasets
@@ -41,240 +54,322 @@ from loss.loss_fn import MoELoss
 # Tắt cảnh báo để output sạch hơn
 warnings.filterwarnings("ignore")
 
+# Configure logging for production use
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 
 # ============================================================================
-# Cấu Hình Mô Hình
+# Configuration Management
 # ============================================================================
 
 class Config:
     """
-    Quản lý toàn bộ cấu hình cho quá trình huấn luyện mô hình MoE.
+    Dynamic configuration management for MoE model training.
+    
+    Configuration values are set from command-line arguments,
+    allowing flexible model training with different parameters.
     
     Attributes:
-        batch_size (int): Kích thước batch cho huấn luyện (mặc định: 32)
-        shuffle_train (bool): Có xáo trộn dữ liệu huấn luyện hay không (mặc định: True)
-        shuffle_val (bool): Có xáo trộn dữ liệu kiểm định hay không (mặc định: False)
-        num_experts (int): Số lượng experts trong mô hình MoE (mặc định: 8)
-        top_k (int): Số lượng experts được chọn cho mỗi input (mặc định: 4)
-        context_feature_dim (int): Chiều của context features (mặc định: 6)
-        num_epochs (int): Số epoch để huấn luyện (mặc định: 300)
-        learning_rate (float): Tốc độ học cho optimizer (mặc định: 0.001)
-        weight_decay (float): Hệ số weight decay (mặc định: 0.001)
-        moe_loss_alpha (float): Hệ số cân bằng cho hàm loss phụ (mặc định: 0.05)
-        device (str): Thiết bị để chạy mô hình ('cuda' hoặc 'cpu')
-        checkpoint_parent (str): Thư mục cha cho checkpoints (mặc định: 'checkpoints')
-        checkpoint_subdir (str): Đường dẫn con cho checkpoints
+        batch_size (int): Batch size for training
+        num_epochs (int): Number of training epochs
+        num_experts (int): Number of experts in MoE model
+        top_k (int): Number of experts selected per input
+        model_name (str): Name of the model architecture
+        type_model (str): Type of model ('MoE', 'pretrained', etc.)
+        context_feature_dim (int): Dimension of context features
+        shuffle_train (bool): Whether to shuffle training data
+        shuffle_val (bool): Whether to shuffle validation data
+        learning_rate (float): Learning rate for optimizer
+        weight_decay (float): Weight decay for optimizer
+        moe_loss_alpha (float): Balance coefficient for auxiliary loss
+        device (str): Computing device ('cuda' or 'cpu')
+        checkpoint_parent (str): Parent directory for checkpoints
     
     Methods:
-        get_checkpoint_dir(): Lấy đường dẫn thư mục checkpoint và tạo nó nếu chưa tồn tại
+        get_checkpoint_dir(): Get checkpoint directory path
+        update_from_args(): Update config from argparse arguments
     """
     
-    # Tham số tải dữ liệu
-    batch_size = 32
-    shuffle_train = True
-    shuffle_val = False
+    # Default values
+    batch_size: int = 32
+    num_epochs: int = 300
+    num_experts: int = 6
+    top_k: int = 4
+    model_name: str = 'mobilenetv3large_moe'
+    type_model: str = 'MoE'
     
-    # Tham số kiến trúc mô hình
-    num_experts = 6
-    top_k = 2  # Số lượng expert được chọn cho mỗi input
-    context_feature_dim = 6
+    # Fixed parameters
+    context_feature_dim: int = 6
+    shuffle_train: bool = True
+    shuffle_val: bool = False
+    learning_rate: float = 0.001
+    weight_decay: float = 0.001
+    moe_loss_alpha: float = 0.05
     
-    # Siêu tham số huấn luyện
-    num_epochs = 300
-    learning_rate = 0.001
-    weight_decay = 0.001
-    moe_loss_alpha = 0.05  # Hệ số cân bằng cho hàm loss phụ
+    # Device configuration
+    device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    checkpoint_parent: str = "checkpoints"
     
-    # Tham số thiết bị
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    
-    # Đường dẫn
-    checkpoint_parent = "checkpoints"
-    checkpoint_subdir = "plantdoc/MoE/mobilenetv3large_moe"
-    
+
+    @classmethod
+    def update_from_args(cls, args: argparse.Namespace) -> None:
+        """
+        Update configuration from command-line arguments.
+        
+        All CLI arguments automatically update corresponding Config class attributes.
+        Example: --batch_size 64 → Config.batch_size = 64
+        
+        Args:
+            args (argparse.Namespace): Parsed command-line arguments
+        """
+        cls.batch_size = args.batch_size
+        cls.num_epochs = args.epochs
+        cls.num_experts = args.num_experts
+        cls.top_k = args.top_k
+        cls.model_name = args.model_name
+        cls.type_model = args.type_model
+
     @classmethod
     def get_checkpoint_dir(cls) -> Path:
         """
-        Lấy đường dẫn thư mục checkpoint và tạo nó nếu chưa tồn tại.
-        
-        Hàm này xác định vị trí của thư mục checkpoint dựa trên cấu hình được thiết lập
-        và tự động tạo thư mục nếu nó chưa tồn tại.
+        Get checkpoint directory path and create if not exists.
         
         Returns:
-            Path: Đối tượng Path đến thư mục checkpoint
+            Path: Path to checkpoint directory
             
         Raises:
-            PermissionError: Nếu không có quyền tạo thư mục
-            OSError: Nếu có lỗi hệ thống khi tạo thư mục
-            
-        Example:
-            >>> checkpoint_dir = Config.get_checkpoint_dir()
-            >>> print(checkpoint_dir)
-            /path/to/checkpoints/plantdoc/MoE/mobilenetv3large_moe
+            PermissionError: If no permission to create directory
+            OSError: If system error when creating directory
         """
         output_dir = Path.cwd().parents[0]
-        checkpoint_dir = output_dir / cls.checkpoint_parent / cls.checkpoint_subdir
+        checkpoint_subdir = f"plantdoc/{cls.type_model}/{cls.model_name}"
+        checkpoint_dir = output_dir / cls.checkpoint_parent / checkpoint_subdir
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Checkpoint directory: {checkpoint_dir}")
         return checkpoint_dir
 
 
 def parse_arguments() -> argparse.Namespace:
     """
-    Phân tích các tham số dòng lệnh.
+    Parse command-line arguments for training configuration.
     
-    Hàm này xử lý các tham số được truyền từ dòng lệnh khi chạy script.
+    Defines and parses all CLI arguments for flexible model training.
     
     Returns:
-        argparse.Namespace: Đối tượng chứa các tham số được phân tích
-            - router_mode (str): Chế độ router ('noisy' hoặc 'context_aware')
-            - use_context (bool): Có sử dụng context features hay không
+        argparse.Namespace: Parsed arguments containing:
+            - batch_size (int): Batch size for training
+            - epochs (int): Number of training epochs
+            - num_experts (int): Number of experts in MoE
+            - top_k (int): Number of experts selected per input
+            - model_name (str): Model architecture name
+            - type_model (str): Model type
+            - router_mode (str): Router mode for MoE gating
+            - use_context (bool): Whether to use context features
             
     Example:
         >>> args = parse_arguments()
-        >>> print(args.router_mode)
-        'context_aware'
-        >>> print(args.use_context)
-        True
+        >>> print(f"Batch size: {args.batch_size}, Epochs: {args.epochs}")
     """
     parser = argparse.ArgumentParser(
-        description="Huấn luyện mô hình MoE cho phân loại bệnh thực vật"
+        description="Train MoE model for plant disease classification",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+    Examples:
+    python context_moe_train.py --batch_size 32 --epochs 300
+    python context_moe_train.py --num_experts 8 --top_k 4 --model_name mobilenetv3large_moe
+    python context_moe_train.py --batch_size 64 --epochs 200 --num_experts 6 --top_k 2
+            """
     )
+    
+    # Data loading parameters
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=32,
+        help="Batch size for training (default: 32)"
+    )
+    
+    # Training parameters
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=300,
+        help="Number of epochs for training (default: 300)"
+    )
+    
+    # Model architecture parameters
+    parser.add_argument(
+        "--num_experts",
+        type=int,
+        default=6,
+        help="Number of experts in MoE model (default: 6)"
+    )
+    
+    parser.add_argument(
+        "--top_k",
+        type=int,
+        default=2,
+        help="Number of experts selected per input (default: 2)"
+    )
+    
+    parser.add_argument(
+        "--model_name",
+        type=str,
+        default="mobilenetv3large_moe",
+        help="Model architecture name (default: mobilenetv3large_moe)"
+    )
+    
+    parser.add_argument(
+        "--type_model",
+        type=str,
+        default="MoE",
+        choices=["MoE", "pretrained", "other"],
+        help="Model type (default: MoE)"
+    )
+    
+    # Router configuration
     parser.add_argument(
         "--router_mode",
         type=str,
-        default="noisy",
+        default="context_aware",
         choices=["noisy", "context_aware"],
-        help="Router mode for MoE gating"
+        help="Router mode for MoE gating (default: context_aware)"
     )
+    
+    # Context features
     parser.add_argument(
         "--use_context",
         type=bool,
         default=True,
         choices=[True, False],
-        help="Whether to use context features in the MoE model"
+        help="Whether to use context features (default: True)"
     )
+    
     return parser.parse_args()
 
 
-def setup_dataloaders(use_context: bool) -> tuple:
+def setup_dataloaders(use_context: bool, batch_size: int) -> tuple:
     """
-    Chuẩn bị các DataLoader cho tập huấn luyện, kiểm định và kiểm thử.
+    Setup DataLoaders for training, validation and test sets.
     
-    Hàm này thực hiện load tập dữ liệu, tạo DataLoaders, tính toán trọng số lớp
-    cân bằng, và xác định số lượng lớp phân loại.
+    Loads datasets, creates DataLoaders, computes class weights,
+    and determines number of classification classes.
     
     Args:
-        use_context (bool): Có sử dụng context features hay không
+        use_context (bool): Whether to load context features
+        batch_size (int): Batch size for DataLoaders
     
     Returns:
-        tuple: Tuple chứa:
-            - train_loader (DataLoader): DataLoader cho tập huấn luyện
-            - val_loader (DataLoader): DataLoader cho tập kiểm định
-            - num_classes (int): Số lượng lớp phân loại
+        tuple: Tuple containing:
+            - train_loader (DataLoader): DataLoader for training set
+            - val_loader (DataLoader): DataLoader for validation set
+            - num_classes (int): Number of classification classes
             
     Note:
-        - Tập kiểm định không được xáo trộn (shuffle=False)
-        - Tập huấn luyện được xáo trộn (shuffle=True)
-        - In ra số lượng lớp được phát hiện
+        - Validation set is not shuffled (shuffle=False)
+        - Training set is shuffled (shuffle=True)
+        - Logs detected number of classes
         
     Example:
-        >>> train_loader, val_loader, num_classes = setup_dataloaders(True)
-        >>> print(f"Số lượng lớp: {num_classes}")
-        Số lượng lớp: 10
+        >>> train_loader, val_loader, num_classes = setup_dataloaders(True, 32)
+        >>> print(f"Number of classes: {num_classes}")
     """
-    train_dataset, validation_dataset, test_dataset = build_datasets(use_context)
+    train_dataset, validation_dataset, _ = build_datasets(use_context)
     
     train_loader = DataLoader(
         train_dataset,
-        batch_size=Config.batch_size,
+        batch_size=batch_size,
         shuffle=Config.shuffle_train
     )
     
     val_loader = DataLoader(
         validation_dataset,
-        batch_size=Config.batch_size,
+        batch_size=batch_size,
         shuffle=Config.shuffle_val
     )
     
     labels = train_dataset.labels
     num_classes = len(set(labels))
-    print(f"Số lượng lớp: {num_classes}")
-    
-    # Tính toán trọng số lớp cân bằng
-    class_weights = compute_class_weight(
-        class_weight='balanced',
-        classes=np.arange(num_classes),
-        y=labels
-    )
+    logger.info(f"Number of classes detected: {num_classes}")
     
     return train_loader, val_loader, num_classes
 
 
-def create_model(num_classes: int, router_mode: str) -> MoEModel:
+def _display_model_summary(model: MoEModel, router_mode: str) -> None:
     """
-    Tạo và khởi tạo mô hình MoE.
-    
-    Hàm này khởi tạo mô hình Mixture of Experts với các cấu hình được chỉ định.
-    Mô hình bao gồm nhiều experts và một gating network để chọn experts.
+    Display model architecture summary (helper function).
     
     Args:
-        num_classes (int): Số lượng lớp phân loại
-        router_mode (str): Chế độ router, có thể là 'noisy' hoặc 'context_aware'
+        model (MoEModel): Model to summarize
+        router_mode (str): Router mode ('context_aware' or 'noisy')
+    """
+    if router_mode == "context_aware":
+        summary(model, input_data=(torch.randn(1, 3, 224, 224), torch.randn(1, Config.context_feature_dim)), 
+                col_names=["input_size", "output_size", "num_params", "trainable"])
+    else:
+        summary(model, input_data=torch.randn(1, 3, 224, 224), 
+                col_names=["input_size", "output_size", "num_params", "trainable"])
+
+
+def create_model(num_classes: int, router_mode: str, num_experts: int, top_k: int) -> MoEModel:
+    """
+    Create and initialize MoE model architecture.
+    
+    Initializes a Mixture of Experts model with specified configuration.
+    Model includes multiple experts and a gating network for expert selection.
+    
+    Args:
+        num_classes (int): Number of classification classes
+        router_mode (str): Router mode, either 'noisy' or 'context_aware'
+        num_experts (int): Number of experts in MoE
+        top_k (int): Number of experts selected per input
     
     Returns:
-        MoEModel: Mô hình MoE được khởi tạo với các tham số từ Config
+        MoEModel: Initialized MoE model with Config parameters
         
     Raises:
-        ValueError: Nếu router_mode không hợp lệ
-        
-    Example:
-        >>> model = create_model(num_classes=10, router_mode='context_aware')
-        >>> print(f"Tổng tham số mô hình: {sum(p.numel() for p in model.parameters())}")
-    
-    Note:
-        Sử dụng cấu hình từ Config class:
-        - context_feature_dim: Chiều của context features
-        - num_experts: Số lượng experts
-        - top_k: Số experts được chọn cho mỗi input
+        RuntimeError: If model creation fails
     """
-    model = MoEModel(
-        context_dim=Config.context_feature_dim,
-        num_classes=num_classes,
-        num_experts=Config.num_experts,
-        top_k=Config.top_k,
-        router_mode=router_mode
-    )
-    if model.router_mode == "context_aware":
-        summary(model, input_data=(torch.randn(1, 3, 224, 224), torch.randn(1, Config.context_feature_dim)), col_names=["input_size", "output_size", "num_params", "trainable"])
-    else:
-        summary(model, input_data=torch.randn(1, 3, 224, 224), col_names=["input_size", "output_size", "num_params", "trainable"])
-    return model
+    try:
+        logger.info(f"Creating MoE model with {num_experts} experts, top_k={top_k}")
+        
+        model = MoEModel(
+            context_dim=Config.context_feature_dim,
+            num_classes=num_classes,
+            num_experts=num_experts,
+            top_k=top_k,
+            router_mode=router_mode
+        )
+        
+        _display_model_summary(model, router_mode)
+        return model
+    except Exception as e:
+        logger.error(f"Failed to create model: {e}")
+        raise RuntimeError(f"Model creation failed: {e}") from e
 
 
 def setup_training_components(model: MoEModel) -> tuple:
     """
-    Thiết lập hàm loss và optimizer cho huấn luyện.
+    Setup loss function and optimizer for training.
     
-    Hàm này khởi tạo MoELoss (hàm loss tùy chỉnh cho MoE) và optimizer Adam
-    để tối ưu hóa các tham số mô hình.
+    Initializes MoELoss (custom loss for MoE) and Adam optimizer
+    to optimize model parameters.
     
     Args:
-        model (MoEModel): Mô hình cần tối ưu hóa
+        model (MoEModel): Model to optimize
     
     Returns:
-        tuple: Tuple chứa:
-            - criterion (MoELoss): Hàm loss cho MoE
-            - optimizer (optim.Adam): Optimizer Adam
+        tuple: Tuple containing:
+            - criterion (MoELoss): Loss function for MoE
+            - optimizer (optim.Adam): Adam optimizer
             
     Note:
-        - Loss function bao gồm hệ số cân bằng (alpha) từ Config
-        - Optimizer sử dụng learning_rate và weight_decay từ Config
-        
-    Example:
-        >>> model = create_model(10, 'context_aware')
-        >>> criterion, optimizer = setup_training_components(model)
-        >>> print(f"Optimizer: {optimizer.__class__.__name__}")
-        Optimizer: Adam
+        - Loss function includes balance coefficient (alpha) from Config
+        - Optimizer uses learning_rate and weight_decay from Config
     """
     criterion = MoELoss(alpha=Config.moe_loss_alpha)
     
@@ -292,43 +387,47 @@ def create_trainer(
     val_loader: DataLoader,
     model: MoEModel,
     criterion,
-    optimizer
+    optimizer,
+    num_epochs: int,
+    batch_size: int
 ) -> ContextAwareMoETrainer:
     """
-    Tạo trainer để thực thi quá trình huấn luyện.
+    Create trainer for model training execution.
     
-    Hàm này khởi tạo ContextAwareMoETrainer với tất cả các thành phần cần thiết
-    để bắt đầu quá trình huấn luyện mô hình.
+    Initializes ContextAwareMoETrainer with all necessary components
+    for starting the model training process.
     
     Args:
-        train_loader (DataLoader): DataLoader cho tập huấn luyện
-        val_loader (DataLoader): DataLoader cho tập kiểm định
-        model (MoEModel): Mô hình để huấn luyện
-        criterion: Hàm loss để tính toán sai số
-        optimizer: Optimizer để cập nhật tham số mô hình
+        train_loader (DataLoader): DataLoader for training set
+        val_loader (DataLoader): DataLoader for validation set
+        model (MoEModel): Model to train
+        criterion: Loss function for error computation
+        optimizer: Optimizer for parameter updates
+        num_epochs (int): Number of epochs for training
+        batch_size (int): Batch size for training
     
     Returns:
-        ContextAwareMoETrainer: Trainer object được khởi tạo sẵn sàng cho huấn luyện
+        ContextAwareMoETrainer: Trainer object ready for training execution
         
     Note:
-        - Trainer sẽ tự động tạo thư mục checkpoint nếu chưa tồn tại
-        - Sử dụng các tham số từ Config class (num_epochs, device, batch_size)
+        - Trainer will automatically create checkpoint directory if not exists
+        - Uses device from Config class
         
     Example:
-        >>> trainer = create_trainer(train_loader, val_loader, model, criterion, optimizer)
-        >>> trainer.train()  # Bắt đầu huấn luyện
+        >>> trainer = create_trainer(train_loader, val_loader, model, criterion, optimizer, 300, 32)
+        >>> trainer.train()  # Start training
     """
     checkpoint_dir = Config.get_checkpoint_dir()
     
     trainer = ContextAwareMoETrainer(
-        num_epochs=Config.num_epochs,
+        num_epochs=num_epochs,
         device=Config.device,
         train_loader=train_loader,
         val_loader=val_loader,
         model=model,
         criterion=criterion,
         optimizer=optimizer,
-        batch_size=Config.batch_size,
+        batch_size=batch_size,
         checkpoint_dir=checkpoint_dir
     )
     
@@ -337,71 +436,97 @@ def create_trainer(
 
 def main():
     """
-    Hàm chính: điều phối toàn bộ quá trình huấn luyện.
+    Main execution function orchestrating the entire training pipeline.
     
-    Hàm này là điểm vào chính của script. Nó điều phối tất cả các bước huấn luyện:
-    1. Phân tích tham số dòng lệnh
-    2. Chuẩn bị dữ liệu (load datasets, tạo DataLoaders)
-    3. Tạo mô hình MoE
-    4. Thiết lập loss function và optimizer
-    5. Tạo trainer
-    6. Thực thi quá trình huấn luyện
+    Function is the main entry point of the script. It orchestrates all training steps:
+    1. Parse command-line arguments
+    2. Update Config from arguments
+    3. Prepare data (load datasets, create DataLoaders)
+    4. Create MoE model
+    5. Setup loss function and optimizer
+    6. Create trainer
+    7. Execute training process
     
     Flow:
-        parse_arguments() -> setup_dataloaders() -> create_model() ->
-        setup_training_components() -> create_trainer() -> trainer.train()
+        parse_arguments() -> Config.update_from_args() -> setup_dataloaders() ->
+        create_model() -> setup_training_components() -> create_trainer() -> trainer.train()
     
     Returns:
         None
         
     Note:
-        - Mô hình sẽ được di chuyển đến device được chỉ định (GPU/CPU)
-        - Checkpoints sẽ được lưu trong quá trình huấn luyện
-        - Quá trình huấn luyện có thể mất thời gian tùy thuộc vào dữ liệu và cấu hình
+        - Model will be moved to specified device (GPU/CPU)
+        - Checkpoints will be saved during training
+        - Training time depends on data and configuration
         
     Example:
-        Để chạy script từ dòng lệnh:
-        >>> python context_moe_train.py --router_mode context_aware --use_context True
+        Running script from command line:
+        >>> python context_moe_train.py --batch_size 32 --epochs 300 --num_experts 8 --top_k 4
     """
-    # Phân tích tham số
-    args = parse_arguments()
-    
-    # Chuẩn bị dữ liệu
-    train_loader, val_loader, num_classes = setup_dataloaders(args.use_context)
-    
-    # Tạo mô hình
-    model = create_model(num_classes, args.router_mode)
-    model.to(Config.device)
-    
-    # Thiết lập loss function và optimizer
-    criterion, optimizer = setup_training_components(model)
-    
-    # Tạo trainer
-    trainer = create_trainer(
-        train_loader=train_loader,
-        val_loader=val_loader,
-        model=model,
-        criterion=criterion,
-        optimizer=optimizer
-    )
-    
-    print("======== Training Config ========")
-    print(f"Router mode: {args.router_mode}")
-    print(f"Use context: {args.use_context}")
-    print(f"Experts: {Config.num_experts}")
-    print(f"Top-k: {Config.top_k}")
-    print(f"Epochs: {Config.num_epochs}")
-    print(f"Device: {Config.device}")
-    print("=================================")
-
-    # Thực thi huấn luyện
-    trainer.train()
+    try:
+        # Parse command-line arguments
+        args = parse_arguments()
+        
+        # Update Config from arguments
+        Config.update_from_args(args)
+        
+        # Log configuration
+        logger.info("=" * 80)
+        logger.info("Starting MoE Model Training")
+        logger.info("=" * 80)
+        logger.info(
+            f"\nTraining Configuration:"
+            f"\n  Batch Size: {Config.batch_size}"
+            f"\n  Epochs: {Config.num_epochs}"
+            f"\n  Num Experts: {Config.num_experts}"
+            f"\n  Top-K: {Config.top_k}"
+            f"\n  Model: {Config.model_name} ({Config.type_model})"
+            f"\n  Router Mode: {args.router_mode}"
+            f"\n  Use Context: {args.use_context}"
+            f"\n  Device: {Config.device}"
+            f"\n  Learning Rate: {Config.learning_rate}"
+            f"\n  Weight Decay: {Config.weight_decay}"
+            f"\n  MoE Loss Alpha: {Config.moe_loss_alpha}"
+        )
+        logger.info("=" * 80)
+        
+        # Setup data
+        train_loader, val_loader, num_classes = setup_dataloaders(args.use_context, Config.batch_size)
+        
+        # Create model
+        model = create_model(
+            num_classes=num_classes,
+            router_mode=args.router_mode,
+            num_experts=Config.num_experts,
+            top_k=Config.top_k
+        )
+        model.to(Config.device)
+        
+        # Setup loss function and optimizer
+        criterion, optimizer = setup_training_components(model)
+        
+        # Create trainer
+        trainer = create_trainer(
+            train_loader=train_loader,
+            val_loader=val_loader,
+            model=model,
+            criterion=criterion,
+            optimizer=optimizer,
+            num_epochs=Config.num_epochs,
+            batch_size=Config.batch_size
+        )
+        
+        # Execute training
+        trainer.train()
+        
+        logger.info("=" * 80)
+        logger.info("Training Completed Successfully")
+        logger.info("=" * 80)
+        
+    except Exception as e:
+        logger.critical(f"Fatal error during training: {e}", exc_info=True)
+        raise
 
 
 if __name__ == "__main__":
-    """
-    Entry point của script.
-    
-    Chạy hàm main() khi script được chạy trực tiếp (không được import như module).
-    """
     main()

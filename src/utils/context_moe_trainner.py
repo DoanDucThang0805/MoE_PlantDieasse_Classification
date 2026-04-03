@@ -152,8 +152,10 @@ class ContextAwareMoETrainer:
             "val_loss_history": self.val_loss_history,
             "train_acc_history": self.train_acc_history,
             "val_acc_history": self.val_acc_history,
+            "num_classes": self.model.num_classes,
             "num_experts": self.model.num_experts,
             "top_k": self.model.top_k,
+            "context_dim": self.model.context_dim,
             "router_mode": self.model.router_mode
         }, path)
         logger.info(f"Saved checkpoint: {path}")

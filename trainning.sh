@@ -5,13 +5,13 @@ source venv/bin/activate
 
 cd src
 
-# PYTHONPATH=src python -m trainning.mobilenetv2_train
 clear
-PYTHONPATH=src python -m trainning.context_moe_train --router_mode="context_aware" --use_context=True
-
-
-
-
-# PYTHONPATH=src python -m trainning.mobilenetv3_small_train
-
-# PYTHONPATH=src python -m trainning.moe_train
+python -m trainning.context_moe_train 
+--batch_size 32 
+--epochs 300 
+--num_experts 6
+--top_k 2
+--model_name mobilenetv3large_moe 
+--type_model MoE 
+--router_mode context_aware 
+--use_context True
