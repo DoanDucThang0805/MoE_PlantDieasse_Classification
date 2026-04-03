@@ -170,7 +170,7 @@ bash trainning.sh \
   --num_experts 6 \
   --top_k 2 \
   --model_name mobilenetv3small_moe \
-  --router_mode noisy \
+  --router_mode context_aware \
   --use_context False
 ```
 
@@ -221,11 +221,6 @@ Config.router_mode = 'context_aware'
 #### 1. **MoE Model Inference (Context-Aware)**
 
 ```bash
-# Basic inference (extracts hyperparameters from checkpoint)
-python -m inference.moe.context_aware_moe_inference \
-  --run_time run_20260320-155951
-
-# Full parameters
 python -m inference.moe.context_aware_moe_inference \
   --model_name mobilenetv3large_moe \
   --type_model MoE \
@@ -233,12 +228,6 @@ python -m inference.moe.context_aware_moe_inference \
   --dataset_name plantdoc \
   --use_context True \
   --router_mode context_aware
-
-# Without context, noisy router
-python -m inference.moe.context_aware_moe_inference \
-  --run_time run_20260320-155951 \
-  --use_context False \
-  --router_mode noisy
 ```
 
 **CLI Parameters:**
@@ -407,82 +396,4 @@ model_state = checkpoint['model_state_dict']
 confusion_matrix.png          # Heatmap of model predictions
 classification_report_heatmap.png  # Precision/Recall scores
 ```
-
 ---
-
-## Advanced Configuration
-
-### Custom Model Training
-```bash
-# For other backbones
-python -m trainning.mobilenetv3_small_train --batch_size 64
-python -m trainning.resnet50_train --epochs 250
-python -m trainning.efficientnetb4_train --batch_size 128
-```
-
-### Router Modes Comparison
-```bash
-# Context-Aware (recommended)
---router_mode context_aware --use_context True
-
-# Noisy Top-K
---router_mode noisy --use_context False
-```
-
-### Batch Size Optimization
-```bash
-# Smaller GPU memory
-bash trainning.sh --batch_size 16
-
-# Larger batch (requires more VRAM)
-bash trainning.sh --batch_size 128
-```
-
----
-
-## Troubleshooting
-
-### CUDA Out of Memory
-```bash
-# Reduce batch size
-bash trainning.sh --batch_size 16
-```
-
-### Checkpoint Not Found
-```bash
-# Verify run_time matches checkpoint directory
-# Check: reports/plantdoc/MoE/{model_name}/{run_time}/
-python -m inference.moe.context_aware_moe_inference --run_time run_20260320-155951
-```
-
-### Context Features Not Available
-```bash
-# Ensure use_context=True matches training
-python -m inference.moe.context_aware_moe_inference \
-  --run_time {run_time} \
-  --use_context True
-```
-
----
-
-## Dependencies
-
-See `requirements.txt` for complete list. Key packages:
-- **PyTorch**: Deep learning framework
-- **torchinfo**: Model summary
-- **scikit-learn**: Metrics and evaluation
-- **matplotlib/seaborn**: Visualization
-- **pandas/numpy**: Data processing
-- **Pillow**: Image processing
-
----
-
-## Author & Version
-- **Project**: MoE Plant Disease Classification
-- **Version**: 2.0
-- **Last Updated**: April 2026
-
----
-
-## License & Credits
-Plant disease classification using Mixture of Experts architecture on PlantDoc dataset.
