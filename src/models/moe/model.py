@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from torchinfo import summary
 from typing import Tuple, Literal, Optional, Union
-from .backbone import Mobilenetv3LargeFeatureExtractor, Mobilenetv3SmallFeatureExtractor
+from .backbone import Mobilenetv3LargeFeatureExtractor, Mobilenetv3SmallFeatureExtractor, EfficientNetV2MFeatureExtractor
 from .gating import NoisyTopKGating, ContextAwareGating
 import warnings
 
@@ -195,7 +195,7 @@ class MoEModel(nn.Module):
         self.use_context = use_context
 
         # Create feature extractor from MobileNetV3 Small backbone
-        self.feature_extractor = Mobilenetv3SmallFeatureExtractor(
+        self.feature_extractor = EfficientNetV2MFeatureExtractor(
             pretrained=True, 
             freeze_backbone=False
         )
