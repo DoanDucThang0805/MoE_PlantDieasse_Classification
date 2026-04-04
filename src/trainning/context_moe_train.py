@@ -104,6 +104,7 @@ class Config:
     
     # Fixed parameters
     context_feature_dim: int = 6
+    use_context: bool = True
     shuffle_train: bool = True
     shuffle_val: bool = False
     learning_rate: float = 0.001
@@ -132,6 +133,7 @@ class Config:
         cls.top_k = args.top_k
         cls.model_name = args.model_name
         cls.type_model = args.type_model
+        cls.use_context = args.use_context
 
     @classmethod
     def get_checkpoint_dir(cls) -> Path:
@@ -342,7 +344,8 @@ def create_model(num_classes: int, router_mode: str, num_experts: int, top_k: in
             num_classes=num_classes,
             num_experts=num_experts,
             top_k=top_k,
-            router_mode=router_mode
+            router_mode=router_mode,
+            use_context=Config.use_context
         )
         
         _display_model_summary(model, router_mode)

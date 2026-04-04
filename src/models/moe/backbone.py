@@ -129,19 +129,41 @@ class MobileViTV2FeatureExtractor(nn.Module):
         return self.backbone(x)
 
 
+class EfficientNetB4FeatureExtractor(nn.Module):
+
+    def __init__(self, pretrained=True):
+        super().__init__()
+        model = models.efficientnet_b4(pretrained=pretrained)
+        self.features = model.features
+        self.pool = nn.AdaptiveAvgPool2d(1)
+        self.out_dim = 1792
+
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.pool(x)
+        x = x.flatten(1)
+        return x
+
+
 if __name__ == "__main__":
     dummy_input = torch.rand((1, 3, 224, 224))
     mobilenetv3smalloutput = Mobilenetv3SmallFeatureExtractor()(dummy_input)
     vitb16output = VitB16FeatureExtractor()(dummy_input)
     mobilevitv1 = MobileViTV1FeatureExtractor()(dummy_input)
     mobilevitv2 = MobileViTV2FeatureExtractor()(dummy_input)
-    print(mobilenetv3smalloutput.shape)
-    print(vitb16output.shape)
-    print(mobilevitv1.shape)
-    print(mobilevitv2.shape)
+    efficientnetb4 = EfficientNetB4FeatureExtractor()(dummy_input)
+
+    print("mobilenetv3smalloutput.shape:", mobilenetv3smalloutput.shape)
+    print("vitb16output.shape:", vitb16output.shape)
+    print("mobilevitv1.shape:", mobilevitv1.shape)
+    print("mobilevitv2.shape:", mobilevitv2.shape)
+    print("efficientnetb4.shape:", efficientnetb4.shape)
+
     from torchinfo import summary
     summary(Mobilenetv3SmallFeatureExtractor(), (1,3,224,224))
     summary(Mobilenetv3LargeFeatureExtractor(), (1,3,224,224))
     summary(VitB16FeatureExtractor(), (1,3,224,224))
     summary(MobileViTV1FeatureExtractor(), (1,3,224,224))
     summary(MobileViTV2FeatureExtractor(), (1,3,224,224))
+    summary(EfficientNetB4FeatureExtractor(), (1,3,224,224))

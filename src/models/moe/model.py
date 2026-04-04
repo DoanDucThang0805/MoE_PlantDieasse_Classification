@@ -44,7 +44,8 @@ class MoELayer(nn.Module):
         model_dim: int, 
         num_experts: int, 
         top_k: int, 
-        router_mode: Literal["noisy", "context_aware"]
+        router_mode: Literal["noisy", "context_aware"],
+        use_context: bool
     ) -> None:
         
         """Initialize the MoE layer with specified configuration."""
@@ -52,17 +53,19 @@ class MoELayer(nn.Module):
         self.num_experts = num_experts
         self.top_k = top_k
         self.router_mode = router_mode
+        self.use_context = use_context
+
         if not (0 < self.top_k <= self.num_experts):
             raise ValueError("top_k must be a positive integer less than or equal to num_experts")
 
         # Initialize gating network based on routing strategy
-        if self.router_mode == "noisy":
+        if self.router_mode == "noisy" and not self.use_context:
             self.gating = NoisyTopKGating(
                 model_dim=model_dim,
                 num_experts=num_experts, 
                 top_k=top_k
             )
-        elif self.router_mode == "context_aware":
+        elif self.router_mode == "context_aware" and self.use_context:
             self.gating = ContextAwareGating(
                 model_dim=model_dim,
                 context_dim=context_dim,
@@ -178,7 +181,8 @@ class MoEModel(nn.Module):
         num_classes: int, 
         num_experts: int, 
         top_k: int, 
-        router_mode: Literal["noisy", "context_aware"]
+        router_mode: Literal["noisy", "context_aware"],
+        use_context: bool
     ) -> None:
         
         """Initialize MoE model with specified configuration."""
@@ -188,9 +192,10 @@ class MoEModel(nn.Module):
         self.num_experts = num_experts
         self.top_k = top_k
         self.router_mode = router_mode
+        self.use_context = use_context
 
-        # Create feature extractor from MobileNetV3 Large backbone
-        self.feature_extractor = Mobilenetv3LargeFeatureExtractor(
+        # Create feature extractor from MobileNetV3 Small backbone
+        self.feature_extractor = Mobilenetv3SmallFeatureExtractor(
             pretrained=True, 
             freeze_backbone=False
         )
@@ -201,7 +206,7 @@ class MoEModel(nn.Module):
         self.post_moe_norm = nn.LayerNorm(model_dim)  # After expert processing
 
         # Initialize MoE layer based on selected routing strategy
-        if router_mode == "noisy":
+        if self.router_mode == "noisy" and not self.use_context:
             self.moe_layer = MoELayer(
                 context_dim=context_dim,
                 model_dim=model_dim, 
@@ -209,18 +214,19 @@ class MoEModel(nn.Module):
                 top_k=top_k, 
                 router_mode="noisy"
             )
-        elif router_mode == "context_aware":
+        elif self.router_mode == "context_aware" and self.use_context:
             self.moe_layer = MoELayer(
                 context_dim=context_dim,
                 model_dim=model_dim, 
                 num_experts=num_experts, 
                 top_k=top_k, 
-                router_mode="context_aware"
+                router_mode="context_aware",
+                use_context=use_context
             )
         else:
             raise ValueError(
-                f"Invalid router_mode: {router_mode}. "
-                "Must be 'noisy' or 'context_aware'."
+                f"Invalid router_mode: {self.router_mode} with use_context={self.use_context}. "
+                "Must be 'noisy' with use_context=False or 'context_aware' with use_context=True."
             )
         
         # Classification head: maps features to class logits

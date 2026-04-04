@@ -91,6 +91,7 @@ class Config:
     context_dim: int = 6
     top_k: int = 2
     router_mode: str = 'context_aware'
+    use_context: bool = True
     
     # Data loading parameters
     batch_size: int = 32
@@ -120,13 +121,16 @@ class Config:
             cls.run_time = args.run_time
         if hasattr(args, 'dataset_name') and args.dataset_name:
             cls.dataset_name = args.dataset_name
+        if hasattr(args, 'use_context') and args.use_context is not None:
+            cls.use_context = args.use_context
         
         logger.info(f"Configuration updated from CLI arguments:")
         logger.info(f"  Model Name: {cls.model_name}")
         logger.info(f"  Model Type: {cls.type_model}")
         logger.info(f"  Run Time: {cls.run_time}")
         logger.info(f"  Dataset Name: {cls.dataset_name}")
-    
+        logger.info(f"  Use Context: {cls.use_context}")
+
     @classmethod
     def get_checkpoint_path(cls) -> Path:
         """
@@ -337,7 +341,8 @@ def create_model(num_classes: int, num_experts: int, top_k: int, context_dim: in
             num_classes=num_classes,
             num_experts=num_experts,
             top_k=top_k,
-            router_mode=router_mode
+            router_mode=router_mode,
+            use_context=Config.use_context
         )
         logger.info(f"Model created successfully on device: {Config.device}")
         return model
