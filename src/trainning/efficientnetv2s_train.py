@@ -8,10 +8,10 @@ from sklearn.utils.class_weight import compute_class_weight
 
 from utils.trainer import Trainer
 from dataset.plantdoc_dataset import train_dataset, validation_dataset
-from models.pretrained_model.mobilenetv3_small import model
+from models.pretrained_model.efficientnetv2s import model
 
 
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 train_ds = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 val_ds = DataLoader(validation_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
@@ -39,7 +39,7 @@ trainer = Trainer(
     model=model,
     criterion=criterion,
     optimizer=optimizer,
-    checkpoints_dir=str(output_dir / "checkpoints" / "plantdoc" / "pretrain_weight" / "mobilenetv3_small")
+    checkpoints_dir=str(output_dir / "checkpoints" / "plantdoc" / "pretrain_weight" / "efficientnetv2s")
 )
 
 if __name__ == "__main__":
