@@ -24,7 +24,7 @@ import seaborn as sns
 import pandas as pd
 
 from dataset.plantdoc_dataset import test_dataset
-from models.pretrained_model.shufflenet import model
+from models.pretrained_model.efficientnet_b4 import model
 
 
 # ============================================================================
@@ -32,9 +32,9 @@ from models.pretrained_model.shufflenet import model
 # ============================================================================
 
 # Thông tin mô hình và checkpoint
-MODEL_NAME = 'shufflenet'  # Tên mô hình (phù hợp với tên thư mục checkpoint)
+MODEL_NAME = 'efficientnet_b4'  # Tên mô hình (phù hợp với tên thư mục checkpoint)
 MODEL_TYPE = 'pretrain_weight'
-RUN_TIME = 'run_20260325-124056'  # Timestamp của lần chạy huấn luyện
+RUN_TIME = 'run_20260325-221625'  # Timestamp của lần chạy huấn luyện
 DATASET_NAME = 'plantdoc'
 
 # Tham số tải dữ liệu
