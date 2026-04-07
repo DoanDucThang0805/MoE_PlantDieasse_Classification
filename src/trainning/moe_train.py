@@ -8,6 +8,7 @@ trên bộ dữ liệu PlantDoc để phân loại bệnh thực vật.
 from pathlib import Path
 import numpy as np
 import warnings
+import argparse
 
 import torch
 from torch.utils.data import DataLoader
@@ -48,9 +49,8 @@ MOE_LOSS_ALPHA = 0.05  # Hệ số cân bằng cho hàm loss phụ
 # Xác định thiết bị (GPU nếu có sẵn, nếu không dùng CPU)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Thiết lập thư mục checkpoint để lưu trọng số mô hình
+# Thiết lập thư mục output
 output_dir = Path.cwd().parents[0]
-checkpoint_dir = output_dir / "checkpoints" / "plantdoc" / "MoE" / "mobilenetv3small_moe" / f"{NUM_EXPERTS}_experts" / f"top_{TOP_K}"
 
 # ============================================================================
 # Chuẩn Bị Dữ Liệu
@@ -84,41 +84,76 @@ class_weights = compute_class_weight(
 # Khởi Tạo Mô Hình, Loss Function và Optimizer
 # ============================================================================
 
-# Khởi tạo mô hình MoE với kiến trúc được chỉ định
-model = MoEModel(
-    num_classes=num_classes,
-    num_experts=NUM_EXPERTS,
-    top_k=TOP_K
-)
-
 # Tạo hàm loss với cân bằng loss phụ
 criterion = MoELoss(alpha=MOE_LOSS_ALPHA)
-
-# Thiết lập optimizer để tối ưu hóa tham số mô hình
-optimizer = optim.Adam(
-    model.parameters(),
-    lr=LEARNING_RATE,
-    weight_decay=WEIGHT_DECAY
-)
 
 # ============================================================================
 # Thiết Lập Huấn Luyện
 # ============================================================================
 
-# Khởi tạo trainer với tất cả các thành phần
-trainer = MoETrainer(
-    num_epochs=NUM_EPOCHS,
-    device=device,
-    train_loader=train_ds,
-    val_loader=val_ds,
-    model=model,
-    criterion=criterion,
-    optimizer=optimizer,
-    batch_size=BATCH_SIZE,
-    checkpoint_dir=checkpoint_dir
-)
-
 
 if __name__ == "__main__":
+    # Thiết lập argument parser cho các CLI biến
+    parser = argparse.ArgumentParser(
+        description="Script huấn luyện mô hình Mixture of Experts (MoE) cho phân loại bệnh thực vật",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    
+    parser.add_argument(
+        '--num_experts',
+        type=int,
+        default=NUM_EXPERTS,
+        help='Số lượng experts trong mô hình MoE'
+    )
+    parser.add_argument(
+        '--top_k',
+        type=int,
+        default=TOP_K,
+        help='Số lượng experts được chọn cho mỗi input'
+    )
+    parser.add_argument(
+        '--num_epoch',
+        type=int,
+        default=NUM_EPOCHS,
+        help='Số epoch để huấn luyện'
+    )
+    
+    args = parser.parse_args()
+    
+    # Cập nhật các tham số từ CLI arguments
+    num_experts = args.num_experts
+    top_k = args.top_k
+    num_epochs = args.num_epoch
+    
+    # Cập nhật đường dẫn checkpoint với các tham số mới
+    checkpoint_dir = output_dir / "checkpoints" / "plantdoc" / "MoE" / "mobilenetv3small_moe" / f"{num_experts}_experts" / f"top_{top_k}"
+    
+    # Khởi tạo mô hình MoE với các tham số từ CLI
+    model = MoEModel(
+        num_classes=num_classes,
+        num_experts=num_experts,
+        top_k=top_k
+    )
+    
+    # Thiết lập optimizer để tối ưu hóa tham số mô hình
+    optimizer = optim.Adam(
+        model.parameters(),
+        lr=LEARNING_RATE,
+        weight_decay=WEIGHT_DECAY
+    )
+    
+    # Khởi tạo trainer với các tham số từ CLI
+    trainer = MoETrainer(
+        num_epochs=num_epochs,
+        device=device,
+        train_loader=train_ds,
+        val_loader=val_ds,
+        model=model,
+        criterion=criterion,
+        optimizer=optimizer,
+        batch_size=BATCH_SIZE,
+        checkpoint_dir=checkpoint_dir
+    )
+    
     # Thực thi quy trình huấn luyện
     trainer.train()
