@@ -148,7 +148,7 @@ class Config:
             OSError: If system error when creating directory
         """
         output_dir = Path.cwd().parents[0]
-        checkpoint_subdir = f"plantdoc/{cls.type_model}/{cls.model_name}"
+        checkpoint_subdir = f"plantdoc/{cls.type_model}/{cls.model_name}/{cls.num_experts}_experts/top_{cls.top_k}"
         checkpoint_dir = output_dir / cls.checkpoint_parent / checkpoint_subdir
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"Checkpoint directory: {checkpoint_dir}")

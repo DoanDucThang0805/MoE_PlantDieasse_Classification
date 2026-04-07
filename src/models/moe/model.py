@@ -195,7 +195,7 @@ class MoEModel(nn.Module):
         self.use_context = use_context
 
         # Create feature extractor from MobileNetV3 Small backbone
-        self.feature_extractor = EfficientNetV2MFeatureExtractor(
+        self.feature_extractor = Mobilenetv3SmallFeatureExtractor(
             pretrained=True, 
             freeze_backbone=False
         )
