@@ -32,8 +32,8 @@ SHUFFLE_TRAIN = True
 SHUFFLE_VAL = False
 
 # Tham số kiến trúc mô hình
-NUM_EXPERTS = 8
-TOP_K = 4  # Số lượng expert được chọn cho mỗi input
+NUM_EXPERTS = 2
+TOP_K = 1  # Số lượng expert được chọn cho mỗi input
 
 # Siêu tham số huấn luyện
 NUM_EPOCHS = 300
@@ -50,7 +50,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Thiết lập thư mục checkpoint để lưu trọng số mô hình
 output_dir = Path.cwd().parents[0]
-checkpoint_dir = output_dir / "checkpoints" / "plantdoc" / "MoE" / "mobilenetv3large_moe"
+checkpoint_dir = output_dir / "checkpoints" / "plantdoc" / "MoE" / "mobilenetv3large_moe" / f"{NUM_EXPERTS}_experts" / f"top_{TOP_K}"
 
 # ============================================================================
 # Chuẩn Bị Dữ Liệu

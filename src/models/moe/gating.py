@@ -13,69 +13,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-
-
-class StandardTopKgating(nn.Module):
-    """
-    Bộ gating Top-K tiêu chuẩn cho Mixture of Experts.
-    
-    Chức năng:
-    - Dự đoán trọng số cho từng chuyên gia
-    - Chọn Top-K chuyên gia có trọng số cao nhất
-    - Áp dụng softmax trên Top-K logits
-    """
-    def __init__(self, model_dim: int, num_experts: int, top_k: int):
-        """
-        Khởi tạo bộ gating Top-K tiêu chuẩn.
-        
-        Tham số:
-        -----------
-        model_dim : int
-            Kích thước embedding/feature input (ví dụ: 960)
-        num_experts : int
-            Tổng số chuyên gia có sẵn (ví dụ: 4)
-        top_k : int
-            Số lượng chuyên gia hàng đầu được chọn (ví dụ: 3)
-        """
-        super().__init__()
-        self.model_dim = model_dim
-        self.num_experts = num_experts
-        self.top_k = top_k
-        # Lớp tuyến tính để dự đoán logits cho từng chuyên gia
-        self.gate_projector = nn.Linear(self.model_dim, self.num_experts, bias=False)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Tính toán trọng số gating cho các chuyên gia.
-        
-        Quy trình:
-        1. Tính logits dự đoán cho tất cả chuyên gia
-        2. Chọn Top-K chuyên gia có logits cao nhất
-        3. Áp dụng softmax trên Top-K logits để được trọng số chuẩn hóa
-        
-        Tham số:
-        -----------
-        x : torch.Tensor
-            Tensor input có shape [batch_size, model_dim]
-        
-        Trả về:
-        -----------
-        Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
-            - combined_weights: Trọng số softmax của Top-K [batch_size, top_k]
-            - top_k_indices: Chỉ số của K chuyên gia được chọn [batch_size, top_k]
-            - gate_logits: Logits gốc tất cả chuyên gia [batch_size, num_experts]
-        """
-        # Tính logits dự đoán cho tất cả chuyên gia
-        gate_logits = self.gate_projector(x)
-        
-        # Chọn Top-K logits và chỉ số tương ứng
-        top_k_logits, top_k_indices = torch.topk(gate_logits, self.top_k, dim=-1)
-        
-        # Chuẩn hóa Top-K logits bằng softmax để được trọng số
-        combined_weights = F.softmax(top_k_logits, dim=-1, dtype=torch.float32)
-        
-        return combined_weights, top_k_indices, gate_logits
-    
+   
 
 class NoisyTopKGating(nn.Module):
     """
@@ -116,7 +54,17 @@ class NoisyTopKGating(nn.Module):
         self.noise_stddev = noise_stddev
 
         # Lớp tuyến tính để dự đoán logits gating cơ bản
-        self.gate_projector = nn.Linear(model_dim, num_experts, bias=False)
+        self.gate_projector = nn.Sequential(
+            nn.Linear(self.model_dim, self.model_dim // 4),  # Giảm chiều để tăng tính phi tuyến
+            nn.LayerNorm(self.model_dim // 4),  # Thêm layer norm để ổn định training
+            nn.GELU(),
+
+            nn.Linear(self.model_dim//4, self.model_dim//16),  # Giảm tiếp để tăng tính phi tuyến
+            nn.LayerNorm(self.model_dim//16),  # Thêm layer norm để ổn định training
+            nn.GELU(),
+
+            nn.Linear(self.model_dim//16, self.num_experts, bias=False)
+        )
         
         # Lớp tuyến tính để dự đoán độ lớn của nhiễu cho mỗi chuyên gia
         self.noise_layer = nn.Linear(model_dim, num_experts, bias=False)
@@ -176,32 +124,3 @@ class NoisyTopKGating(nn.Module):
 
         # Trả về trọng số, chỉ số chuyên gia, và logits gốc sạch
         return combined_weights, top_k_indices, clean_logits    
-
-
-if __name__ == "__main__":
-    """
-    Khối kiểm tra (test block) để xác minh hoạt động của gating modules.
-    
-    Khởi tạo một bộ gating StandardTopKgating và kiểm tra output.
-    """
-    
-    # Khởi tạo bộ gating với các tham số:
-    # - model_dim=960: Kích thước feature input
-    # - num_experts=4: Tổng 4 chuyên gia
-    # - top_k=3: Chọn 3 chuyên gia tốt nhất
-    noisygating = StandardTopKgating(
-        model_dim=960,
-        num_experts=4,
-        top_k=1
-    )
-    
-    # Tạo dữ liệu test: batch_size=3, model_dim=960
-    logits = torch.rand((3, 960))
-    
-    # Chạy forward pass
-    combined_weights, top_k_indices, clean_logits = noisygating(logits)
-    
-    # In kết quả
-    print(combined_weights)  # Trọng số trơn mượt từ softmax
-    print(top_k_indices)      # Chỉ số của 3 chuyên gia được chọn
-    print(clean_logits)      # Logits gốc cho tất cả chuyên gia (4)

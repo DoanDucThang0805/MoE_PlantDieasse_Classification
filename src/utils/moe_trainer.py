@@ -151,7 +151,10 @@ class MoETrainer:
             "train_loss_history": self.train_loss_history,
             "val_loss_history": self.val_loss_history,
             "train_acc_history": self.train_acc_history,
-            "val_acc_history": self.val_acc_history
+            "val_acc_history": self.val_acc_history,
+            "num_classes": self.model.num_classes,
+            "num_experts": self.model.num_experts,
+            "top_k": self.model.top_k
         }, path)
         logger.info(f"Saved checkpoint: {path}")
 
@@ -349,7 +352,7 @@ class MoETrainer:
         plt.xlabel("Class ID")
         plt.ylabel("Expert ID")
         plt.xticks(range(self.model.num_classes))
-        plt.yticks(range(self.model.moe_layer.num_experts))
+        plt.yticks(range(self.model.num_experts))
 
         # hiển thị số
         for i in range(heatmap_norm.shape[0]):

@@ -6,6 +6,5 @@ source venv/bin/activate
 cd src
 
 clear
-PYTHONPATH=src python -m trainning.vit_train
-clear
-PYTHONPATH=src python -m trainning.vit_train
+PYTHONPATH=src python -m trainning.moe_train
+
