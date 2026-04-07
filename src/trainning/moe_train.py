@@ -50,7 +50,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Thiết lập thư mục checkpoint để lưu trọng số mô hình
 output_dir = Path.cwd().parents[0]
-checkpoint_dir = output_dir / "checkpoints" / "plantdoc" / "MoE" / "mobilenetv3large_moe" / f"{NUM_EXPERTS}_experts" / f"top_{TOP_K}"
+checkpoint_dir = output_dir / "checkpoints" / "plantdoc" / "MoE" / "mobilenetv3small_moe" / f"{NUM_EXPERTS}_experts" / f"top_{TOP_K}"
 
 # ============================================================================
 # Chuẩn Bị Dữ Liệu
