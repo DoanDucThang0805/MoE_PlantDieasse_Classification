@@ -30,6 +30,8 @@ from models.pretrained_model.resnet50 import model as resnet50
 from models.pretrained_model.shufflenet import model as shufflenet
 from models.pretrained_model.squeezenet import model as squeezenet
 from models.pretrained_model.vgg16 import model as vgg16
+from models.pretrained_model.vit import model as vit
+
 
 # Configure logging
 logging.basicConfig(
@@ -344,7 +346,8 @@ MODEL_REGISTRY = {
     "resnet50": resnet50,
     "shufflenet": shufflenet,
     "squeezenet": squeezenet,
-    "vgg16": vgg16
+    "vgg16": vgg16,
+    "vit": vit
 }
 
 
