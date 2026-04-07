@@ -7,4 +7,7 @@ cd src
 
 clear
 PYTHONPATH=src python -m trainning.moe_train
-
+clear
+PYTHONPATH=src python -m trainning.moe_train
+clear
+PYTHONPATH=src python -m trainning.moe_train

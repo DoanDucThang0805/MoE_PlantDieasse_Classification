@@ -92,7 +92,7 @@ class LoadDataset(Dataset):
         class_names = sorted(
             [d for d in os.listdir(root_dir)
              if os.path.isdir(os.path.join(root_dir, d))
-             and d.startswith("Tomato")]
+             and not d.startswith('.')]
         )
         class_to_idx = {class_name: idx for idx, class_name in enumerate(class_names)}
         idx_to_class = {idx: class_name for class_name, idx in class_to_idx.items()}

@@ -33,7 +33,7 @@ SHUFFLE_VAL = False
 
 # Tham số kiến trúc mô hình
 NUM_EXPERTS = 2
-TOP_K = 1  # Số lượng expert được chọn cho mỗi input
+TOP_K = 2  # Số lượng expert được chọn cho mỗi input
 
 # Siêu tham số huấn luyện
 NUM_EPOCHS = 300
