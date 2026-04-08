@@ -7,7 +7,7 @@ clear
 python -m inference.moe.context_aware_moe_inference \
     --model_name mobilenetv3small_moe \
     --type_model MoE \
-    --run_time run_20260404-142955 \
+    --run_time run_20260404-181413 \
     --dataset_name plantdoc \
     --use_context True \
     --router_mode context_aware
