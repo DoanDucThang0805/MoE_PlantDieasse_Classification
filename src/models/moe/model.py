@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from torchinfo import summary
 from typing import Tuple, Literal, Optional, Union
-from .backbone import Mobilenetv3LargeFeatureExtractor, Mobilenetv3SmallFeatureExtractor
+from .backbone import Mobilenetv3LargeFeatureExtractor, Mobilenetv3SmallFeatureExtractor, EfficientNetV2MFeatureExtractor
 from .gating import NoisyTopKGating, ContextAwareGating
 import warnings
 
