@@ -1,3 +1,4 @@
+from typing import Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -15,16 +16,20 @@ class MoELoss(nn.Module):
         alpha (float): Trọng số của auxiliary loss (mặc định: 0.01)
     """
     
-    def __init__(self, alpha: float = 0.01):
+    def __init__(self, alpha: float = 0.01, class_weights: Optional[torch.Tensor] = None):
         """
         Khởi tạo MoELoss.
         
         Args:
             alpha: Hệ số cân bằng giữa task loss và auxiliary loss
+            class_weights: Trọng số cho từng lớp (nếu có), để xử lý mất cân bằng dữ liệu
         """
         super().__init__()
         self.alpha = alpha  # Trọng số của auxiliary loss
-        self.ce = nn.CrossEntropyLoss()  # Hàm mất mát phân loại chính
+        if class_weights is not None:
+            self.ce = nn.CrossEntropyLoss(weight=class_weights)
+        else:
+            self.ce = nn.CrossEntropyLoss()
 
 
     def forward(self, logits, targets, router_logits, top_k_indices):

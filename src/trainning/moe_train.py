@@ -79,13 +79,14 @@ class_weights = compute_class_weight(
     classes=np.arange(num_classes),
     y=labels
 )
+class_weights = torch.tensor(class_weights, dtype=torch.float32).to(device)
 
 # ============================================================================
 # Khởi Tạo Mô Hình, Loss Function và Optimizer
 # ============================================================================
 
 # Tạo hàm loss với cân bằng loss phụ
-criterion = MoELoss(alpha=MOE_LOSS_ALPHA)
+criterion = MoELoss(alpha=MOE_LOSS_ALPHA, class_weights=class_weights)
 
 # ============================================================================
 # Thiết Lập Huấn Luyện
@@ -98,7 +99,13 @@ if __name__ == "__main__":
         description="Script huấn luyện mô hình Mixture of Experts (MoE) cho phân loại bệnh thực vật",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    
+    parser.add_argument(
+        '--type_model',
+        type=str,
+        default="MoE",
+        help='Loại mô hình để huấn luyện (ví dụ: MoE, pretrauined, v.v.)'
+    )
+
     parser.add_argument(
         '--num_experts',
         type=int,
@@ -124,9 +131,10 @@ if __name__ == "__main__":
     num_experts = args.num_experts
     top_k = args.top_k
     num_epochs = args.num_epoch
+    type_model = args.type_model
     
     # Cập nhật đường dẫn checkpoint với các tham số mới
-    checkpoint_dir = output_dir / "checkpoints" / "plantdoc" / "MoE" / "mobilenetv3small_moe" / f"{num_experts}_experts" / f"top_{top_k}"
+    checkpoint_dir = output_dir / "checkpoints" / "plantdoc" / type_model / "mobilenetv3small_moe" / f"{num_experts}_experts" / f"top_{top_k}"
     
     # Khởi tạo mô hình MoE với các tham số từ CLI
     model = MoEModel(
