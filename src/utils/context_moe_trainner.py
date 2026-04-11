@@ -156,7 +156,8 @@ class ContextAwareMoETrainer:
             "num_experts": self.model.num_experts,
             "top_k": self.model.top_k,
             "context_dim": self.model.context_dim,
-            "router_mode": self.model.router_mode
+            "router_mode": self.model.router_mode,
+            "temperature": self.model.temperature
         }, path)
         logger.info(f"Saved checkpoint: {path}")
 
@@ -236,14 +237,14 @@ class ContextAwareMoETrainer:
 
                 if context is not None:
                     context = context.to(self.device)
-                    logits, clean_router_logits, topk_indices = self.model(images, context)
+                    class_logits, clean_router_logits, topk_indices = self.model(images, context)
                 else:
-                    logits, clean_router_logits, topk_indices = self.model(images)
+                    class_logits, clean_router_logits, topk_indices = self.model(images)
                
                 self._monitor_expert_usage(topk_indices, labels)
-                probs = torch.softmax(logits, dim=1)
+                probs = torch.softmax(class_logits, dim=1)
                 preds = torch.argmax(probs, dim=1)
-                loss = self.criterion(logits, labels, clean_router_logits, topk_indices)
+                loss = self.criterion(class_logits, labels, clean_router_logits, topk_indices)
                 acc = accuracy(preds, labels)
 
                 self.optimizer.zero_grad()
@@ -271,13 +272,13 @@ class ContextAwareMoETrainer:
 
                     if context is not None:
                         context = context.to(self.device)
-                        logits, clean_router_logits, topk_indices = self.model(images, context)
+                        class_logits, clean_router_logits, topk_indices = self.model(images, context)
                     else:
-                        logits, clean_router_logits, topk_indices = self.model(images)
+                        class_logits, clean_router_logits, topk_indices = self.model(images)
 
-                    probs = torch.softmax(logits, dim=1)
+                    probs = torch.softmax(class_logits, dim=1)
                     preds = torch.argmax(probs, dim=1)
-                    loss = self.criterion(logits, labels, clean_router_logits, topk_indices)
+                    loss = self.criterion(class_logits, labels, clean_router_logits, topk_indices)
                     acc = accuracy(preds, labels)
                     val_running_loss += loss.item()
                     val_running_correct += acc

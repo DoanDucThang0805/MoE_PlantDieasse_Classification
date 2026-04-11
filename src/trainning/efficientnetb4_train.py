@@ -7,7 +7,7 @@ import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
 
 from utils.trainer import Trainer
-from dataset.plantdoc_dataset import train_dataset, validation_dataset
+from dataset.mixed_dataset import train_dataset, validation_dataset
 from models.pretrained_model.efficientnet_b4 import model
 
 

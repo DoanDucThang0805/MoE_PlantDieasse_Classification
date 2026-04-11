@@ -20,7 +20,7 @@ from collections import Counter
 
 
 # Path to cropped tomato disease dataset
-cropped_data_path = Path(__file__).resolve().parents[2] / 'data' / 'tomato_only'
+cropped_data_path = Path(__file__).resolve().parents[2] / 'data' / 'mixed_tomato'
 
 
 # Training augmentation pipeline

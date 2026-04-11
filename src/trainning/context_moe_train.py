@@ -47,7 +47,7 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 
 from utils.context_moe_trainner import ContextAwareMoETrainer
-from dataset.plantdoc_dataset import build_datasets
+from dataset.mixed_dataset import build_datasets
 from models.moe.model import MoEModel
 from loss.loss_fn import MoELoss
 
@@ -99,9 +99,11 @@ class Config:
     num_epochs: int = 300
     num_experts: int = 6
     top_k: int = 4
+    temperature: float = 1.0
     model_name: str = 'mobilenetv3large_moe'
     type_model: str = 'MoE'
-    
+    dataset_name: str = 'plantdoc'
+
     # Fixed parameters
     context_feature_dim: int = 6
     use_context: bool = True
@@ -131,9 +133,11 @@ class Config:
         cls.num_epochs = args.epochs
         cls.num_experts = args.num_experts
         cls.top_k = args.top_k
+        cls.temperature = args.temperature if hasattr(args, 'temperature') else 1.0
         cls.model_name = args.model_name
         cls.type_model = args.type_model
         cls.use_context = args.use_context
+        cls.dataset_name = args.dataset_name
 
     @classmethod
     def get_checkpoint_dir(cls) -> Path:
@@ -148,7 +152,7 @@ class Config:
             OSError: If system error when creating directory
         """
         output_dir = Path.cwd().parents[0]
-        checkpoint_subdir = f"plantdoc/{cls.type_model}/{cls.model_name}/{cls.num_experts}_experts/top_{cls.top_k}"
+        checkpoint_subdir = f"{cls.dataset_name}/{cls.type_model}/{cls.model_name}/{cls.num_experts}_experts/top_{cls.top_k}"
         checkpoint_dir = output_dir / cls.checkpoint_parent / checkpoint_subdir
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"Checkpoint directory: {checkpoint_dir}")
@@ -171,7 +175,7 @@ def parse_arguments() -> argparse.Namespace:
             - type_model (str): Model type
             - router_mode (str): Router mode for MoE gating
             - use_context (bool): Whether to use context features
-            
+            - dataset_name (str): Name of the dataset
     Example:
         >>> args = parse_arguments()
         >>> print(f"Batch size: {args.batch_size}, Epochs: {args.epochs}")
@@ -217,6 +221,13 @@ def parse_arguments() -> argparse.Namespace:
         default=2,
         help="Number of experts selected per input (default: 2)"
     )
+
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=1.0,
+        help="Temperature for gating softmax (default: 1.0)"
+    )
     
     parser.add_argument(
         "--model_name",
@@ -249,6 +260,13 @@ def parse_arguments() -> argparse.Namespace:
         default=True,
         choices=[True, False],
         help="Whether to use context features (default: True)"
+    )
+
+    parser.add_argument(
+        "--dataset_name",
+        type=str,
+        default="plantdoc",
+        help="Name of the dataset (default: plantdoc)"
     )
     
     return parser.parse_args()
@@ -345,7 +363,8 @@ def create_model(num_classes: int, router_mode: str, num_experts: int, top_k: in
             num_experts=num_experts,
             top_k=top_k,
             router_mode=router_mode,
-            use_context=Config.use_context
+            use_context=Config.use_context,
+            temperature=Config.temperature
         )
         
         _display_model_summary(model, router_mode)
@@ -483,6 +502,7 @@ def main():
             f"\n  Epochs: {Config.num_epochs}"
             f"\n  Num Experts: {Config.num_experts}"
             f"\n  Top-K: {Config.top_k}"
+            f"\n  Temperature: {Config.temperature}"
             f"\n  Model: {Config.model_name} ({Config.type_model})"
             f"\n  Router Mode: {args.router_mode}"
             f"\n  Use Context: {args.use_context}"

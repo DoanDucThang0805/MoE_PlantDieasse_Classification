@@ -45,7 +45,8 @@ class MoELayer(nn.Module):
         num_experts: int, 
         top_k: int, 
         router_mode: Literal["noisy", "context_aware"],
-        use_context: bool
+        temperature: float = 1.0,
+        use_context: bool = True
     ) -> None:
         
         """Initialize the MoE layer with specified configuration."""
@@ -53,6 +54,9 @@ class MoELayer(nn.Module):
         self.num_experts = num_experts
         self.top_k = top_k
         self.router_mode = router_mode
+        self.context_dim = context_dim
+        self.model_dim = model_dim
+        self.temperature = temperature
         self.use_context = use_context
 
         if not (0 < self.top_k <= self.num_experts):
@@ -63,14 +67,16 @@ class MoELayer(nn.Module):
             self.gating = NoisyTopKGating(
                 model_dim=model_dim,
                 num_experts=num_experts, 
-                top_k=top_k
+                top_k=top_k,
+                temperature=temperature
             )
         elif self.router_mode == "context_aware" and self.use_context:
             self.gating = ContextAwareGating(
                 model_dim=model_dim,
                 context_dim=context_dim,
                 num_experts=num_experts, 
-                top_k=top_k
+                top_k=top_k,
+                temperature=temperature
             )
         else:
             raise ValueError(
@@ -182,7 +188,8 @@ class MoEModel(nn.Module):
         num_experts: int, 
         top_k: int, 
         router_mode: Literal["noisy", "context_aware"],
-        use_context: bool
+        use_context: bool = True,
+        temperature: float = 1.0
     ) -> None:
         
         """Initialize MoE model with specified configuration."""
@@ -193,6 +200,7 @@ class MoEModel(nn.Module):
         self.top_k = top_k
         self.router_mode = router_mode
         self.use_context = use_context
+        self.temperature = temperature
 
         # Create feature extractor from MobileNetV3 Small backbone
         self.feature_extractor = Mobilenetv3SmallFeatureExtractor(
@@ -212,7 +220,9 @@ class MoEModel(nn.Module):
                 model_dim=model_dim, 
                 num_experts=num_experts, 
                 top_k=top_k, 
-                router_mode="noisy"
+                router_mode="noisy",
+                use_context=use_context,
+                temperature=self.temperature
             )
         elif self.router_mode == "context_aware" and self.use_context:
             self.moe_layer = MoELayer(
@@ -221,7 +231,8 @@ class MoEModel(nn.Module):
                 num_experts=num_experts, 
                 top_k=top_k, 
                 router_mode="context_aware",
-                use_context=use_context
+                use_context=use_context,
+                temperature=self.temperature
             )
         else:
             raise ValueError(

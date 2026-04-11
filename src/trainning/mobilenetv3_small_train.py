@@ -7,11 +7,12 @@ import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
 
 from utils import Trainer
-from dataset.plantdoc_dataset import build_datasets
-from models.pretrained_backbone.mobilenetv3_small import model
+from dataset.mixed_dataset import build_datasets
+from models.pretrained_model.mobilenetv3_small import model
 
 
 BATCH_SIZE = 64
+train_dataset, validation_dataset, _ = build_datasets()  # Build datasets with augmentations and context features
 train_ds = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 val_ds = DataLoader(validation_dataset, batch_size=BATCH_SIZE, shuffle=False)
 

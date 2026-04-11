@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-from dataset.plantdoc_dataset import test_dataset
+from dataset.mixed_dataset import test_dataset
 from models.moe.model import MoEModel
 
 

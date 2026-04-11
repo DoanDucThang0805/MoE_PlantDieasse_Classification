@@ -35,7 +35,7 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 
-from dataset.plantdoc_dataset import build_datasets
+from dataset.mixed_dataset import build_datasets
 from models.moe.model import MoEModel
 
 # Configure logging for production use
@@ -90,6 +90,7 @@ class Config:
     num_experts: int = 8
     context_dim: int = 6
     top_k: int = 2
+    temperature: float = 1.0
     router_mode: str = 'context_aware'
     use_context: bool = True
     
@@ -123,13 +124,19 @@ class Config:
             cls.dataset_name = args.dataset_name
         if hasattr(args, 'use_context') and args.use_context is not None:
             cls.use_context = args.use_context
-        
+        if hasattr(args, 'temperature') and args.temperature is not None:
+            cls.temperature = args.temperature
+        if hasattr(args, 'router_mode') and args.router_mode:
+            cls.router_mode = args.router_mode
         logger.info(f"Configuration updated from CLI arguments:")
         logger.info(f"  Model Name: {cls.model_name}")
         logger.info(f"  Model Type: {cls.type_model}")
         logger.info(f"  Run Time: {cls.run_time}")
         logger.info(f"  Dataset Name: {cls.dataset_name}")
         logger.info(f"  Use Context: {cls.use_context}")
+        logger.info(f"  Temperature: {cls.temperature}")
+        logger.info(f"  Router Mode: {cls.router_mode}")
+
 
     @classmethod
     def get_checkpoint_path(cls) -> Path:
@@ -245,6 +252,12 @@ Examples:
         choices=["context_aware", "noisy"],
         help="Router mode for MoE gating (default: context_aware)"
     )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=1.0,
+        help="Temperature for softmax in router (default: 1.0)"
+    )
     
     return parser.parse_args()
 
@@ -315,7 +328,7 @@ def get_class_names(test_dataset: object) -> List[str]:
 # Model Loading Functions
 # ============================================================================
 
-def create_model(num_classes: int, num_experts: int, top_k: int, context_dim: int, router_mode: str) -> MoEModel:
+def create_model(num_classes: int, num_experts: int, top_k: int, context_dim: int, router_mode: str, temperature: float) -> MoEModel:
     """
     Create and initialize MoE model architecture.
     
@@ -325,7 +338,8 @@ def create_model(num_classes: int, num_experts: int, top_k: int, context_dim: in
         top_k (int): Number of experts selected per input
         context_dim (int): Dimension of context features
         router_mode (str): Router mode ('context_aware' or 'noisy')
-    
+        temperature (float): Temperature for softmax in router
+
     Returns:
         MoEModel: Uninitialized MoE model instance
         
@@ -334,7 +348,7 @@ def create_model(num_classes: int, num_experts: int, top_k: int, context_dim: in
     """
     try:
         logger.info("Creating MoE model architecture...")
-        logger.info(f"  Num Experts: {num_experts}, Top-K: {top_k}, Router Mode: {router_mode}")
+        logger.info(f"  Num Experts: {num_experts}, Top-K: {top_k}, Router Mode: {router_mode}, Temperature: {temperature}")
         
         model = MoEModel(
             context_dim=context_dim,
@@ -342,7 +356,8 @@ def create_model(num_classes: int, num_experts: int, top_k: int, context_dim: in
             num_experts=num_experts,
             top_k=top_k,
             router_mode=router_mode,
-            use_context=Config.use_context
+            use_context=Config.use_context,
+            temperature=temperature
         )
         logger.info(f"Model created successfully on device: {Config.device}")
         return model
@@ -381,7 +396,8 @@ def extract_checkpoint_metadata(checkpoint_path: Path) -> Dict[str, any]:
             'num_experts': Config.num_experts,
             'context_dim': Config.context_dim,
             'top_k': Config.top_k,
-            'router_mode': 'context_aware'
+            'router_mode': Config.router_mode,
+            'temperature': Config.temperature
         }
         
         # Check for metadata in checkpoint
@@ -406,13 +422,18 @@ def extract_checkpoint_metadata(checkpoint_path: Path) -> Dict[str, any]:
                 metadata['router_mode'] = checkpoint['router_mode']
                 logger.info(f"Loaded router_mode from checkpoint: {metadata['router_mode']}")
         
+            if 'temperature' in checkpoint:
+                metadata['temperature'] = checkpoint['temperature']
+                logger.info(f"Loaded temperature from checkpoint: {metadata['temperature']}")
+
         logger.info(f"Using model configuration:")
         logger.info(f"  Num Classes: {metadata['num_classes']}")
         logger.info(f"  Num Experts: {metadata['num_experts']}")
         logger.info(f"  Context Dim: {metadata['context_dim']}")
         logger.info(f"  Top-K: {metadata['top_k']}")
         logger.info(f"  Router Mode: {metadata['router_mode']}")
-        
+        logger.info(f"  Temperature: {metadata['temperature']}")
+
         return metadata
         
     except FileNotFoundError as e:
@@ -527,7 +548,7 @@ def run_inference(
                     # Forward pass with context
                     logits, _, _ = model(images, context)
                 else:
-                    images, labels = batch
+                    images, labels, _ = batch
                     images = images.to(Config.device)
                     labels = labels.to(Config.device)
                     
@@ -736,6 +757,7 @@ def main():
         logger.info(f"  Device: {Config.device}")
         logger.info(f"  Use Context: {args.use_context}")
         logger.info(f"  Router Mode: {args.router_mode}")
+        logger.info(f"  Temperature: {args.temperature}")
         
         # Setup data
         test_loader, test_dataset = setup_test_dataloader(args.use_context)
@@ -751,6 +773,7 @@ def main():
         Config.context_dim = metadata['context_dim']
         Config.top_k = metadata['top_k']
         Config.router_mode = metadata['router_mode']
+        Config.temperature = metadata['temperature']
         
         # Create model with parameters from checkpoint
         model = create_model(
@@ -758,7 +781,8 @@ def main():
             num_experts=metadata['num_experts'],
             top_k=metadata['top_k'],
             context_dim=metadata['context_dim'],
-            router_mode=metadata['router_mode']
+            router_mode=metadata['router_mode'],
+            temperature=metadata['temperature']
         )
         
         # Load model weights

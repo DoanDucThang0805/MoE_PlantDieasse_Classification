@@ -175,7 +175,7 @@ class Trainer:
             self.model.train()
             train_running_loss = 0.0
             train_running_correct = 0.0
-            for images, labels in self.train_loader:
+            for images, labels, _ in self.train_loader:
                 images, labels = images.to(self.device), labels.to(self.device)
                 logits = self.model(images)
                 probs = torch.softmax(logits, dim=1)
@@ -199,7 +199,7 @@ class Trainer:
             val_running_loss = 0.0
             val_running_correct = 0.0
             with torch.inference_mode():
-                for images, labels in self.val_loader:
+                for images, labels, _ in self.val_loader:
                     images, labels = images.to(self.device), labels.to(self.device)
                     logits = self.model(images)
                     probs = torch.softmax(logits, dim=1)

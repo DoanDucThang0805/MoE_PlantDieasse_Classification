@@ -168,7 +168,7 @@ class NoisyTopKGating(nn.Module):
     - Result: More robust and well-distributed expert usage
     """
     
-    def __init__(self, model_dim: int, num_experts: int, top_k: int, noise_stddev=1.0) -> None:
+    def __init__(self, model_dim: int, num_experts: int, top_k: int, noise_stddev: float = 1.0, temperature: float = 1.0) -> None:
         """
         Initialize the noisy top-k gating module.
         
@@ -200,10 +200,23 @@ class NoisyTopKGating(nn.Module):
         self.num_experts = num_experts
         self.top_k = top_k
         self.noise_stddev = noise_stddev
+        self.temperature = temperature
 
         # Linear layer: computes deterministic expert selection logits
         # This is the primary routing signal
-        self.gate_projector = nn.Linear(model_dim, num_experts, bias=False)
+        self.gate_projector = nn.Sequential(
+            nn.Linear(model_dim, 128),
+            nn.LayerNorm(128),
+            nn.GELU(),
+            nn.Dropout(0.1),
+
+            nn.Linear(128, 32),
+            nn.LayerNorm(32),
+            nn.GELU(),
+            nn.Dropout(0.1),
+
+            nn.Linear(32, num_experts)
+        )
         
         # Linear layer: learns to predict noise magnitude for each expert
         # These magnitudes are adaptively learned and can vary per expert
@@ -313,149 +326,80 @@ class NoisyTopKGating(nn.Module):
 
         # Convert selected logits to normalized probability weights via softmax
         # Ensures weights are in [0, 1] and sum to 1 per sample
-        combined_weights = F.softmax(top_k_logits, dim=-1)
+        combined_weights = F.softmax(top_k_logits / self.temperature, dim=-1)
 
         # Return expert weights, their indices, and clean logits for auxiliary losses
         return combined_weights, top_k_indices, clean_logits    
 
 
 class ContextAwareGating(nn.Module):
-    """
-    Context-aware gating mechanism for Mixture of Experts.
-    
-    This gating module enhances expert selection by incorporating contextual information
-    alongside the main embedding. It fuses embedding and context features to make more
-    informed decisions about which experts to route to.
-    
-    Architecture:
-    - Normalizes embedding and context separately using LayerNorm
-    - Projects context features to a fixed dimension (32)
-    - Concatenates embedding and projected context
-    - Applies multi-layer MLP to predict expert logits
-    - Optionally adds Gaussian noise during training for exploration
-    - Selects top-k experts with highest logits
-    
-    Attributes:
-        model_dim (int): Dimension of input embeddings (e.g., 960)
-        context_dim (int): Dimension of context features
-        num_experts (int): Total number of experts available
-        top_k (int): Number of top experts to select
-        noise_stddev (float): Standard deviation of noise added during training
-    """
-    
-    def __init__(self, model_dim: int, context_dim: int, num_experts: int, top_k: int, noise_stddev=1.0) -> None:
-        """
-        Initialize the context-aware gating module.
-        
-        Args:
-            model_dim (int): Dimension of input embeddings
-            context_dim (int): Dimension of context feature vectors
-            num_experts (int): Total number of experts in the MoE layer
-            top_k (int): Number of top experts to select based on logits
-            noise_stddev (float, optional): Standard deviation of Gaussian noise added during training.
-                                           Defaults to 1.0.
-        
-        Raises:
-            AssertionError: If top_k > num_experts
-        """
+    def __init__(self, model_dim, context_dim, num_experts, top_k, noise_stddev=1.0, temperature=1.0):
         super().__init__()
-        assert top_k <= num_experts, "top_k must be less than or equal to num_experts"
-
-        self.model_dim = model_dim
-        self.context_dim = context_dim
-        self.num_experts = num_experts
-        self.top_k = top_k
+        assert top_k <= num_experts
+        
+        self.model_dim    = model_dim
+        self.context_dim  = context_dim
+        self.num_experts  = num_experts
+        self.top_k        = top_k
         self.noise_stddev = noise_stddev
+        self.temperature = temperature
+
         fusion_dim = model_dim + 32
 
-        # Layer normalization for input embedding
-        self.embedding_norm = nn.LayerNorm(model_dim)
-        # Layer normalization for context features
-        self.context_norm = nn.LayerNorm(context_dim)
-        # Layer normalization for fused embedding and context
-        self.fusion_norm = nn.LayerNorm(fusion_dim)
+        # Norm riêng từng phần trước khi concat
+        self.embedding_norm     = nn.LayerNorm(model_dim)
+        self.context_norm       = nn.LayerNorm(context_dim)
+        self.context_feat_norm  = nn.LayerNorm(32)        # thêm mới — norm sau project
 
-        # Project context features to 32 dimensions
-        # Uses GELU activation for smoothness
+        # Context projector có norm giữa các layer
         self.context_projector = nn.Sequential(
             nn.Linear(context_dim, 32),
+            nn.LayerNorm(32),
             nn.GELU(),
             nn.Linear(32, 32),
+            nn.LayerNorm(32),
             nn.GELU()
         )
 
-        # Predict noise magnitude for each expert
-        # Enables context-aware noise in gating decisions
-        self.noise_layer = nn.Linear(fusion_dim, num_experts, bias=False)
-        
-        # Multi-layer MLP to predict logits for all experts
-        # Takes fused representation and outputs expert logits
+        # Gate projector có norm giữa các layer
         self.gate_projector = nn.Sequential(
-            nn.Linear(fusion_dim, fusion_dim//2),
+            nn.Linear(fusion_dim, fusion_dim // 2),
+            nn.LayerNorm(fusion_dim // 2),
             nn.GELU(),
-            nn.Linear(fusion_dim//2, fusion_dim//4),
+            nn.Dropout(0.1),
+            nn.Linear(fusion_dim // 2, fusion_dim // 4),
+            nn.LayerNorm(fusion_dim // 4),
             nn.GELU(),
-            nn.Linear(fusion_dim//4, num_experts)
+            nn.Dropout(0.2),
+            nn.Linear(fusion_dim // 4, num_experts)
         )
 
-    
-    def forward(self, x: torch.Tensor, context: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """
-        Generate gating weights for expert selection using context information.
+        self.noise_layer = nn.Linear(fusion_dim, num_experts, bias=False)
         
-        Processing pipeline:
-        1. Normalize input embedding and context independently
-        2. Project context features to 32 dimensions
-        3. Concatenate (embedding + projected_context)
-        4. Normalize the fused representation
-        5. Generate clean logits via multi-layer MLP
-        6. During training: Add learnable Gaussian noise to logits for exploration
-        7. Select top-k experts and compute softmax weights
-        
-        Args:
-            x (torch.Tensor): Input embedding tensor of shape [batch_size, model_dim]
-            context (torch.Tensor): Context feature tensor of shape [batch_size, context_dim]
-        
-        Returns:
-            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-                - combined_weights: Softmax normalized weights for top-k experts 
-                                  Shape: [batch_size, top_k]
-                - top_k_indices: Indices of selected top-k experts 
-                                Shape: [batch_size, top_k]
-                - clean_logits: Raw logits for all experts (before noise) 
-                               Shape: [batch_size, num_experts]
-        """
-        
-        embedding = self.embedding_norm(x)
-        context = self.context_norm(context)
+        # Init layer cuối gần zero — gate bắt đầu gần uniform
+        # nn.init.normal_(self.gate_projector[-1].weight, std=0.01)
+        # nn.init.zeros_(self.gate_projector[-1].bias)
 
-        # Project context to fixed dimension
+
+    def forward(self, x, context):
+        embedding        = self.embedding_norm(x)
+        context          = self.context_norm(context)
+        
         context_features = self.context_projector(context)
-        # Concatenate normalized embedding with projected context
-        fusion_features = torch.cat([embedding, context_features], dim=-1)
-        # Normalize the fused representation
-        fusion_features = self.fusion_norm(fusion_features)
+        context_features = self.context_feat_norm(context_features)  # norm trước concat
+        
+        # Lúc này embedding và context_features đều ở cùng scale → concat an toàn
+        fusion_features  = torch.cat([embedding, context_features], dim=-1)
 
-        # Compute clean logits (without noise)
         clean_logits = self.gate_projector(fusion_features)
-        
-        # Add noise during training for improved exploration
+
         if self.training:
-            # Predict noise magnitude based on fused features
-            noise_magnitude = self.noise_layer(fusion_features)
-            # Ensure positive scaling using softplus: log(1 + exp(x))
-            noise_scale = nn.functional.softplus(noise_magnitude)
-            # Sample Gaussian noise
-            sampled_noise = torch.randn_like(clean_logits)
-            # Combine clean logits with scaled noise
-            noisy_logits = clean_logits + noise_scale * sampled_noise * self.noise_stddev
+            noise_scale  = F.softplus(self.noise_layer(fusion_features))
+            noisy_logits = clean_logits + noise_scale * torch.randn_like(clean_logits) * self.noise_stddev
         else:
-            # Use clean logits without noise during inference
             noisy_logits = clean_logits
-        
-        # Select top-k experts
+
         top_k_logits, top_k_indices = torch.topk(noisy_logits, self.top_k, dim=-1)
-        # Normalize top-k logits to weights via softmax
-        combined_weights = F.softmax(top_k_logits, dim=-1)
+        combined_weights = F.softmax(top_k_logits / self.temperature, dim=-1)
 
         return combined_weights, top_k_indices, clean_logits

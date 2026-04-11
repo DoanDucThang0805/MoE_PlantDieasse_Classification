@@ -11,7 +11,7 @@ from models.pretrained_backbone.mobilenetv2 import model as mobilenetv2
 from models.pretrained_backbone.mobilenetv3_small import model as mobilenetv3_small
 from models.pretrained_backbone.mobilenetv3_large import model as mobilenetv3_large
 from models.pretrained_backbone.mobilenetv4 import model as mobilenetv4
-from dataset.plantdoc_dataset import test_dataset
+from dataset.mixed_dataset import test_dataset
 
 
 test_ds = DataLoader(test_dataset, batch_size=32, shuffle=True)
