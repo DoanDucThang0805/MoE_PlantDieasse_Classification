@@ -6,10 +6,9 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
 
-from utils import Trainer
+from utils.trainer import Trainer
 from dataset.mixed_dataset import build_datasets
-from models.pretrained_model.mobilenetv3_small import model
-
+from models.pretrained_model.mobilenetv3_small import create_model
 
 BATCH_SIZE = 64
 train_dataset, validation_dataset, _ = build_datasets()  # Build datasets with augmentations and context features
@@ -21,6 +20,7 @@ output_dir = Path.cwd().parents[0]
 
 labels = train_dataset.labels
 num_classes = len(set(labels))
+model = create_model(num_classes)
 
 class_weights = compute_class_weight(
     class_weight='balanced',
@@ -40,7 +40,7 @@ trainer = Trainer(
     model=model,
     criterion=criterion,
     optimizer=optimizer,
-    checkpoints_dir=str(output_dir / "checkpoints" / "plantdoc" / "pretrain_weight" / "mobilenetv3_small")
+    checkpoints_dir=str(output_dir / "checkpoints" / "mixed_dataset" / "pretrain_weight" / "mobilenetv3_small")
 )
 
 if __name__ == "__main__":

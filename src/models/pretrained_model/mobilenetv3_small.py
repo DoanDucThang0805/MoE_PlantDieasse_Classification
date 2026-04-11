@@ -3,13 +3,15 @@ from torchinfo import summary
 
 
 num_classes=8
-# Load model pretrained
-model = timm.create_model(
-    'mobilenetv3_small_100',
-    pretrained=True,
-    num_classes=num_classes
-)
+def create_model(num_classes):
+    model = timm.create_model(
+        'mobilenetv3_small_100',
+        pretrained=True,
+        num_classes=num_classes
+    )
+    return model
+
 
 
 # Summary
-summary(model, (1,3,224,224), col_names=["input_size", "output_size", "num_params", "mult_adds"])
+summary(create_model(num_classes), (1,3,224,224), col_names=["input_size", "output_size", "num_params", "mult_adds"])
