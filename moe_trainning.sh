@@ -4,7 +4,7 @@
 source venv/bin/activate
 
 cd src
-
+clear
 
 python -m trainning.context_moe_train \
     --batch_size 32 \
@@ -12,8 +12,8 @@ python -m trainning.context_moe_train \
     --num_experts 5 \
     --top_k 2 \
     --model_name mobilenetv3small_moe \
-    --type_model MoE \
+    --type_model noisy_moe \
     --router_mode noisy \
-    --use_context False \
     --temperature 1.0 \
+    --no_context \
     --dataset_name mixed_dataset

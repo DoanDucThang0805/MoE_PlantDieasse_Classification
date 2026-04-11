@@ -180,8 +180,8 @@ class LoadDataset(Dataset):
             augumented = self.transform(image=image_np)
             image_np = augumented["image"]
         
-        context_features = None
-        if self.return_context and self.context_extractor is not None:
+        context_features = False
+        if self.return_context and self.context_extractor is not False:
             context_features = torch.tensor(self.context_extractor(np.array(image)), dtype=torch.float32)
         
         return image_np, label, context_features

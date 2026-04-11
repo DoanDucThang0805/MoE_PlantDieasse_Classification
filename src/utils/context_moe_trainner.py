@@ -235,7 +235,7 @@ class ContextAwareMoETrainer:
                 images, labels, context = batch
                 images, labels = images.to(self.device), labels.to(self.device)
 
-                if context is not None:
+                if context is not False:
                     context = context.to(self.device)
                     class_logits, clean_router_logits, topk_indices = self.model(images, context)
                 else:
@@ -270,7 +270,7 @@ class ContextAwareMoETrainer:
                     images, labels, context = batch
                     images, labels = images.to(self.device), labels.to(self.device)
 
-                    if context is not None:
+                    if context is not False:
                         context = context.to(self.device)
                         class_logits, clean_router_logits, topk_indices = self.model(images, context)
                     else:

@@ -240,7 +240,6 @@ def parse_arguments() -> argparse.Namespace:
         "--type_model",
         type=str,
         default="MoE",
-        choices=["MoE", "pretrained", "other"],
         help="Model type (default: MoE)"
     )
     
@@ -256,11 +255,16 @@ def parse_arguments() -> argparse.Namespace:
     # Context features
     parser.add_argument(
         "--use_context",
-        type=bool,
-        default=True,
-        choices=[True, False],
-        help="Whether to use context features (default: True)"
+        action="store_true",
+        help="Enable context features"
     )
+    parser.add_argument(
+        "--no_context",
+        action="store_false",
+        dest="use_context",
+        help="Disable context features"
+    ),
+    parser.set_defaults(use_context=True),
 
     parser.add_argument(
         "--dataset_name",
