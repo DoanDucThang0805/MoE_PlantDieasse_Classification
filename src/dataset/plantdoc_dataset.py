@@ -59,21 +59,21 @@ test_transform = A.Compose([
 train_dataset = LoadDataset(
     root_dir=cropped_data_path,
     split='train',
-    train_ratio=0.7,
+    train_ratio=0.8,
     transform=train_transform
 )
 
 validation_dataset = LoadDataset(
     root_dir=cropped_data_path,
     split='validation',
-    train_ratio=0.7,
+    train_ratio=0.8,
     transform=val_transform
 )
 
 test_dataset = LoadDataset(
     root_dir=cropped_data_path,
     split='test',
-    train_ratio=0.7,
+    train_ratio=0.8,
     transform=test_transform
 )
 

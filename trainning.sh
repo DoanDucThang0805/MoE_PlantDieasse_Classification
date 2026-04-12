@@ -4,9 +4,10 @@
 source venv/bin/activate
 
 cd src
+clear
 
 python -m trainning.moe_train \
-    --type-model MoE_classweight \
-    --num-experts 5 \
-    --top-k 2 \
-    --num-epochs 300
+    --type_model MoE_classweight \
+    --num_experts 5 \
+    --top_k 2 \
+    --num_epochs 300

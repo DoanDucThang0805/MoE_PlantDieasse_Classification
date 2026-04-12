@@ -119,7 +119,7 @@ if __name__ == "__main__":
         help='Số lượng experts được chọn cho mỗi input'
     )
     parser.add_argument(
-        '--num_epoch',
+        '--num_epochs',
         type=int,
         default=NUM_EPOCHS,
         help='Số epoch để huấn luyện'
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     # Cập nhật các tham số từ CLI arguments
     num_experts = args.num_experts
     top_k = args.top_k
-    num_epochs = args.num_epoch
+    num_epochs = args.num_epochs
     type_model = args.type_model
     
     # Cập nhật đường dẫn checkpoint với các tham số mới

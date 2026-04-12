@@ -79,6 +79,13 @@ def get_args() -> Any:
         help="Model directory name under checkpoints/MoE and reports/MoE."
     )
     parser.add_argument(
+        '--type-model',
+        dest="type_model",
+        type=str,
+        default="MoE",
+        help='Loại mô hình để huấn luyện (ví dụ: MoE, pretrauined, v.v.)'
+    )
+    parser.add_argument(
         "--run-time",
         "--runtime",
         dest="run_time",
@@ -115,6 +122,7 @@ def get_args() -> Any:
 def get_checkpoint_path(
     dataset_name: str,
     model_name: str,
+    type_model: str,
     run_time: str,
     num_experts: int = None,
     top_k: int = None
@@ -133,7 +141,7 @@ def get_checkpoint_path(
         Path to the checkpoint file
     """
     checkpoint_base = (
-        Path(__file__).resolve().parents[3] / 'checkpoints' / dataset_name / "MoE" / model_name
+        Path(__file__).resolve().parents[3] / 'checkpoints' / dataset_name / type_model / model_name
     )
 
     if num_experts is not None and top_k is not None:
@@ -166,13 +174,14 @@ def get_checkpoint_path(
 def get_report_dir(
     dataset_name: str,
     model_name: str,
+    type_model: str,
     run_time: str,
     num_experts: int,
     top_k: int
 ) -> Path:
     """Get the report directory path based on model configuration."""
     return (
-        Path(__file__).resolve().parents[3] / 'reports' / dataset_name / 'MoE' / 
+        Path(__file__).resolve().parents[3] / 'reports' / dataset_name / type_model / 
         model_name / f"{num_experts}_experts" / f"top_{top_k}" / run_time
     )
 
@@ -424,7 +433,7 @@ def main() -> None:
     try:
         args = get_args()
         logger.info(
-            f"Inference configuration: dataset_name={args.dataset_name}, model_name={args.model_name}, "
+            f"Inference configuration: dataset_name={args.dataset_name}, model_name={args.model_name}, type_model={args.type_model}, "
             f"run_time={args.run_time}, num_experts={args.num_experts}, top_k={args.top_k}"
         )
 
@@ -432,6 +441,7 @@ def main() -> None:
         checkpoint_path = get_checkpoint_path(
             dataset_name=args.dataset_name,
             model_name=args.model_name,
+            type_model=args.type_model,
             run_time=args.run_time,
             num_experts=args.num_experts,
             top_k=args.top_k
@@ -455,6 +465,7 @@ def main() -> None:
         report_dir = get_report_dir(
             dataset_name=args.dataset_name,
             model_name=args.model_name,
+            type_model=args.type_model,
             run_time=args.run_time,
             num_experts=num_experts,
             top_k=top_k
