@@ -7,7 +7,11 @@ cd src
 clear
 
 python -m trainning.moe_train \
-    --type_model MoE_classweight \
-    --num_experts 5 \
+    --seed 42 \
+    --num_experts 4 \
     --top_k 2 \
-    --num_epochs 300
+    --num_epochs 200 \
+    --batch_size 32 \
+    --lr 0.0005 \
+    --weight_decay 0.001 \
+    --moe_alpha 0.05
