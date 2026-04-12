@@ -17,57 +17,73 @@ import numpy as np
 
 class NoisyTopKGating(nn.Module):
     """
-    Bộ gating Top-K có bổ sung nhiễu cho Mixture of Experts.
-    
-    Chức năng:
+    Bộ gating Top-K có bổ sung nhiễu cho Mixture of Experts (MoE).
+
+    Cơ chế hoạt động:
     - Tính toán logits gating cơ bản (clean logits)
     - Trong quá trình huấn luyện (training), thêm nhiễu Gaussian vào logits
     - Chọn Top-K chuyên gia từ logits có nhiễu
-    - Áp dụng softmax để chuẩn hóa trọng số
-    
-    Lợi ích của việc bổ sung nhiễu:
-    - Tăng sự đa dạng khi chọn chuyên gia
-    - Giảm việc một số chuyên gia luôn bị chọn
-    - Cải thiện tính tổng quát của mô hình
+    - Áp dụng softmax với temperature để chuẩn hóa trọng số
+
+    Lợi ích:
+    - Nhiễu giúp tăng tính đa dạng trong việc lựa chọn chuyên gia
+    - Tránh hiện tượng một số expert luôn bị bỏ qua
+    - Temperature điều chỉnh độ sắc của phân phối gating:
+        + temperature thấp → phân phối sắc → tăng chuyên môn hóa
+        + temperature cao → phân phối phẳng → tăng chia tải giữa các expert
     """
     
-    def __init__(self, model_dim: int, num_experts: int, top_k: int, noise_stddev=1.0):
+    def __init__(self, model_dim: int, num_experts: int, top_k: int, temperature: float = 1.0, noise_stddev: float = 1.0):
         """
         Khởi tạo bộ gating Top-K có bổ sung nhiễu.
-        
+
         Tham số:
         -----------
         model_dim : int
             Kích thước embedding/feature input (ví dụ: 960)
+
         num_experts : int
             Tổng số chuyên gia có sẵn (ví dụ: 4)
+
         top_k : int
-            Số lượng chuyên gia hàng đầu được chọn (ví dụ: 3)
+            Số lượng chuyên gia hàng đầu được chọn (ví dụ: 2)
+
+        temperature : float, tùy chọn
+            Hệ số temperature dùng trong softmax của Top-K logits.
+            Điều chỉnh độ sắc của phân phối gating:
+            - temperature < 1 → phân phối sắc hơn (tăng specialization)
+            - temperature > 1 → phân phối phẳng hơn (tăng load balancing)
+
         noise_stddev : float, tùy chọn
-            Độ lệch chuẩn của nhiễu Gaussian, mặc định = 1.0
-            Kiểm soát độ mạnh của nhiễu thêm vào
+            Độ lệch chuẩn của nhiễu Gaussian được thêm vào logits trong training.
+        Điều khiển cường độ nhiễu để khuyến khích khám phá các expert khác nhau.
         """
+        
         super().__init__()
         self.model_dim = model_dim
         self.num_experts = num_experts
         self.top_k = top_k
         self.noise_stddev = noise_stddev
+        self.temperature = temperature
 
         # Lớp tuyến tính để dự đoán logits gating cơ bản
         self.gate_projector = nn.Sequential(
-            nn.Linear(self.model_dim, self.model_dim // 4),  # Giảm chiều để tăng tính phi tuyến
-            nn.LayerNorm(self.model_dim // 4),  # Thêm layer norm để ổn định training
+            nn.Linear(self.model_dim, 128),  # Giảm chiều để tăng tính phi tuyến
+            nn.LayerNorm(128),  # Thêm layer norm để ổn định training
             nn.GELU(),
+            nn.Dropout(0.1),  # Thêm dropout để giảm overfitting
 
-            nn.Linear(self.model_dim//4, self.model_dim//16),  # Giảm tiếp để tăng tính phi tuyến
-            nn.LayerNorm(self.model_dim//16),  # Thêm layer norm để ổn định training
+            nn.Linear(128, 32),  # Giảm tiếp để tăng tính phi tuyến
+            nn.LayerNorm(32),  # Thêm layer norm để ổn định training
             nn.GELU(),
+            nn.Dropout(0.1),  # Thêm dropout để giảm overfitting
 
-            nn.Linear(self.model_dim//16, self.num_experts, bias=False)
+            nn.Linear(32, self.num_experts, bias=False)
         )
         
         # Lớp tuyến tính để dự đoán độ lớn của nhiễu cho mỗi chuyên gia
         self.noise_layer = nn.Linear(model_dim, num_experts, bias=False)
+
 
     def forward(self, x: torch.Tensor):
         """
@@ -80,7 +96,7 @@ class NoisyTopKGating(nn.Module):
            - Tạo nhiễu Gaussian
            - Cộng nhiễu vào clean logits
         3. Chọn Top-K chuyên gia từ logits (có nhiễu hoặc không)
-        4. Chuẩn hóa Top-K logits bằng softmax
+        4. Chuẩn hóa Top-K logits bằng softmax có temperature
         
         Tham số:
         -----------
@@ -120,7 +136,7 @@ class NoisyTopKGating(nn.Module):
         top_k_logits, top_k_indices = torch.topk(noisy_logits, self.top_k, dim=-1)
 
         # Áp dụng softmax trên Top-K logits để chuẩn hóa thành trọng số
-        combined_weights = F.softmax(top_k_logits, dim=-1)
+        combined_weights = F.softmax(top_k_logits / self.temperature, dim=-1)
 
         # Trả về trọng số, chỉ số chuyên gia, và logits gốc sạch
         return combined_weights, top_k_indices, clean_logits    

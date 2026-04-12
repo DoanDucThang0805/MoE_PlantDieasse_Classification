@@ -116,6 +116,12 @@ def get_args() -> Any:
         default=None,
         help="Number of experts used by the MoE model."
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for reproducibility"
+    )
     return parser.parse_args()
 
 
@@ -125,7 +131,8 @@ def get_checkpoint_path(
     type_model: str,
     run_time: str,
     num_experts: int = None,
-    top_k: int = None
+    top_k: int = None,
+    seed: int = 42
 ) -> Path:
     """
     Get the checkpoint file path based on configuration.
@@ -136,7 +143,7 @@ def get_checkpoint_path(
         run_time: Training run timestamp folder name.
         num_experts: Number of experts (optional).
         top_k: Number of top experts (optional).
-        
+        seed: Random seed (optional).
     Returns:
         Path to the checkpoint file
     """
@@ -145,7 +152,7 @@ def get_checkpoint_path(
     )
 
     if num_experts is not None and top_k is not None:
-        return checkpoint_base / f"{num_experts}_experts" / f"top_{top_k}" / run_time / 'best_checkpoint.pth'
+        return checkpoint_base / f"{num_experts}_experts" / f"top_{top_k}" / f"seed_{seed}" / run_time / 'best_checkpoint.pth'
 
     if not checkpoint_base.exists():
         raise FileNotFoundError(
@@ -177,12 +184,13 @@ def get_report_dir(
     type_model: str,
     run_time: str,
     num_experts: int,
-    top_k: int
+    top_k: int,
+    seed: int
 ) -> Path:
     """Get the report directory path based on model configuration."""
     return (
         Path(__file__).resolve().parents[3] / 'reports' / dataset_name / type_model / 
-        model_name / f"{num_experts}_experts" / f"top_{top_k}" / run_time
+        model_name / f"{num_experts}_experts" / f"top_{top_k}" / f"seed_{seed}" / run_time
     )
 
 
@@ -190,7 +198,7 @@ def get_report_dir(
 # Helper Functions
 # ============================================================================
 
-def load_checkpoint(checkpoint_path: Path) -> Tuple[Dict[str, Any], int, int, int]:
+def load_checkpoint(checkpoint_path: Path) -> Tuple[Dict[str, Any], int, int, int, float]:
     """
     Load model checkpoint and extract model configuration.
     
@@ -198,7 +206,7 @@ def load_checkpoint(checkpoint_path: Path) -> Tuple[Dict[str, Any], int, int, in
         checkpoint_path: Path to the checkpoint file
         
     Returns:
-        Tuple of (state_dict, num_classes, num_experts, top_k)
+        Tuple of (state_dict, num_classes, num_experts, top_k, temperature)
         
     Raises:
         FileNotFoundError: If checkpoint file doesn't exist
@@ -222,20 +230,21 @@ def load_checkpoint(checkpoint_path: Path) -> Tuple[Dict[str, Any], int, int, in
     top_k = checkpoint.get("top_k")
     num_experts = checkpoint.get("num_experts")
     num_classes = checkpoint.get("num_classes")
-    
+    temperature = checkpoint.get("temperature")
     logger.info(
         f"Checkpoint loaded: num_classes={num_classes}, "
-        f"num_experts={num_experts}, top_k={top_k}"
+        f"num_experts={num_experts}, top_k={top_k}, temperature={temperature}"
     )
     
-    return state_dict, num_classes, num_experts, top_k
+    return state_dict, num_classes, num_experts, top_k, temperature
 
 
 def initialize_model(
     state_dict: Dict[str, Any],
     num_classes: int,
     num_experts: int,
-    top_k: int
+    top_k: int,
+    temperature: float
 ) -> torch.nn.Module:
     """
     Initialize and load the MoE model.
@@ -245,14 +254,15 @@ def initialize_model(
         num_classes: Number of output classes
         num_experts: Number of expert networks
         top_k: Number of top experts to select
-        
+        temperature: Temperature for gating softmax
     Returns:
         Loaded model on the configured device in eval mode
     """
     model = MoEModel(
         num_classes=num_classes,
         num_experts=num_experts,
-        top_k=top_k
+        top_k=top_k,
+        temperature=temperature
     )
     model.load_state_dict(state_dict)
     model = model.to(DEVICE)
@@ -434,7 +444,7 @@ def main() -> None:
         args = get_args()
         logger.info(
             f"Inference configuration: dataset_name={args.dataset_name}, model_name={args.model_name}, type_model={args.type_model}, "
-            f"run_time={args.run_time}, num_experts={args.num_experts}, top_k={args.top_k}"
+            f"run_time={args.run_time}, num_experts={args.num_experts}, top_k={args.top_k}, seed={args.seed}"
         )
 
         # Load checkpoint and extract configuration
@@ -444,12 +454,13 @@ def main() -> None:
             type_model=args.type_model,
             run_time=args.run_time,
             num_experts=args.num_experts,
-            top_k=args.top_k
+            top_k=args.top_k,
+            seed=args.seed
         )
-        state_dict, num_classes, num_experts, top_k = load_checkpoint(checkpoint_path)
+        state_dict, num_classes, num_experts, top_k, temperature = load_checkpoint(checkpoint_path)
         
         # Initialize model
-        model = initialize_model(state_dict, num_classes, num_experts, top_k)
+        model = initialize_model(state_dict, num_classes, num_experts, top_k, temperature)
         
         # Load test data
         test_loader = create_test_dataloader()
@@ -468,7 +479,8 @@ def main() -> None:
             type_model=args.type_model,
             run_time=args.run_time,
             num_experts=num_experts,
-            top_k=top_k
+            top_k=top_k,
+            seed=args.seed
         )
         report_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"Report directory: {report_dir}")

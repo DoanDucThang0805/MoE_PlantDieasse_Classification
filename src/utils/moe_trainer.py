@@ -154,7 +154,8 @@ class MoETrainer:
             "val_acc_history": self.val_acc_history,
             "num_classes": self.model.num_classes,
             "num_experts": self.model.num_experts,
-            "top_k": self.model.top_k
+            "top_k": self.model.top_k,
+            "temperature": self.model.temperature
         }, path)
         logger.info(f"Saved checkpoint: {path}")
 

@@ -124,6 +124,13 @@ def get_args():
         help="MoE auxiliary loss weight"
     )
 
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=1.0,
+        help="Temperature for gating softmax"
+    )
+
     return parser.parse_args()
 
 
@@ -134,6 +141,10 @@ def get_args():
 def main():
 
     args = get_args()
+    print("\n===== Training Configuration =====")
+    for k, v in vars(args).items():
+        print(f"{k:<15}: {v}")
+    print("==================================\n")
 
     # -------------------------------------------------------------------------
     # Seed
@@ -174,7 +185,6 @@ def main():
         train_dataset,
         batch_size=args.batch_size,
         shuffle=SHUFFLE_TRAIN,
-        generator=g
     )
 
     val_loader = DataLoader(
@@ -214,7 +224,8 @@ def main():
     model = MoEModel(
         num_classes=num_classes,
         num_experts=args.num_experts,
-        top_k=args.top_k
+        top_k=args.top_k,
+        temperature=args.temperature,
     )
 
     # -------------------------------------------------------------------------

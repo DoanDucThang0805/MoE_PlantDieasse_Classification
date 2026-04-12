@@ -14,4 +14,6 @@ python -m trainning.moe_train \
     --batch_size 32 \
     --lr 0.0005 \
     --weight_decay 0.001 \
-    --moe_alpha 0.05
+    --moe_alpha 0.05 \
+    --temperature 0.5 \
+    --type_model moe_0.5temperature

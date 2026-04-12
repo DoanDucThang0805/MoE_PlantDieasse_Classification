@@ -43,16 +43,18 @@ class MoELayer(nn.Module):
         top_k (int): Number of top experts to use for each input sample.
     """
     
-    def __init__(self, embedding_dim: int, num_experts: int, top_k: int) -> None:
+    def __init__(self, embedding_dim: int, num_experts: int, top_k: int, temperature: float = 1.0) -> None:
         super().__init__()
         self.num_experts = num_experts
         self.top_k = top_k
-        
+        self.temperature = temperature
+
         # Gating network for expert selection
         self.gating = NoisyTopKGating(
             model_dim=embedding_dim,
             num_experts=num_experts,
-            top_k=top_k
+            top_k=top_k,
+            temperature=temperature
         )
         
         # Expert networks - each is a feed-forward network
@@ -143,12 +145,14 @@ class MoEModel(nn.Module):
         num_classes: int,
         num_experts: int,
         top_k: int,
+        temperature: float = 1.0
     ) -> None:
         super().__init__()
         
         self.num_classes = num_classes
         self.num_experts = num_experts
         self.top_k = top_k
+        self.temperature = temperature
         
         # Feature extraction backbone
         self.feature_extractor = Mobilenetv3SmallFeatureExtractor(
@@ -166,7 +170,8 @@ class MoEModel(nn.Module):
         self.moe_layer = MoELayer(
             embedding_dim=embedding_dim,
             num_experts=num_experts,
-            top_k=top_k
+            top_k=top_k,
+            temperature=temperature
         )
         
         # Classification head
@@ -183,11 +188,11 @@ class MoEModel(nn.Module):
         Returns:
             nn.Sequential: Classifier network.
         """
-        hidden_dim = embedding_dim // 8
+        hidden_dim = 32
         return nn.Sequential(
             nn.Linear(embedding_dim, hidden_dim),
             nn.GELU(),
-            nn.Dropout(DEFAULT_DROPOUT_RATE),
+            nn.Dropout(0.2),
             nn.Linear(hidden_dim, num_classes)
         )
 
