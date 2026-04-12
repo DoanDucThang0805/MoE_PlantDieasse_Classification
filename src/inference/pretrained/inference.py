@@ -15,6 +15,7 @@ Tính năng:
 
 import os
 from pathlib import Path
+import argparse
 
 import torch
 from torch.utils.data import DataLoader
@@ -23,23 +24,80 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-from dataset.mixed_dataset import test_dataset
-from models.pretrained_model.shufflenet import model
+from dataset.mixed_dataset import build_datasets
+from models.pretrained_model.mobilenetv3_small import create_model
 
 
 # ============================================================================
 # Cấu Hình Chính
 # ============================================================================
 
-# Thông tin mô hình và checkpoint
-MODEL_NAME = 'shufflenet'  # Tên mô hình (phù hợp với tên thư mục checkpoint)
-MODEL_TYPE = 'pretrain_weight'
-RUN_TIME = 'run_20260325-124056'  # Timestamp của lần chạy huấn luyện
-DATASET_NAME = 'plantdoc'
+parser = argparse.ArgumentParser(
+    description="Evaluate trained model on test dataset"
+)
 
-# Tham số tải dữ liệu
-BATCH_SIZE = 32
-SHUFFLE_TEST = True
+parser.add_argument(
+    "--model_name",
+    type=str,
+    default="shufflenet",
+    help="Model name (must match checkpoint folder name)"
+)
+
+parser.add_argument(
+    "--model_type",
+    type=str,
+    default="pretrain_weight",
+    help="Model type folder"
+)
+
+parser.add_argument(
+    "--run_time",
+    type=str,
+    required=True,
+    help="Training run timestamp (e.g. run_20260325-124056)"
+)
+
+parser.add_argument(
+    "--dataset_name",
+    type=str,
+    default="plantdoc",
+    help="Dataset name"
+)
+
+parser.add_argument(
+    "--batch_size",
+    type=int,
+    default=32,
+    help="Batch size for inference"
+)
+
+parser.add_argument(
+    "--shuffle_test",
+    action="store_true",
+    help="Shuffle test dataset"
+)
+parser.set_defaults(shuffle_test=True)
+args = parser.parse_args()
+
+
+# Thông tin mô hình và checkpoint
+MODEL_NAME = args.model_name
+MODEL_TYPE = args.model_type
+RUN_TIME = args.run_time
+DATASET_NAME = args.dataset_name
+BATCH_SIZE = args.batch_size
+SHUFFLE_TEST = args.shuffle_test
+
+
+print("\n========== Evaluation Config ==========")
+print(f"Dataset      : {DATASET_NAME}")
+print(f"Model Name   : {MODEL_NAME}")
+print(f"Model Type   : {MODEL_TYPE}")
+print(f"Run Time     : {RUN_TIME}")
+print(f"Batch Size   : {BATCH_SIZE}")
+print(f"Shuffle Test : {SHUFFLE_TEST}")
+print("=======================================\n")
+
 
 # Tham số hình ảnh plot
 CONFUSION_MATRIX_FIGSIZE = (12, 10)
@@ -69,12 +127,16 @@ report_dir = (
 # ============================================================================
 
 # Tạo data loader cho tập kiểm tra
+_, _, test_dataset = build_datasets(use_context=False)
 test_ds = DataLoader(
     test_dataset,
     batch_size=BATCH_SIZE,
     shuffle=SHUFFLE_TEST
 )
-
+labels = test_dataset.labels
+num_classes = len(set(labels))
+print("Detect num_classes of model: ", num_classes)
+model = create_model(num_classes=num_classes)
 
 # ============================================================================
 # Tải Checkpoint
@@ -113,7 +175,7 @@ all_labels = []
 # Suy luận trên từng batch
 print("Đang thực hiện suy luận trên tập kiểm tra...")
 with torch.inference_mode(True):
-    for images, labels in test_ds:
+    for images, labels, _ in test_ds:
         # Chuyển dữ liệu sang thiết bị
         images, labels = images.to(device), labels.to(device)
         
@@ -205,12 +267,12 @@ sns.heatmap(
     annot=True,
     cmap="Blues",
     fmt=".2f",
-    cbar_kws={"label": "Giá Trị"}
+    cbar_kws={"label": "Score"}
 )
 
-plt.title("Báo Cáo Phân Loại (Precision / Recall / F1-score)", fontsize=12)
-plt.xlabel("Chỉ Số Đánh Giá")
-plt.ylabel("Lớp Bệnh")
+plt.title("Classification Report (Precision / Recall / F1-score)", fontsize=12)
+plt.xlabel("Evaluation Metrics")
+plt.ylabel("Disease Classes")
 plt.tight_layout()
 
 # Lưu hình ảnh

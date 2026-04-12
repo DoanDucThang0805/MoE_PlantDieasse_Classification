@@ -260,7 +260,7 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "--no_context",
-        action="store_false",
+        action="sto re_false",
         dest="use_context",
         help="Disable context features"
     ),

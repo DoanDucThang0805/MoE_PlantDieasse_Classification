@@ -118,6 +118,10 @@ class Config:
             cls.model_name = args.model_name
         if hasattr(args, 'type_model') and args.type_model:
             cls.type_model = args.type_model
+        if hasattr(args, 'num_experts') and args.num_experts:
+            cls.num_experts = args.num_experts
+        if hasattr(args, 'top_k') and args.top_k:
+            cls.top_k = args.top_k
         if hasattr(args, 'run_time') and args.run_time:
             cls.run_time = args.run_time
         if hasattr(args, 'dataset_name') and args.dataset_name:
@@ -131,6 +135,8 @@ class Config:
         logger.info(f"Configuration updated from CLI arguments:")
         logger.info(f"  Model Name: {cls.model_name}")
         logger.info(f"  Model Type: {cls.type_model}")
+        logger.info(f"  Num experts: {cls.num_experts}")
+        logger.info(f"  Top_k: {cls.top_k}")
         logger.info(f"  Run Time: {cls.run_time}")
         logger.info(f"  Dataset Name: {cls.dataset_name}")
         logger.info(f"  Use Context: {cls.use_context}")
@@ -151,7 +157,7 @@ class Config:
         """
         checkpoint_path = (
             Path(__file__).resolve().parents[3] / 'checkpoints' / cls.dataset_name / cls.type_model / 
-            cls.model_name / cls.run_time / 'best_checkpoint.pth'
+            cls.model_name / f"{cls.num_experts}_experts" / f"top_{cls.top_k}" / cls.run_time / 'best_checkpoint.pth'
         )
         
         if not checkpoint_path.exists():
@@ -162,6 +168,7 @@ class Config:
         
         return checkpoint_path
     
+
     @classmethod
     def get_report_dir(cls) -> Path:
         """
@@ -173,8 +180,8 @@ class Config:
             Path: Directory path for saving reports
         """
         report_dir = (
-            Path(__file__).resolve().parents[3] / 'reports' / cls.dataset_name / cls.type_model / 
-            cls.model_name / cls.run_time
+            Path(__file__).resolve().parents[3] / 'reports' / cls.dataset_name / cls.type_model /
+            cls.model_name / f"{cls.num_experts}_experts" / f"top_{cls.top_k}" / cls.run_time
         )
         report_dir.mkdir(parents=True, exist_ok=True)
         return report_dir
@@ -225,6 +232,18 @@ Examples:
         help="Model type (default: MoE)"
     )
     parser.add_argument(
+        "--num_experts",
+        type=int,
+        default=5,
+        help="Num experts of model"
+    )
+    parser.add_argument(
+        "--top_k",
+        type=int,
+        default=2,
+        help="top_k of model"
+    )
+    parser.add_argument(
         "--run_time",
         type=str,
         default=None,
@@ -241,10 +260,16 @@ Examples:
     # Inference mode arguments
     parser.add_argument(
         "--use_context",
-        type=lambda x: x.lower() == 'true',
-        default=True,
-        help="Whether to use context features (default: True)"
+        action="store_true",
+        help="Enable context features"
     )
+    parser.add_argument(
+        "--no_context",
+        action="store_false",
+        dest="use_context",
+        help="Disable context features"
+    ),
+    parser.set_defaults(use_context=True),
     parser.add_argument(
         "--router_mode",
         type=str,
@@ -752,6 +777,8 @@ def main():
         logger.info(f"Inference Configuration:")
         logger.info(f"  Model: {Config.model_name}")
         logger.info(f"  Model Type: {Config.type_model}")
+        logger.info(f"  Num_experts: {Config.num_experts}")
+        logger.info(f"  Top_k: {Config.top_k}")
         logger.info(f"  Run: {Config.run_time}")
         logger.info(f"  Dataset: {Config.dataset_name}")
         logger.info(f"  Device: {Config.device}")
