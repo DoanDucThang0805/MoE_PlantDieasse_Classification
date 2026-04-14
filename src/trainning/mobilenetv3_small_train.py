@@ -20,14 +20,14 @@ output_dir = Path.cwd().parents[0]
 
 labels = train_dataset.labels
 num_classes = len(set(labels))
-
+classes = np.unique(labels)
 class_weights = compute_class_weight(
     class_weight='balanced',
-    classes=np.arange(num_classes),
+    classes=classes,
     y=labels
 )
-
-criterion = nn.CrossEntropyLoss()
+class_weights = torch.tensor(class_weights, dtype=torch.float32, device=device)
+criterion = nn.CrossEntropyLoss(class_weights)
 optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=0.001)
 
 trainer = Trainer(

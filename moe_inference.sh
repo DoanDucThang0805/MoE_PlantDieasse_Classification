@@ -11,10 +11,10 @@ echo "=========================================="
 
 python -m inference.moe.inference \
   --model-name mobilenetv3small_moe \
-  --run-time run_20260412-175504 \
+  --run-time run_20260412-141057 \
   --dataset-name plantdoc \
   --topk 2 \
-  --num-expert 4 \
+  --num-expert 5 \
   --type-model moe_0.5temperature \
   --seed 42
 echo "=========================================="
