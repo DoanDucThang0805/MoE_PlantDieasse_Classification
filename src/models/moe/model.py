@@ -24,8 +24,6 @@ DEFAULT_EXPERT_HIDDEN_DIM = 576*2   # Hidden layer multiplier (2x embedding_dim)
 DEFAULT_CLASSIFIER_HIDDEN_DIM = 120  # Classifier hidden dimension
 DEFAULT_DROPOUT_RATE = 0.1
 DEFAULT_NUM_CLASSES = 8
-DEFAULT_NUM_EXPERTS = 2
-DEFAULT_TOP_K = 2
 DEFAULT_BATCH_SIZE = 32
 DEFAULT_IMAGE_SIZE = 224
 DEFAULT_NUM_IMAGE_CHANNELS = 3
@@ -73,9 +71,11 @@ class MoELayer(nn.Module):
         """
         return nn.ModuleList([
             nn.Sequential(
-                nn.Linear(embedding_dim, embedding_dim * 2),
-                nn.ReLU(),
-                nn.Linear(embedding_dim * 2, embedding_dim)
+                nn.Linear(embedding_dim, 1024),
+                nn.LayerNorm(1024),
+                nn.GELU(),
+                nn.Dropout(0.1),
+                nn.Linear(1024, embedding_dim)
             )
             for _ in range(num_experts)
         ])
@@ -188,13 +188,18 @@ class MoEModel(nn.Module):
         Returns:
             nn.Sequential: Classifier network.
         """
-        hidden_dim = 32
         return nn.Sequential(
-            nn.Linear(embedding_dim, hidden_dim),
+            nn.Linear(embedding_dim, 256),
+            nn.LayerNorm(256),
             nn.GELU(),
             nn.Dropout(0.2),
-            nn.Linear(hidden_dim, num_classes)
+            nn.Linear(256, 128),
+            nn.LayerNorm(128),
+            nn.GELU(),
+            nn.Dropout(0.1),      # giảm nhẹ
+            nn.Linear(128, num_classes)
         )
+
 
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Forward pass through the MoE model.
@@ -241,8 +246,8 @@ def test_moe_layer() -> None:
     batch_size = 3
     moe_layer = MoELayer(
         embedding_dim=DEFAULT_EMBEDDING_DIM,
-        num_experts=DEFAULT_NUM_EXPERTS,
-        top_k=DEFAULT_TOP_K
+        num_experts=4,
+        top_k=2
     )
     
     dummy_input = torch.randn(batch_size, DEFAULT_EMBEDDING_DIM)
@@ -264,8 +269,8 @@ def test_moe_model() -> None:
     # Create and test full model
     model = MoEModel(
         num_classes=DEFAULT_NUM_CLASSES,
-        num_experts=DEFAULT_NUM_EXPERTS,
-        top_k=DEFAULT_TOP_K
+        num_experts=4,
+        top_k=2
     )
     
     dummy_images = torch.randn(

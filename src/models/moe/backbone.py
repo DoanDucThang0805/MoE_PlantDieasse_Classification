@@ -12,7 +12,8 @@ class Mobilenetv3SmallFeatureExtractor(nn.Module):
     def __init__(self, pretrained=True, freeze_backbone=False) -> None:
         super().__init__()
 
-        backbone = models.mobilenet_v3_small(pretrained=pretrained)
+        weights = models.MobileNet_V3_Small_Weights.DEFAULT if pretrained else None
+        backbone = models.mobilenet_v3_small(weights=weights)
 
         self.features = backbone.features
         self.pool = nn.AdaptiveAvgPool2d(1)

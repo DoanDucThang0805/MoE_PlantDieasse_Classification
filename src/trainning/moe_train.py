@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
 
-from utils.moe_trainer import MoETrainer
+from utils.moe_trainnerv2 import MoETrainer
 from dataset.plantdoc_dataset import train_dataset, validation_dataset
 from models.moe.model import MoEModel
 from loss.loss_fn import MoELoss
@@ -47,13 +47,13 @@ BATCH_SIZE = 32
 SHUFFLE_TRAIN = True
 SHUFFLE_VAL = False
 
-NUM_EXPERTS = 2
+NUM_EXPERTS = 4
 TOP_K = 2
 
 NUM_EPOCHS = 300
 LEARNING_RATE = 0.001
 WEIGHT_DECAY = 0.001
-MOE_LOSS_ALPHA = 0.05
+MOE_LOSS_ALPHA = 0.01
 
 
 # =============================================================================
@@ -180,11 +180,13 @@ def main():
     # -------------------------------------------------------------------------
     # DataLoader (seeded)
     # -------------------------------------------------------------------------
-
+    g = torch.Generator()
+    g.manual_seed(args.seed)
     train_loader = DataLoader(
         train_dataset,
         batch_size=args.batch_size,
         shuffle=SHUFFLE_TRAIN,
+        generator=g
     )
 
     val_loader = DataLoader(
@@ -199,6 +201,7 @@ def main():
 
     labels = train_dataset.labels
     num_classes = len(set(labels))
+    classes = np.unique(labels)
 
     print(f"Number of classes: {num_classes}")
 
@@ -208,14 +211,15 @@ def main():
 
     class_weights = compute_class_weight(
         class_weight="balanced",
-        classes=np.arange(num_classes),
+        classes=classes,
         y=labels
     )
 
     class_weights = torch.tensor(
         class_weights,
-        dtype=torch.float32
-    ).to(device)
+        dtype=torch.float32,
+        device=device
+    )
 
     # -------------------------------------------------------------------------
     # Model
@@ -232,17 +236,18 @@ def main():
     # Loss
     # -------------------------------------------------------------------------
 
-    criterion = MoELoss(alpha=args.moe_alpha)
+    criterion = MoELoss(alpha=args.moe_alpha, class_weights=class_weights)
 
     # -------------------------------------------------------------------------
     # Optimizer
     # -------------------------------------------------------------------------
 
-    optimizer = optim.Adam(
-        model.parameters(),
-        lr=args.lr,
-        weight_decay=args.weight_decay
-    )
+    # optimizer = optim.Adam(
+    #     model.parameters(),
+    #     lr=args.lr,
+    #     weight_decay=args.weight_decay
+    # )
+    optimizer = optim.AdamW(params=model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     # -------------------------------------------------------------------------
     # Trainer

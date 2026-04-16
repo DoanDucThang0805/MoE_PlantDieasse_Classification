@@ -8,7 +8,7 @@ clear
 
 python -m trainning.moe_train \
     --seed 42 \
-    --num_experts 5 \
+    --num_experts 4 \
     --top_k 2 \
     --num_epochs 300 \
     --batch_size 32 \
@@ -20,7 +20,7 @@ python -m trainning.moe_train \
 
 python -m trainning.moe_train \
     --seed 42 \
-    --num_experts 5 \
+    --num_experts 4 \
     --top_k 2 \
     --num_epochs 300 \
     --batch_size 32 \
@@ -32,7 +32,7 @@ python -m trainning.moe_train \
 
 python -m trainning.moe_train \
     --seed 42 \
-    --num_experts 5 \
+    --num_experts 4 \
     --top_k 2 \
     --num_epochs 300 \
     --batch_size 32 \

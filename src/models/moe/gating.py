@@ -68,16 +68,12 @@ class NoisyTopKGating(nn.Module):
 
         # Lớp tuyến tính để dự đoán logits gating cơ bản
         self.gate_projector = nn.Sequential(
-            nn.Linear(self.model_dim, 128),  # Giảm chiều để tăng tính phi tuyến
-            nn.LayerNorm(128),  # Thêm layer norm để ổn định training
+            nn.Linear(self.model_dim, 128),
+            nn.LayerNorm(128),
             nn.GELU(),
-            nn.Dropout(0.1),  # Thêm dropout để giảm overfitting
-
-            nn.Linear(128, 32),  # Giảm tiếp để tăng tính phi tuyến
-            nn.LayerNorm(32),  # Thêm layer norm để ổn định training
+            nn.Linear(128, 32),
+            nn.LayerNorm(32),
             nn.GELU(),
-            nn.Dropout(0.1),  # Thêm dropout để giảm overfitting
-
             nn.Linear(32, self.num_experts, bias=False)
         )
         
