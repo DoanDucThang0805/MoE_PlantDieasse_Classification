@@ -11,7 +11,7 @@ echo "=========================================="
 
 python -m inference.moe.inference \
   --model-name mobilenetv3small_moe \
-  --run-time run_20260416-023523 \
+  --run-time run_20260416-152114 \
   --dataset-name plantdoc \
   --topk 2 \
   --num-expert 4 \
