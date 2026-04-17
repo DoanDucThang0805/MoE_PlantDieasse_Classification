@@ -11,12 +11,12 @@ echo "=========================================="
 
 python -m inference.moe.inference \
   --model-name mobilenetv3small_moe \
-  --run-time run_20260416-234819 \
+  --run-time run_20260417-104039 \
   --dataset-name plantdoc \
   --topk 2 \
   --num-expert 4 \
   --type-model moe_0.5temperature \
-  --seed 44
+  --seed 45
 
 echo "=========================================="
 echo "All inference completed!"

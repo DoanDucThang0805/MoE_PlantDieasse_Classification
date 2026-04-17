@@ -7,7 +7,7 @@ cd src
 clear
 
 python -m trainning.moe_train \
-    --seed 44 \
+    --seed 45 \
     --num_experts 4 \
     --top_k 2 \
     --num_epochs 300 \
@@ -19,7 +19,7 @@ python -m trainning.moe_train \
     --type_model moe_0.5temperature
 
 python -m trainning.moe_train \
-    --seed 44 \
+    --seed 45 \
     --num_experts 4 \
     --top_k 2 \
     --num_epochs 300 \
@@ -31,7 +31,7 @@ python -m trainning.moe_train \
     --type_model moe_0.5temperature
 
 python -m trainning.moe_train \
-    --seed 44 \
+    --seed 45 \
     --num_experts 4 \
     --top_k 2 \
     --num_epochs 300 \
