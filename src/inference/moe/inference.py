@@ -343,7 +343,8 @@ def save_plot(
     output_path = filepath / f"{filename}.{PLOT_FORMAT}"
     plt.savefig(output_path, dpi=REPORT_DPI, bbox_inches="tight")
     logger.info(f"Saved {description}: {output_path}")
-    plt.show()
+    # plt.show()
+    plt.close()
 
 
 def visualize_confusion_matrix(

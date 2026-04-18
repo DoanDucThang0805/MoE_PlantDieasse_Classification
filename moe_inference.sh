@@ -1,7 +1,8 @@
 #!/bin/bash
 
 
-source venv/bin/activate
+# source venv/bin/activate
+source venv/Scripts/activate
 
 cd src
 clear
@@ -11,7 +12,7 @@ echo "=========================================="
 
 python -m inference.moe.inference \
   --model-name mobilenetv3small_moe \
-  --run-time run_20260416-234819 \
+  --run-time run_20260418-032938 \
   --dataset-name plantdoc \
   --topk 2 \
   --num-expert 4 \

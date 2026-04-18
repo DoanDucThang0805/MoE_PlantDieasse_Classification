@@ -19,6 +19,7 @@ from utils.moe_trainnerv2 import MoETrainer
 from dataset.plantdoc_dataset import train_dataset, validation_dataset
 from models.moe.model import MoEModel
 from loss.loss_fn import MoELoss
+from loss.loss_fn2 import MoELossWithOrtho
 
 warnings.filterwarnings("ignore")
 
@@ -122,6 +123,13 @@ def get_args():
         type=float,
         default=MOE_LOSS_ALPHA,
         help="MoE auxiliary loss weight"
+    )
+
+    parser.add_argument(
+        "--lambda_ortho",
+        type=float,
+        default=0.001,
+        help="Orthogonality loss weight"
     )
 
     parser.add_argument(
@@ -236,7 +244,11 @@ def main():
     # Loss
     # -------------------------------------------------------------------------
 
-    criterion = MoELoss(alpha=args.moe_alpha, class_weights=class_weights)
+    criterion = MoELossWithOrtho(
+        alpha        = args.moe_alpha,      # vẫn là 0.01
+        lambda_ortho = args.lambda_ortho,   # tune: 0.0001 ~ 0.01
+        class_weights= class_weights,
+    )
 
     # -------------------------------------------------------------------------
     # Optimizer

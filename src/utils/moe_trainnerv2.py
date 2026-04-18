@@ -171,6 +171,7 @@ class MoETrainer:
                     labels,
                     clean_logits,
                     topk_indices,
+                    self.model.moe_layer.experts,
                 )
 
                 loss.backward()
@@ -232,6 +233,7 @@ class MoETrainer:
                         labels,
                         clean_logits,
                         topk_indices,
+                        self.model.moe_layer.experts,
                     )
 
                     preds = torch.argmax(logits, dim=1)
