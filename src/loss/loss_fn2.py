@@ -145,7 +145,7 @@ class MoELossWithOrtho(nn.Module):
             + self.lambda_ortho * ortho_loss
         )
 
-        return total_loss
+        return total_loss, balance_loss, ortho_loss
 
     # ─────────────────────────────────────────────────────────────────────────
     # Load-balance Loss  (giữ nguyên từ MoELoss gốc)

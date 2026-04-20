@@ -133,6 +133,17 @@ def get_args():
     )
 
     parser.add_argument(
+        "--ortho_warmup_epochs",
+        type=int,
+        default=10,
+        help=(
+            "Số epoch để warm up lambda_ortho từ 0 lên giá trị đích. "
+            "Ortho loss bắt đầu sau LR warmup (warmup_epochs) "
+            "và đạt đỉnh sau thêm ortho_warmup_epochs epoch nữa."
+        )
+    )
+
+    parser.add_argument(
         "--temperature",
         type=float,
         default=1.0,
@@ -167,6 +178,7 @@ def main():
     # -------------------------------------------------------------------------
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Using device: {device}")
 
     # -------------------------------------------------------------------------
     # Output Directory
@@ -274,7 +286,8 @@ def main():
         criterion=criterion,
         optimizer=optimizer,
         batch_size=args.batch_size,
-        checkpoint_dir=checkpoint_dir
+        checkpoint_dir=checkpoint_dir,
+        ortho_warmup_epochs=args.ortho_warmup_epochs,
     )
 
     # -------------------------------------------------------------------------
