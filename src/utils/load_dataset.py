@@ -66,6 +66,8 @@ class LoadDataset(Dataset):
             root_dir (Path): Root directory containing class subdirectories
             split (str, optional): Dataset split - 'train', 'val', or 'test'. Defaults to 'train'.
             train_ratio (float, optional): Proportion of data for training (0 to 1). Defaults to 0.8.
+            return_context (bool, optional): Whether to return context features. Defaults to False.
+            context_extractor (Callable, optional): Function to extract context features from an image. Defaults to None.
             transform (transforms.Compose, optional): Image transformation pipeline. Defaults to None.
         """
         self.root_dir = root_dir

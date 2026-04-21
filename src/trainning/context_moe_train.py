@@ -99,6 +99,7 @@ class Config:
     num_epochs: int = 300
     num_experts: int = 6
     top_k: int = 4
+    temperature: float = 1.0
     model_name: str = 'mobilenetv3large_moe'
     type_model: str = 'MoE'
     
@@ -131,6 +132,7 @@ class Config:
         cls.num_epochs = args.epochs
         cls.num_experts = args.num_experts
         cls.top_k = args.top_k
+        cls.temperature = args.temperature
         cls.model_name = args.model_name
         cls.type_model = args.type_model
         cls.use_context = args.use_context
@@ -219,6 +221,13 @@ def parse_arguments() -> argparse.Namespace:
     )
     
     parser.add_argument(
+        "--temperature",
+        type=float,
+        default=1.0,
+        help="Temperature for softmax in gating network (default: 1.0)"
+    )
+
+    parser.add_argument(
         "--model_name",
         type=str,
         default="mobilenetv3large_moe",
@@ -229,7 +238,6 @@ def parse_arguments() -> argparse.Namespace:
         "--type_model",
         type=str,
         default="MoE",
-        choices=["MoE", "pretrained", "other"],
         help="Model type (default: MoE)"
     )
     
@@ -345,8 +353,7 @@ def create_model(num_classes: int, router_mode: str, num_experts: int, top_k: in
             num_experts=num_experts,
             top_k=top_k,
             router_mode=router_mode,
-            use_context=Config.use_context
-        )
+            temperature=Config.temperature)
         
         _display_model_summary(model, router_mode)
         return model
@@ -376,7 +383,7 @@ def setup_training_components(model: MoEModel) -> tuple:
     """
     criterion = MoELoss(alpha=Config.moe_loss_alpha)
     
-    optimizer = optim.Adam(
+    optimizer = optim.AdamW(
         model.parameters(),
         lr=Config.learning_rate,
         weight_decay=Config.weight_decay

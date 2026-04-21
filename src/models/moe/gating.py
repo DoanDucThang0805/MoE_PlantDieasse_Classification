@@ -343,7 +343,7 @@ class ContextAwareGating(nn.Module):
         noise_stddev (float): Standard deviation of noise added during training
     """
     
-    def __init__(self, model_dim: int, context_dim: int, num_experts: int, top_k: int, noise_stddev=1.0) -> None:
+    def __init__(self, model_dim: int, context_dim: int, num_experts: int, top_k: int, temperature: float = 1.0, noise_stddev=1.0) -> None:
         """
         Initialize the context-aware gating module.
         
@@ -366,22 +366,22 @@ class ContextAwareGating(nn.Module):
         self.num_experts = num_experts
         self.top_k = top_k
         self.noise_stddev = noise_stddev
+        self.temperature = temperature
         fusion_dim = model_dim + 32
 
         # Layer normalization for input embedding
         self.embedding_norm = nn.LayerNorm(model_dim)
         # Layer normalization for context features
         self.context_norm = nn.LayerNorm(context_dim)
+        self.context_proj_norm = nn.LayerNorm(32)
         # Layer normalization for fused embedding and context
         self.fusion_norm = nn.LayerNorm(fusion_dim)
 
         # Project context features to 32 dimensions
-        # Uses GELU activation for smoothness
         self.context_projector = nn.Sequential(
             nn.Linear(context_dim, 32),
             nn.GELU(),
             nn.Linear(32, 32),
-            nn.GELU()
         )
 
         # Predict noise magnitude for each expert
@@ -391,11 +391,13 @@ class ContextAwareGating(nn.Module):
         # Multi-layer MLP to predict logits for all experts
         # Takes fused representation and outputs expert logits
         self.gate_projector = nn.Sequential(
-            nn.Linear(fusion_dim, fusion_dim//2),
+            nn.Linear(fusion_dim, 128),
+            nn.LayerNorm(128),
             nn.GELU(),
-            nn.Linear(fusion_dim//2, fusion_dim//4),
+            nn.Linear(128, 32),
+            nn.LayerNorm(32),
             nn.GELU(),
-            nn.Linear(fusion_dim//4, num_experts)
+            nn.Linear(32, num_experts)
         )
 
     
@@ -431,10 +433,10 @@ class ContextAwareGating(nn.Module):
 
         # Project context to fixed dimension
         context_features = self.context_projector(context)
+        context_features = self.context_proj_norm(context_features)
+
         # Concatenate normalized embedding with projected context
         fusion_features = torch.cat([embedding, context_features], dim=-1)
-        # Normalize the fused representation
-        fusion_features = self.fusion_norm(fusion_features)
 
         # Compute clean logits (without noise)
         clean_logits = self.gate_projector(fusion_features)
@@ -456,6 +458,6 @@ class ContextAwareGating(nn.Module):
         # Select top-k experts
         top_k_logits, top_k_indices = torch.topk(noisy_logits, self.top_k, dim=-1)
         # Normalize top-k logits to weights via softmax
-        combined_weights = F.softmax(top_k_logits, dim=-1)
+        combined_weights = F.softmax(top_k_logits / self.temperature, dim=-1)
 
         return combined_weights, top_k_indices, clean_logits

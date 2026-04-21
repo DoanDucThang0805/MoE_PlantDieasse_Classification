@@ -1,52 +1,27 @@
 """
 Training Module for Plant Disease Classification Models.
-
-This module provides a comprehensive Trainer class for training neural networks on 
-plant disease classification tasks. It includes features like learning rate scheduling,
-early stopping, checkpoint management, and training visualization.
-
-Features:
-    - Learning rate reduction on plateau
-    - Early stopping mechanism
-    - Checkpoint saving (best and last models)
-    - Training history tracking and visualization
-    - Automatic logging to file
 """
 
 import os
 from datetime import datetime
 import logging
+
 import tqdm
 import matplotlib.pyplot as plt
 
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
-
+from torch.optim.lr_scheduler import SequentialLR, LinearLR, CosineAnnealingLR
 
 from metric.metric import accuracy
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class MoETrainer:
-    """
-    Training orchestrator for neural network models.
-    
-    Manages the complete training pipeline including forward/backward passes,
-    validation, learning rate scheduling, early stopping, and checkpoint management.
-    Automatically tracks and visualizes training metrics.
-    
-    Attributes:
-        num_epochs (int): Total number of training epochs
-        device (torch.device): Device to train on (CPU or CUDA)
-        model (nn.Module): Neural network model to train
-        optimizer (optim.Optimizer): Optimization algorithm
-        criterion (nn.Module): Loss function
-        scheduler (torch.optim.lr_scheduler.ReduceLROnPlateau): Learning rate scheduler
-        run_dir (str): Directory to save checkpoints and logs
-    """
-    
+
     def __init__(
         self,
         num_epochs: int,
@@ -57,34 +32,15 @@ class MoETrainer:
         criterion: nn.Module,
         optimizer: optim.Optimizer,
         batch_size: int,
-        checkpoint_dir: str = 'checkpoints',
-        lr_reduction_rate: float = 0.5,          # 50%
-        min_lr: float = 1e-7,
-        lr_reduction_patience: int = 10,
+        checkpoint_dir: str = "checkpoints",
+        warmup_epochs: int = 10,
+        min_lr: float = 1e-6,
         val_acc_threshold: float = 1e-5,
         early_stopping_patience: int = 50,
-        save_best: bool = True
+        max_grad_norm: float = 1.0,
+        save_best: bool = True,
     ) -> None:
-        """
-        Initialize the Trainer.
-        
-        Args:
-            num_epochs (int): Number of training epochs
-            device (torch.device): Device to train on (torch.device("cuda") or torch.device("cpu"))
-            train_loader (DataLoader): DataLoader for training dataset
-            val_loader (DataLoader): DataLoader for validation dataset
-            model (nn.Module): Neural network model to train
-            criterion (nn.Module): Loss function (e.g., nn.CrossEntropyLoss())
-            optimizer (optim.Optimizer): Optimizer (e.g., torch.optim.Adam())
-            batch_size (int): Batch size for training
-            checkpoints_dir (str, optional): Directory to save checkpoints. Defaults to 'checkpoints'.
-            lr_reduction_rate (float, optional): Factor to reduce learning rate. Defaults to 0.5.
-            min_lr (float, optional): Minimum learning rate. Defaults to 1e-7.
-            lr_reduction_patience (int, optional): Patience for LR reduction. Defaults to 10.
-            val_acc_threshold (float, optional): Threshold for validation improvement. Defaults to 1e-5.
-            early_stopping_patience (int, optional): Patience for early stopping. Defaults to 50.
-            save_best (bool, optional): Whether to save best model. Defaults to True.
-        """
+
         self.batch_size = batch_size
         self.num_epochs = num_epochs
         self.device = device
@@ -94,273 +50,345 @@ class MoETrainer:
         self.criterion = criterion
         self.optimizer = optimizer
         self.checkpoint_dir = checkpoint_dir
-        self.lr_reduction_rate = lr_reduction_rate
+        self.warmup_epochs = warmup_epochs
         self.min_lr = min_lr
-        self.lr_reduction_patience = lr_reduction_patience
         self.val_acc_threshold = val_acc_threshold
         self.early_stopping_patience = early_stopping_patience
+        self.max_grad_norm = max_grad_norm
         self.save_best = save_best
 
         self.expert_sample_count = torch.zeros(self.model.num_experts)
-        self.expert_class_count = torch.zeros(self.model.num_experts, self.model.num_classes)
-
-        # scheduler: reduce LR on plateau, monitoring validation accuracy (mode='max')
-        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            self.optimizer,
-            mode='max',
-            factor=lr_reduction_rate,
-            patience=lr_reduction_patience,
-            threshold=val_acc_threshold,
-            min_lr=min_lr,
+        self.expert_class_count = torch.zeros(
+            self.model.num_experts, self.model.num_classes
         )
 
-        # run_id & run_dir
+        cosine_epochs = max(num_epochs - warmup_epochs, 1)
+
+        warmup_scheduler = LinearLR(
+            self.optimizer,
+            start_factor=0.1,
+            end_factor=1.0,
+            total_iters=warmup_epochs,
+        )
+
+        cosine_scheduler = CosineAnnealingLR(
+            self.optimizer,
+            T_max=cosine_epochs,
+            eta_min=min_lr,
+        )
+
+        self.scheduler = SequentialLR(
+            self.optimizer,
+            schedulers=[warmup_scheduler, cosine_scheduler],
+            milestones=[warmup_epochs],
+        )
+
         self.run_id = datetime.now().strftime("%Y%m%d-%H%M%S")
         self.run_dir = os.path.join(self.checkpoint_dir, f"run_{self.run_id}")
         os.makedirs(self.run_dir, exist_ok=True)
 
-        if logger.hasHandlers():
-            logger.handlers.clear()
-            
-        # logging file
-        file_handler = logging.FileHandler(os.path.join(self.run_dir, 'training.log'))
+        logger.propagate = False
+        logger.handlers = [
+            h for h in logger.handlers
+            if not isinstance(h, logging.FileHandler)
+        ]
+        file_handler = logging.FileHandler(
+            os.path.join(self.run_dir, "training.log")
+        )
         file_handler.setLevel(logging.INFO)
         logger.addHandler(file_handler)
 
-        # history
         self.train_loss_history = []
         self.val_loss_history = []
         self.train_acc_history = []
         self.val_acc_history = []
-
+        self.lr_history = []
 
     def _save_checkpoint(self, path: str, epoch: int):
-        """
-        Save model checkpoint.
-        
-        Saves the model state, optimizer state, and training history to a checkpoint file.
-        
-        Args:
-            path (str): File path to save the checkpoint
-            epoch (int): Current epoch number
-        """
-        torch.save({
-            "epoch": epoch,
-            "model_state_dict": self.model.state_dict(),
-            "optimizer_state_dict": self.optimizer.state_dict(),
-            "train_loss_history": self.train_loss_history,
-            "val_loss_history": self.val_loss_history,
-            "train_acc_history": self.train_acc_history,
-            "val_acc_history": self.val_acc_history
-        }, path)
+
+        torch.save(
+            {
+                "epoch": epoch,
+                "model_state_dict": self.model.state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+                "scheduler_state_dict": self.scheduler.state_dict(),
+                "train_loss_history": self.train_loss_history,
+                "val_loss_history": self.val_loss_history,
+                "train_acc_history": self.train_acc_history,
+                "val_acc_history": self.val_acc_history,
+                "lr_history": self.lr_history,
+                "num_classes": self.model.num_classes,
+                "num_experts": self.model.num_experts,
+                "top_k": self.model.top_k,
+                "temperature": self.model.temperature,
+            },
+            path,
+        )
+
         logger.info(f"Saved checkpoint: {path}")
 
-
     def _monitor_expert_usage(self, topk_indices: torch.Tensor, labels: torch.Tensor):
-        """
-        Monitor how experts are utilized in the MoE (Mixture of Experts) model.
-        
-        This function counts:
-        1. How many times each expert is used (expert_sample_count)
-        2. How many samples from each class are processed by each expert (expert_class_count)
-        
-        Args:
-            topk_indices (Tensor): Indices of K experts selected for each sample, shape (B, K)
-                                   B = batch size, K = number of experts selected
-            labels (Tensor): Class labels of the samples, shape (B,)
-        """
-        # ===== Get the number of experts and classes =====
-        N = self.model.num_experts  # Number of experts
-        C = self.model.num_classes  # Number of classes
 
-        # ===== Step 1: Convert indices to one-hot and count expert usage =====
-        # topk_indices shape: (B, K) 
-        # one_hot (B, K, N): Each position (b, k) becomes a one-hot vector of size N
-        # sum(dim=1) (B, N): Aggregate by sample, creating a binary matrix (B, N)
+        N = self.model.num_experts
+        C = self.model.num_classes
+
         expert_mask = torch.nn.functional.one_hot(topk_indices, num_classes=N).float()
-        expert_mask = expert_mask.sum(dim=1)  # shape: (B, N)
+        expert_mask = expert_mask.sum(dim=1)
 
-        # ===== Step 2: Update the count of how many times each expert is used =====
-        # Sum over batch (dim=0): Add all samples to get (N,)
-        # Result: Number of times each expert is used in the batch
         self.expert_sample_count += expert_mask.sum(dim=0).cpu()
 
-        # ===== Step 3: Count samples of each class processed by each expert =====
-        # Convert labels to one-hot (B,) → (B, C)
-        # Position (b, c) = 1 if sample b belongs to class c, otherwise = 0
         label_onehot = torch.nn.functional.one_hot(labels, num_classes=C).float()
 
-        # ===== Step 4: Expert × Class matrix =====
-        # (B, N)^T @ (B, C) = (N, C)
-        # Result: (i, j) = number of class j samples processed by expert i
         class_count = expert_mask.T @ label_onehot
 
-        # Update the cumulative counter
-        self.expert_class_count += class_count.cpu()     
-
+        self.expert_class_count += class_count.cpu()
 
     def train(self):
-        """
-        Execute the complete training loop.
-        
-        Performs training with validation for each epoch, implements learning rate scheduling,
-        early stopping, and saves the best and last checkpoints. Generates and saves a 
-        training visualization plot at the end.
-        
-        The training loop:
-        1. Trains model on training set
-        2. Validates on validation set
-        3. Updates learning rate based on validation accuracy
-        4. Implements early stopping if no improvement
-        5. Saves best and last model checkpoints
-        6. Visualizes loss and accuracy trends
-        """
+
         best_val_acc = -float("inf")
         best_epoch = -1
         no_improve_count = 0
 
         for epoch in tqdm.tqdm(range(self.num_epochs), desc="Epochs"):
-            # ---- Train ----
+
+            # ---------------- TRAIN ----------------
             self.model.train()
+
             train_running_loss = 0.0
             train_running_correct = 0.0
-            for images, labels in self.train_loader:
-                images, labels = images.to(self.device), labels.to(self.device)
-                logits, combined_weight, topk_indices = self.model(images)
-                self._monitor_expert_usage(topk_indices, labels)
-                probs = torch.softmax(logits, dim=1)
-                preds = torch.argmax(probs, dim=1)
-                loss = self.criterion(logits, labels, combined_weight, topk_indices)
-                acc = accuracy(preds, labels)
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-                train_running_loss += loss.item()
-                train_running_correct += acc
-            train_loss = train_running_loss / len(self.train_loader)
-            train_acc = train_running_correct / len(self.train_loader)
-            self.train_loss_history.append(train_loss)
-            self.train_acc_history.append(train_acc)
-            logger.info(f"Epoch[{epoch+1}/{self.num_epochs}] "
-                        f"Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%")
 
-            # ---- Validation ----
-            self.model.eval()
-            val_running_loss = 0.0
-            val_running_correct = 0.0
-            with torch.inference_mode():
-                for images, labels in self.val_loader:
-                    images, labels = images.to(self.device), labels.to(self.device)
-                    logits, combined_weight, topk_indices = self.model(images)
+            for images, labels, context in self.train_loader:
+
+                images = images.to(self.device)
+                labels = labels.to(self.device)
+                context = context.to(self.device)
+
+                self.optimizer.zero_grad(set_to_none=True)
+                if self.model.router_mode == "context_aware":
+                    logits, clean_logits, topk_indices = self.model(images, context)
+                else:
+                    raise ValueError(f"Unsupported router mode at now: {self.model.router_mode}")
+
+                loss = self.criterion(
+                    logits,
+                    labels,
+                    clean_logits,
+                    topk_indices,
+                )
+
+                loss.backward()
+
+                torch.nn.utils.clip_grad_norm_(
+                    self.model.parameters(),
+                    self.max_grad_norm,
+                )
+
+                self.optimizer.step()
+
+                with torch.no_grad():
+
+                    self._monitor_expert_usage(
+                        topk_indices.detach(),
+                        labels.detach(),
+                    )
+
                     probs = torch.softmax(logits, dim=1)
                     preds = torch.argmax(probs, dim=1)
-                    loss = self.criterion(logits, labels, combined_weight, topk_indices)
                     acc = accuracy(preds, labels)
+
+                train_running_loss += loss.item()
+                train_running_correct += acc
+
+            train_loss = train_running_loss / len(self.train_loader)
+            train_acc = train_running_correct / len(self.train_loader)
+
+            self.train_loss_history.append(train_loss)
+            self.train_acc_history.append(train_acc)
+
+            current_lr = self.optimizer.param_groups[0]["lr"]
+            self.lr_history.append(current_lr)
+
+            logger.info(
+                f"Epoch[{epoch+1}/{self.num_epochs}] "
+                f"Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}% "
+                f"LR: {current_lr:.2e}"
+            )
+
+            # ---------------- VALIDATION ----------------
+
+            self.model.eval()
+
+            val_running_loss = 0.0
+            val_running_correct = 0.0
+
+            with torch.inference_mode():
+
+                for images, labels, context in self.val_loader:
+
+                    images = images.to(self.device)
+                    labels = labels.to(self.device)
+                    context = context.to(self.device)
+
+                    logits, clean_logits, topk_indices = self.model(images, context)
+
+                    loss = self.criterion(
+                        logits,
+                        labels,
+                        clean_logits,
+                        topk_indices,
+                    )
+
+                    probs = torch.softmax(logits, dim=1)
+                    preds = torch.argmax(probs, dim=1)
+                    acc = accuracy(preds, labels)
+
                     val_running_loss += loss.item()
                     val_running_correct += acc
+
             validation_loss = val_running_loss / len(self.val_loader)
             validation_acc = val_running_correct / len(self.val_loader)
-            self.val_acc_history.append(validation_acc)
+
             self.val_loss_history.append(validation_loss)
-            logger.info(f"Epoch[{epoch + 1}/{self.num_epochs}] "
-                        f"Val Loss: {validation_loss:.4f}, Val Acc: {validation_acc:.2f}%")
+            self.val_acc_history.append(validation_acc)
 
-            # ---- Scheduler step (monitor validation accuracy) ----
-            # ReduceLROnPlateau expects the metric (we use validation_acc)
-            try:
-                self.scheduler.step(validation_acc)
-            except Exception as e:
-                # fail-safe - scheduler usually accepts a scalar
-                logger.warning(f"Scheduler step failed: {e}")
+            logger.info(
+                f"Epoch[{epoch+1}/{self.num_epochs}] "
+                f"Val Loss: {validation_loss:.4f}, "
+                f"Val Acc: {validation_acc:.2f}%"
+            )
 
-            # ---- Check improvement and save best model ----
+            self.scheduler.step()
+
             if validation_acc > best_val_acc + self.val_acc_threshold:
-                logger.info(f"Validation accuracy improved ({best_val_acc:.4f} -> {validation_acc:.4f}).")
+
+                logger.info(
+                    f"Validation accuracy improved "
+                    f"({best_val_acc:.4f} -> {validation_acc:.4f})."
+                )
+
                 best_val_acc = validation_acc
                 best_epoch = epoch + 1
                 no_improve_count = 0
-                if self.save_best:
-                    best_path = os.path.join(self.run_dir, "best_checkpoint.pth")
-                    self._save_checkpoint(best_path, epoch + 1)
-            else:
-                no_improve_count += 1
-                logger.info(f"No improvement for {no_improve_count} epoch(s).")
 
-            # ---- Early stopping ----
+                if self.save_best:
+
+                    best_path = os.path.join(
+                        self.run_dir,
+                        "best_checkpoint.pth",
+                    )
+
+                    self._save_checkpoint(best_path, epoch + 1)
+
+            else:
+
+                no_improve_count += 1
+
+                logger.info(
+                    f"No improvement for {no_improve_count} epoch(s)."
+                )
+
             if no_improve_count >= self.early_stopping_patience:
-                logger.info(f"Early stopping triggered. No improvement in validation acc for {self.early_stopping_patience} epochs.")
+
+                logger.info(
+                    f"Early stopping triggered."
+                )
+
                 break
 
-        # ---- Save last checkpoint ----
         last_path = os.path.join(self.run_dir, "last_checkpoint.pth")
+
         self._save_checkpoint(last_path, epoch + 1)
 
-        logger.info(f"Training finished. Best val acc: {best_val_acc:.4f} at epoch {best_epoch}")
+        logger.info(
+            f"Training finished. Best val acc: {best_val_acc:.4f} "
+            f"at epoch {best_epoch}"
+        )
 
-        # ---- Plot loss/acc ----
-        plt.figure(figsize=(12, 8))
-        plt.subplot(1, 2, 1)
+        # ---------------- PLOTS ----------------
+
+        plt.figure(figsize=(18, 5))
+
+        plt.subplot(1, 3, 1)
         plt.plot(self.train_loss_history, label="train_loss")
         plt.plot(self.val_loss_history, label="val_loss")
         plt.title("Loss")
-        plt.xlabel("Epochs")
-        plt.ylabel("Loss Values")
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
         plt.legend()
 
-        plt.subplot(1, 2, 2)
+        plt.subplot(1, 3, 2)
         plt.plot(self.train_acc_history, label="train_acc")
         plt.plot(self.val_acc_history, label="val_acc")
         plt.title("Accuracy")
-        plt.xlabel("Epochs")
+        plt.xlabel("Epoch")
         plt.ylabel("Accuracy (%)")
         plt.legend()
 
+        plt.subplot(1, 3, 3)
+        plt.plot(self.lr_history)
+        plt.title("Learning Rate")
+        plt.xlabel("Epoch")
+        plt.ylabel("LR")
+        plt.yscale("log")
+
         plt.tight_layout()
+
         plot_path = os.path.join(self.run_dir, "loss_acc_plot.png")
+
         plt.savefig(plot_path)
         plt.close()
 
+        # ---------------- EXPERT USAGE ----------------
 
-        # =========================================================
-        # 🔥 NEW: Expert Usage Plot
-        # =========================================================
         plt.figure()
-        plt.bar(range(self.model.num_experts), self.expert_sample_count.numpy())
-        plt.title("Expert Usage (Number of Samples)")
-        plt.xlabel("Expert ID")
-        plt.ylabel("Count")
-        plt.xticks(range(self.model.num_experts))
 
-        usage_path = os.path.join(self.run_dir, "expert_usage.png")
+        plt.bar(
+            range(self.model.num_experts),
+            self.expert_sample_count.numpy(),
+        )
+
+        plt.title("Expert Usage")
+        plt.xlabel("Expert ID")
+        plt.ylabel("Sample Count")
+
+        usage_path = os.path.join(
+            self.run_dir,
+            "expert_usage.png",
+        )
+
         plt.savefig(usage_path)
+
         plt.close()
 
+        # ---------------- HEATMAP ----------------
 
-        # =========================================================
-        # 🔥 NEW: Expert-Class Heatmap
-        # =========================================================
         heatmap = self.expert_class_count.numpy()
-        heatmap_norm = heatmap / (heatmap.sum(axis=1, keepdims=True) + 1e-9)
+
+        heatmap_norm = heatmap / (
+            heatmap.sum(axis=1, keepdims=True) + 1e-9
+        )
 
         plt.figure(figsize=(10, 6))
-        im = plt.imshow(heatmap_norm, cmap="Blues")  # 👈 đổi ở đây
-        plt.colorbar(im)
-        plt.title("Expert vs Class Distribution (Normalized)")
-        plt.xlabel("Class ID")
-        plt.ylabel("Expert ID")
-        plt.xticks(range(self.model.num_classes))
-        plt.yticks(range(self.model.moe_layer.num_experts))
 
-        # hiển thị số
-        for i in range(heatmap_norm.shape[0]):
-            for j in range(heatmap_norm.shape[1]):
-                value = heatmap_norm[i, j]
-                color = "white" if value > 0.5 else "black"
-                plt.text(j, i, f"{value:.2f}",
-                        ha="center", va="center", color=color, fontsize=8)
-                
-        heatmap_path = os.path.join(self.run_dir, "expert_class_heatmap.png")
+        im = plt.imshow(
+            heatmap_norm,
+            cmap="Blues",
+        )
+
+        plt.colorbar(im)
+        plt.title("Expert-Class Distribution (Normalized)")
+        plt.xlabel("Class")
+        plt.ylabel("Expert")
+
+        heatmap_path = os.path.join(
+            self.run_dir,
+            "expert_class_heatmap.png",
+        )
+
         plt.savefig(heatmap_path)
+
         plt.close()
-        logger.info(f"Number of Expert are: {self.model.num_experts} and top_k are {self.model.top_k}")
-        logger.info(f"Saved training plot to {plot_path}, expert usage plot to {usage_path}, and expert-class heatmap to {heatmap_path}.")
+
+        logger.info(
+            f"Saved plots to {self.run_dir}"
+        )

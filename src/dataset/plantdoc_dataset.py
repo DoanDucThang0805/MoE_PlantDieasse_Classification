@@ -23,31 +23,42 @@ from collections import Counter
 cropped_data_path = Path(__file__).resolve().parents[2] / 'data' / 'tomato_only'
 
 
-# Training augmentation pipeline
-# Applies geometric and photometric transformations to improve model robustness
+# Augmentation cho tập huấn luyện
 train_transform = A.Compose([
-    A.Resize(224, 224),
+    # Geometric — giúp model không phụ thuộc vị trí lá trong ảnh
+    A.Resize(256, 256),              # resize lên 256 trước
+    A.RandomCrop(224, 224),          # crop ngẫu nhiên → tăng diversity hơn Resize(224) thẳng
     A.HorizontalFlip(p=0.5),
+    A.VerticalFlip(p=0.3),           # lá cây lật dọc vẫn hợp lý
     A.RandomRotate90(p=0.5),
     A.ShiftScaleRotate(
         shift_limit=0.05,
-        scale_limit=0.05,
+        scale_limit=0.1,
         rotate_limit=30,
         p=0.5
     ),
-    # Optional augmentations for additional robustness (commented for current setup):
-    # A.RandomGamma(p=0.2),
-    # A.RandomBrightnessContrast(p=0.3),
-    # A.RGBShift(
-    #     r_shift_limit=15,
-    #     g_shift_limit=15,
-    #     b_shift_limit=15,
-    #     p=0.3
+ 
+    # Color — quan trọng nhất cho plant disease vì bệnh thay đổi màu lá
+    # A.RandomBrightnessContrast(
+    #     brightness_limit=0.2,
+    #     contrast_limit=0.2,
+    #     p=0.4
     # ),
-    # A.CLAHE(
-    #     clip_limit=4.0,
-    #     p=0.3
+    # A.HueSaturationValue(
+    #     hue_shift_limit=10,
+    #     sat_shift_limit=25,
+    #     val_shift_limit=15,
+    #     p=0.35
     # ),
+    # # CLAHE: tăng tương phản cục bộ → làm rõ viền đốm bệnh
+    # A.CLAHE(clip_limit=3.0, tile_grid_size=(8, 8), p=0.3),
+ 
+    # # Noise nhẹ — tránh overfit với ảnh quá sạch
+    # A.OneOf([
+    #     A.GaussNoise(var_limit=(5.0, 30.0), p=1.0),
+    #     A.GaussianBlur(blur_limit=(3, 5), p=1.0),
+    # ], p=0.2),
+ 
     A.Normalize(
         mean=(0.485, 0.456, 0.406),
         std=(0.229, 0.224, 0.225)
@@ -55,9 +66,7 @@ train_transform = A.Compose([
     ToTensorV2()
 ])
 
-
-# Validation augmentation pipeline
-# No augmentation applied; only resizing and normalization
+# Augmentation cho tập validation
 val_transform = A.Compose([
     A.Resize(224, 224),
     A.Normalize(
@@ -67,20 +76,18 @@ val_transform = A.Compose([
     ToTensorV2()
 ])
 
-
-# Test augmentation pipeline
-# Consistent with validation: resizing and normalization without augmentation
+# Augmentation cho tập test 
 test_transform = A.Compose([
-    A.Resize(height=224, width=224),
+    A.Resize(height=224, width=224),  # Resize giống transforms.Resize(224)
     A.Normalize(
         mean=[0.485, 0.456, 0.406],
         std=[0.229, 0.224, 0.225]
     ),
-    ToTensorV2()
+    ToTensorV2()  # Thay cho transforms.ToTensor()
 ])
 
 
-def build_datasets(use_context: bool = False):
+def build_datasets(use_context: bool = True):
     """
     Build train, validation, and test datasets with optional context features.
     
@@ -89,7 +96,7 @@ def build_datasets(use_context: bool = False):
 
     Args:
         use_context (bool, optional): Whether to extract and include context features.
-                                     Defaults to False.
+                                     Defaults to True.
 
     Returns:
         Tuple[LoadDataset, LoadDataset, LoadDataset]: A tuple containing the train, 

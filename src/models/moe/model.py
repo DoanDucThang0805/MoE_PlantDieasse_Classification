@@ -7,7 +7,6 @@ multiple specialized experts using a learned gating mechanism.
 
 import torch
 import torch.nn as nn
-from torchinfo import summary
 from typing import Tuple, Literal, Optional, Union
 from .backbone import Mobilenetv3LargeFeatureExtractor, Mobilenetv3SmallFeatureExtractor, EfficientNetV2MFeatureExtractor
 from .gating import NoisyTopKGating, ContextAwareGating
@@ -43,9 +42,9 @@ class MoELayer(nn.Module):
         context_dim: Union[int, None],
         model_dim: int, 
         num_experts: int, 
-        top_k: int, 
+        top_k: int,
         router_mode: Literal["noisy", "context_aware"],
-        use_context: bool
+        temperature: float = 1.0
     ) -> None:
         
         """Initialize the MoE layer with specified configuration."""
@@ -53,41 +52,49 @@ class MoELayer(nn.Module):
         self.num_experts = num_experts
         self.top_k = top_k
         self.router_mode = router_mode
-        self.use_context = use_context
+        self.temperature = temperature
 
         if not (0 < self.top_k <= self.num_experts):
-            raise ValueError("top_k must be a positive integer less than or equal to num_experts")
+            raise ValueError(
+                "top_k must be a positive integer less than or equal to num_experts"
+            )
 
         # Initialize gating network based on routing strategy
-        if self.router_mode == "noisy" and not self.use_context:
+        self._initialize_gating(model_dim, context_dim)
+
+        # Create list of expert networks - each is a feed-forward network
+        self.experts = nn.ModuleList([
+            nn.Sequential(
+                nn.Linear(model_dim, 1024),  # Expand to 2x dimension
+                nn.LayerNorm(1024),
+                nn.GELU(),                   # Non-linear activation
+                nn.Dropout(0.1),             # Regularization
+                nn.Linear(1024, model_dim)   # Contract back to original dimension
+            ) 
+            for _ in range(num_experts)
+        ])
+
+    def _initialize_gating(self, model_dim: int, context_dim: Optional[int]) -> None:
+        """Initialize the appropriate gating network based on router mode."""
+        if self.router_mode == "noisy":
             self.gating = NoisyTopKGating(
                 model_dim=model_dim,
-                num_experts=num_experts, 
-                top_k=top_k
+                num_experts=self.num_experts, 
+                top_k=self.top_k
             )
-        elif self.router_mode == "context_aware" and self.use_context:
+        elif self.router_mode == "context_aware":
             self.gating = ContextAwareGating(
                 model_dim=model_dim,
                 context_dim=context_dim,
-                num_experts=num_experts, 
-                top_k=top_k
+                num_experts=self.num_experts, 
+                top_k=self.top_k,
+                temperature=self.temperature
             )
         else:
             raise ValueError(
                 f"Invalid router_mode: {self.router_mode}. "
                 "Must be 'noisy' or 'context_aware'."
             )
-
-        # Create list of expert networks - each is a feed-forward network
-        self.experts = nn.ModuleList([
-            nn.Sequential(
-                nn.Linear(model_dim, model_dim * 2),      # Expand to 2x dimension
-                nn.GELU(),                                 # Non-linear activation
-                nn.Dropout(0.1),                           # Regularization
-                nn.Linear(model_dim * 2, model_dim)       # Contract back to original dimension
-            ) 
-            for _ in range(num_experts)
-        ])
 
     def forward(self, x: torch.Tensor, context: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
@@ -182,7 +189,7 @@ class MoEModel(nn.Module):
         num_experts: int, 
         top_k: int, 
         router_mode: Literal["noisy", "context_aware"],
-        use_context: bool
+        temperature: float = 1.0
     ) -> None:
         
         """Initialize MoE model with specified configuration."""
@@ -192,7 +199,7 @@ class MoEModel(nn.Module):
         self.num_experts = num_experts
         self.top_k = top_k
         self.router_mode = router_mode
-        self.use_context = use_context
+        self.temperature = temperature
 
         # Create feature extractor from MobileNetV3 Small backbone
         self.feature_extractor = Mobilenetv3SmallFeatureExtractor(
@@ -206,31 +213,27 @@ class MoEModel(nn.Module):
         self.post_moe_norm = nn.LayerNorm(model_dim)  # After expert processing
 
         # Initialize MoE layer based on selected routing strategy
-        if self.router_mode == "noisy" and not self.use_context:
-            self.moe_layer = MoELayer(
-                context_dim=context_dim,
-                model_dim=model_dim, 
-                num_experts=num_experts, 
-                top_k=top_k, 
-                router_mode="noisy"
-            )
-        elif self.router_mode == "context_aware" and self.use_context:
-            self.moe_layer = MoELayer(
-                context_dim=context_dim,
-                model_dim=model_dim, 
-                num_experts=num_experts, 
-                top_k=top_k, 
-                router_mode="context_aware",
-                use_context=use_context
-            )
-        else:
-            raise ValueError(
-                f"Invalid router_mode: {self.router_mode} with use_context={self.use_context}. "
-                "Must be 'noisy' with use_context=False or 'context_aware' with use_context=True."
-            )
+        self.moe_layer = MoELayer(
+            context_dim=context_dim,
+            model_dim=model_dim, 
+            num_experts=num_experts, 
+            top_k=top_k, 
+            router_mode=router_mode,
+            temperature=temperature
+        )
         
         # Classification head: maps features to class logits
-        self.classifier = nn.Linear(model_dim, num_classes)
+        self.classifier = nn.Sequential(
+            nn.Linear(model_dim, 256),
+            nn.LayerNorm(256),
+            nn.GELU(),
+            nn.Dropout(0.2),
+            nn.Linear(256, 128),
+            nn.LayerNorm(128),
+            nn.GELU(),
+            nn.Dropout(0.1),
+            nn.Linear(128, num_classes)
+        )
 
 
     def forward(self, x: torch.Tensor, context: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -258,27 +261,34 @@ class MoEModel(nn.Module):
         # Step 1: Extract semantic features from input images
         # Input:  [batch_size, 3, 224, 224]
         # Output: [batch_size, model_dim] (typically 960 for MobileNetV3 Large)
-        x = self.feature_extractor(x)
+        feature = self.feature_extractor(x)
+        residual = feature  # Save for residual connection
         
         # Step 2: Normalize features to stabilize MoE layer inputs
-        x_norm = self.pre_moe_norm(x)
+        feature_norm = self.pre_moe_norm(feature)
         
         # Step 3: Route features through expert networks based on gating mechanism
         # This step adaptively selects and combines expert outputs for feature enhancement
         if self.router_mode == "noisy":
-            moe_output, clean_router_logits, top_k_indices = self.moe_layer(x_norm)
+            moe_output, clean_router_logits, top_k_indices = self.moe_layer(feature_norm)
         elif self.router_mode == "context_aware":
-            moe_output, clean_router_logits, top_k_indices = self.moe_layer(x_norm, context)
+            moe_output, clean_router_logits, top_k_indices = self.moe_layer(feature_norm, context)
+        else:
+            raise ValueError(
+                f"Invalid router_mode: {self.router_mode}. "
+                "Must be 'noisy' or 'context_aware'."
+            )
         
         # Step 4: Apply residual connection to preserve original feature information
         # while combining with expert-enhanced features
-        x = x + moe_output
+        moe_residual = residual + moe_output
 
         # Step 5: Normalize expert-combined features before classification
-        x = self.post_moe_norm(x)
+        moe_residual_norm = self.post_moe_norm(moe_residual)
         
         # Step 6: Classify normalized features into disease categories
         # Input:  [batch_size, model_dim]
         # Output: [batch_size, num_classes]
-        class_logits = self.classifier(x)
+        class_logits = self.classifier(moe_residual_norm)
         return class_logits, clean_router_logits, top_k_indices
+    
