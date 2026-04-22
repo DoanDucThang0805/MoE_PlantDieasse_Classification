@@ -264,7 +264,6 @@ def main():
         router_mode=args.router_mode,
         temperature=args.temperature,
     )
-    summary(model, input_size=(args.batch_size, 3, 224, 224), col_names=["input_size", "output_size", "num_params", "trainable"])
 
     # -------------------------------------------------------------------------
     # Loss
