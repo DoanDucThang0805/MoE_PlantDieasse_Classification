@@ -3,16 +3,12 @@ Gating Mechanisms for Mixture of Experts (MoE).
 
 This module provides three gating mechanisms for routing inputs to experts in a MoE layer:
 
-1. StandardTopKgating: Simple top-k selection based on learned logits
-   - Deterministic expert selection during inference
-   - Selects exactly k experts with highest scores
-
-2. NoisyTopKGating: Top-k selection with noise injection during training
+1. NoisyTopKGating: Top-k selection with noise injection during training
    - Adds Gaussian noise during training for exploration
    - Learned noise magnitude per expert
    - Deterministic during inference (no noise)
 
-3. ContextAwareGating: Gating that incorporates contextual information
+2. ContextAwareGating: Gating that incorporates contextual information
    - Fuses embedding with context features
    - More informed expert selection
    - Supports both training and inference modes

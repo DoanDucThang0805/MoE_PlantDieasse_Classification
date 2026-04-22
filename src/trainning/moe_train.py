@@ -11,6 +11,7 @@ import warnings
 import argparse
 
 import torch
+from torchinfo import summary
 from torch.utils.data import DataLoader
 import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
@@ -263,6 +264,7 @@ def main():
         router_mode=args.router_mode,
         temperature=args.temperature,
     )
+    summary(model, input_size=(args.batch_size, 3, 224, 224), col_names=["input_size", "output_size", "num_params", "trainable"])
 
     # -------------------------------------------------------------------------
     # Loss
