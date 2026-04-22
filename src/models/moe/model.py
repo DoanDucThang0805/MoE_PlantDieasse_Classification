@@ -8,7 +8,7 @@ multiple specialized experts using a learned gating mechanism.
 import torch
 import torch.nn as nn
 from typing import Tuple, Literal, Optional, Union
-from .backbone import Mobilenetv3LargeFeatureExtractor, Mobilenetv3SmallFeatureExtractor, EfficientNetV2MFeatureExtractor
+from .backbone import Mobilenetv3SmallFeatureExtractor
 from .gating import NoisyTopKGating, ContextAwareGating
 import warnings
 
@@ -39,7 +39,7 @@ class MoELayer(nn.Module):
     
     def __init__(
         self, 
-        context_dim: Union[int, None],
+        context_dim: Optional[int],
         model_dim: int, 
         num_experts: int, 
         top_k: int,
@@ -80,7 +80,8 @@ class MoELayer(nn.Module):
             self.gating = NoisyTopKGating(
                 model_dim=model_dim,
                 num_experts=self.num_experts, 
-                top_k=self.top_k
+                top_k=self.top_k,
+                temperature=self.temperature
             )
         elif self.router_mode == "context_aware":
             self.gating = ContextAwareGating(
@@ -184,7 +185,7 @@ class MoEModel(nn.Module):
     
     def __init__(
         self, 
-        context_dim: Union[int, None],
+        context_dim: Optional[int],
         num_classes: int, 
         num_experts: int, 
         top_k: int, 

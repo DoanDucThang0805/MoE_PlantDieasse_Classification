@@ -121,6 +121,8 @@ class MoETrainer:
                 "num_experts": self.model.num_experts,
                 "top_k": self.model.top_k,
                 "temperature": self.model.temperature,
+                "router_mode": self.model.router_mode,
+                "context_dim": self.model.context_dim,
             },
             path,
         )
@@ -161,13 +163,14 @@ class MoETrainer:
 
                 images = images.to(self.device)
                 labels = labels.to(self.device)
-                context = context.to(self.device)
+                if context.any():
+                    context = context.to(self.device)
 
                 self.optimizer.zero_grad(set_to_none=True)
                 if self.model.router_mode == "context_aware":
                     logits, clean_logits, topk_indices = self.model(images, context)
                 else:
-                    raise ValueError(f"Unsupported router mode at now: {self.model.router_mode}")
+                    logits, clean_logits, topk_indices = self.model(images)
 
                 loss = self.criterion(
                     logits,
@@ -228,8 +231,13 @@ class MoETrainer:
                     images = images.to(self.device)
                     labels = labels.to(self.device)
                     context = context.to(self.device)
+                    if context.any():
+                        context = context.to(self.device)
 
-                    logits, clean_logits, topk_indices = self.model(images, context)
+                    if self.model.router_mode == "context_aware":
+                        logits, clean_logits, topk_indices = self.model(images, context)
+                    else:
+                        logits, clean_logits, topk_indices = self.model(images)
 
                     loss = self.criterion(
                         logits,

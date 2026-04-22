@@ -5,12 +5,14 @@ source venv/bin/activate
 
 cd src
 
-python -m trainning.context_moe_train \
-    --batch_size 32 \
-    --epochs 300 \
+python -m trainning.moe_train \
+    --type_model moe_contextaware_temp0.5 \
     --num_experts 4 \
     --top_k 2 \
-    --model_name mobilenetv3small_moe \
-    --type_model moe_temp0.5 \
     --router_mode context_aware \
-    --temperature 1.0
+    --batch_size 32 \
+    --num_epochs 300 \
+    --temperature 0.5 \
+    --moe_alpha 0.05 \
+    --use_context \
+    --seed 42 \
