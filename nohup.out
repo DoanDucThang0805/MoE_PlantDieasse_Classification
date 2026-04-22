@@ -1,499 +1,26 @@
 nohup: ignoring input
 /media/data/minhht/moe_plantdeasse/venv/lib/python3.11/site-packages/albumentations/core/validation.py:114: UserWarning: ShiftScaleRotate is a special case of Affine transform. Please use Affine transform instead.
   original_init(self, **validated_kwargs)
-INFO:__main__:================================================================================
-INFO:__main__:Starting MoE Model Training
-INFO:__main__:================================================================================
-INFO:__main__:
-Training Configuration:
-  Batch Size: 32
-  Epochs: 300
-  Num Experts: 4
-  Top-K: 2
-  Model: mobilenetv3small_moe (moe_temp0.5)
-  Router Mode: context_aware
-  Use Context: True
-  Device: cuda
-  Learning Rate: 0.001
-  Weight Decay: 0.001
-  MoE Loss Alpha: 0.05
-INFO:__main__:================================================================================
-INFO:__main__:Number of classes detected: 8
-INFO:__main__:Creating MoE model with 4 experts, top_k=2
-INFO:__main__:Checkpoint directory: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2
+
+===== Training Configuration =====
+seed           : 43
+type_model     : moe_contextaware_temp0.5
+num_experts    : 4
+top_k          : 2
+num_epochs     : 300
+batch_size     : 32
+lr             : 0.001
+weight_decay   : 0.001
+moe_alpha      : 0.05
+temperature    : 0.5
+router_mode    : context_aware
+context_dim    : 6
+use_context    : True
+==================================
+
+
+Using seed: 43
+Using device: cuda
+Number of classes: 8
 MobileNetV3-Small output feature dimension: 576
-===========================================================================================================================================================
-Layer (type:depth-idx)                                  Input Shape               Output Shape              Param #                   Trainable
-===========================================================================================================================================================
-MoEModel                                                [1, 3, 224, 224]          [1, 8]                    --                        True
-├─Mobilenetv3SmallFeatureExtractor: 1-1                 [1, 3, 224, 224]          [1, 576]                  --                        True
-│    └─Sequential: 2-1                                  [1, 3, 224, 224]          [1, 576, 7, 7]            --                        True
-│    │    └─Conv2dNormActivation: 3-1                   [1, 3, 224, 224]          [1, 16, 112, 112]         464                       True
-│    │    └─InvertedResidual: 3-2                       [1, 16, 112, 112]         [1, 16, 56, 56]           744                       True
-│    │    └─InvertedResidual: 3-3                       [1, 16, 56, 56]           [1, 24, 28, 28]           3,864                     True
-│    │    └─InvertedResidual: 3-4                       [1, 24, 28, 28]           [1, 24, 28, 28]           5,416                     True
-│    │    └─InvertedResidual: 3-5                       [1, 24, 28, 28]           [1, 40, 14, 14]           13,736                    True
-│    │    └─InvertedResidual: 3-6                       [1, 40, 14, 14]           [1, 40, 14, 14]           57,264                    True
-│    │    └─InvertedResidual: 3-7                       [1, 40, 14, 14]           [1, 40, 14, 14]           57,264                    True
-│    │    └─InvertedResidual: 3-8                       [1, 40, 14, 14]           [1, 48, 14, 14]           21,968                    True
-│    │    └─InvertedResidual: 3-9                       [1, 48, 14, 14]           [1, 48, 14, 14]           29,800                    True
-│    │    └─InvertedResidual: 3-10                      [1, 48, 14, 14]           [1, 96, 7, 7]             91,848                    True
-│    │    └─InvertedResidual: 3-11                      [1, 96, 7, 7]             [1, 96, 7, 7]             294,096                   True
-│    │    └─InvertedResidual: 3-12                      [1, 96, 7, 7]             [1, 96, 7, 7]             294,096                   True
-│    │    └─Conv2dNormActivation: 3-13                  [1, 96, 7, 7]             [1, 576, 7, 7]            56,448                    True
-│    └─AdaptiveAvgPool2d: 2-2                           [1, 576, 7, 7]            [1, 576, 1, 1]            --                        --
-├─LayerNorm: 1-2                                        [1, 576]                  [1, 576]                  1,152                     True
-├─MoELayer: 1-3                                         [1, 576]                  [1, 576]                  --                        True
-│    └─ContextAwareGating: 2-3                          [1, 576]                  [1, 2]                    3,648                     True
-│    │    └─LayerNorm: 3-14                             [1, 576]                  [1, 576]                  1,152                     True
-│    │    └─LayerNorm: 3-15                             [1, 6]                    [1, 6]                    12                        True
-│    │    └─Sequential: 3-16                            [1, 6]                    [1, 32]                   1,280                     True
-│    │    └─LayerNorm: 3-17                             [1, 32]                   [1, 32]                   64                        True
-│    │    └─Sequential: 3-18                            [1, 608]                  [1, 4]                    82,532                    True
-│    └─ModuleList: 2-4                                  --                        --                        2,366,592                 True
-│    │    └─Sequential: 3-19                            [1, 576]                  [1, 576]                  1,183,296                 True
-│    │    └─Sequential: 3-20                            [1, 576]                  [1, 576]                  1,183,296                 True
-├─LayerNorm: 1-4                                        [1, 576]                  [1, 576]                  1,152                     True
-├─Sequential: 1-5                                       [1, 576]                  [1, 8]                    --                        True
-│    └─Linear: 2-5                                      [1, 576]                  [1, 256]                  147,712                   True
-│    └─LayerNorm: 2-6                                   [1, 256]                  [1, 256]                  512                       True
-│    └─GELU: 2-7                                        [1, 256]                  [1, 256]                  --                        --
-│    └─Dropout: 2-8                                     [1, 256]                  [1, 256]                  --                        --
-│    └─Linear: 2-9                                      [1, 256]                  [1, 128]                  32,896                    True
-│    └─LayerNorm: 2-10                                  [1, 128]                  [1, 128]                  256                       True
-│    └─GELU: 2-11                                       [1, 128]                  [1, 128]                  --                        --
-│    └─Dropout: 2-12                                    [1, 128]                  [1, 128]                  --                        --
-│    └─Linear: 2-13                                     [1, 128]                  [1, 8]                    1,032                     True
-===========================================================================================================================================================
-Total params: 5,933,592
-Trainable params: 5,933,592
-Non-trainable params: 0
-Total mult-adds (Units.MEGABYTES): 57.55
-===========================================================================================================================================================
-Input size (MB): 0.60
-Forward/backward pass size (MB): 22.69
-Params size (MB): 14.25
-Estimated Total Size (MB): 37.55
-===========================================================================================================================================================
-Epochs:   0%|          | 0/300 [00:00<?, ?it/s]INFO:utils.context_moe_trainner:Epoch[1/300] Train Loss: 1.4410, Train Acc: 52.04%
-INFO:utils.context_moe_trainner:Epoch[1/300] Val Loss: 1.3813, Val Acc: 56.25%
-INFO:utils.context_moe_trainner:Validation accuracy improved (-inf -> 56.2500).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:   0%|          | 1/300 [00:08<44:21,  8.90s/it]INFO:utils.context_moe_trainner:Epoch[2/300] Train Loss: 1.1599, Train Acc: 63.19%
-INFO:utils.context_moe_trainner:Epoch[2/300] Val Loss: 1.2930, Val Acc: 62.55%
-INFO:utils.context_moe_trainner:Validation accuracy improved (56.2500 -> 62.5496).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:   1%|          | 2/300 [00:17<43:50,  8.83s/it]INFO:utils.context_moe_trainner:Epoch[3/300] Train Loss: 1.0540, Train Acc: 66.54%
-INFO:utils.context_moe_trainner:Epoch[3/300] Val Loss: 1.1881, Val Acc: 62.65%
-INFO:utils.context_moe_trainner:Validation accuracy improved (62.5496 -> 62.6488).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:   1%|          | 3/300 [00:26<43:39,  8.82s/it]INFO:utils.context_moe_trainner:Epoch[4/300] Train Loss: 1.0887, Train Acc: 64.89%
-INFO:utils.context_moe_trainner:Epoch[4/300] Val Loss: 1.2303, Val Acc: 62.20%
-INFO:utils.context_moe_trainner:No improvement for 1 epoch(s).
-Epochs:   1%|▏         | 4/300 [00:35<43:14,  8.76s/it]INFO:utils.context_moe_trainner:Epoch[5/300] Train Loss: 0.9686, Train Acc: 67.84%
-INFO:utils.context_moe_trainner:Epoch[5/300] Val Loss: 1.0404, Val Acc: 63.49%
-INFO:utils.context_moe_trainner:Validation accuracy improved (62.6488 -> 63.4921).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:   2%|▏         | 5/300 [00:44<43:13,  8.79s/it]INFO:utils.context_moe_trainner:Epoch[6/300] Train Loss: 0.8847, Train Acc: 72.66%
-INFO:utils.context_moe_trainner:Epoch[6/300] Val Loss: 1.3802, Val Acc: 57.99%
-INFO:utils.context_moe_trainner:No improvement for 1 epoch(s).
-Epochs:   2%|▏         | 6/300 [00:52<42:57,  8.77s/it]INFO:utils.context_moe_trainner:Epoch[7/300] Train Loss: 1.0060, Train Acc: 68.49%
-INFO:utils.context_moe_trainner:Epoch[7/300] Val Loss: 1.2518, Val Acc: 60.02%
-INFO:utils.context_moe_trainner:No improvement for 2 epoch(s).
-Epochs:   2%|▏         | 7/300 [01:01<42:43,  8.75s/it]INFO:utils.context_moe_trainner:Epoch[8/300] Train Loss: 0.8980, Train Acc: 72.48%
-INFO:utils.context_moe_trainner:Epoch[8/300] Val Loss: 1.1171, Val Acc: 66.37%
-INFO:utils.context_moe_trainner:Validation accuracy improved (63.4921 -> 66.3690).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:   3%|▎         | 8/300 [01:10<42:39,  8.76s/it]INFO:utils.context_moe_trainner:Epoch[9/300] Train Loss: 0.8632, Train Acc: 73.09%
-INFO:utils.context_moe_trainner:Epoch[9/300] Val Loss: 1.0318, Val Acc: 66.67%
-INFO:utils.context_moe_trainner:Validation accuracy improved (66.3690 -> 66.6667).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:   3%|▎         | 9/300 [01:19<42:37,  8.79s/it]INFO:utils.context_moe_trainner:Epoch[10/300] Train Loss: 0.8366, Train Acc: 74.26%
-INFO:utils.context_moe_trainner:Epoch[10/300] Val Loss: 1.0392, Val Acc: 68.40%
-INFO:utils.context_moe_trainner:Validation accuracy improved (66.6667 -> 68.4028).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:   3%|▎         | 10/300 [01:27<42:29,  8.79s/it]INFO:utils.context_moe_trainner:Epoch[11/300] Train Loss: 0.7680, Train Acc: 76.48%
-INFO:utils.context_moe_trainner:Epoch[11/300] Val Loss: 1.0343, Val Acc: 68.80%
-INFO:utils.context_moe_trainner:Validation accuracy improved (68.4028 -> 68.7996).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:   4%|▎         | 11/300 [01:36<42:27,  8.82s/it]INFO:utils.context_moe_trainner:Epoch[12/300] Train Loss: 0.6831, Train Acc: 79.21%
-INFO:utils.context_moe_trainner:Epoch[12/300] Val Loss: 1.1511, Val Acc: 68.06%
-INFO:utils.context_moe_trainner:No improvement for 1 epoch(s).
-Epochs:   4%|▍         | 12/300 [01:45<42:09,  8.78s/it]INFO:utils.context_moe_trainner:Epoch[13/300] Train Loss: 0.7690, Train Acc: 77.26%
-INFO:utils.context_moe_trainner:Epoch[13/300] Val Loss: 0.8489, Val Acc: 76.04%
-INFO:utils.context_moe_trainner:Validation accuracy improved (68.7996 -> 76.0417).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:   4%|▍         | 13/300 [01:54<42:05,  8.80s/it]INFO:utils.context_moe_trainner:Epoch[14/300] Train Loss: 0.6806, Train Acc: 79.90%
-INFO:utils.context_moe_trainner:Epoch[14/300] Val Loss: 1.0091, Val Acc: 69.94%
-INFO:utils.context_moe_trainner:No improvement for 1 epoch(s).
-Epochs:   5%|▍         | 14/300 [02:02<41:47,  8.77s/it]INFO:utils.context_moe_trainner:Epoch[15/300] Train Loss: 0.6284, Train Acc: 81.86%
-INFO:utils.context_moe_trainner:Epoch[15/300] Val Loss: 1.1119, Val Acc: 68.30%
-INFO:utils.context_moe_trainner:No improvement for 2 epoch(s).
-Epochs:   5%|▌         | 15/300 [02:11<41:35,  8.76s/it]INFO:utils.context_moe_trainner:Epoch[16/300] Train Loss: 0.6331, Train Acc: 81.29%
-INFO:utils.context_moe_trainner:Epoch[16/300] Val Loss: 0.9135, Val Acc: 70.34%
-INFO:utils.context_moe_trainner:No improvement for 3 epoch(s).
-Epochs:   5%|▌         | 16/300 [02:20<41:02,  8.67s/it]INFO:utils.context_moe_trainner:Epoch[17/300] Train Loss: 0.6086, Train Acc: 81.77%
-INFO:utils.context_moe_trainner:Epoch[17/300] Val Loss: 0.8990, Val Acc: 72.02%
-INFO:utils.context_moe_trainner:No improvement for 4 epoch(s).
-Epochs:   6%|▌         | 17/300 [02:28<40:20,  8.55s/it]INFO:utils.context_moe_trainner:Epoch[18/300] Train Loss: 0.5909, Train Acc: 82.12%
-INFO:utils.context_moe_trainner:Epoch[18/300] Val Loss: 1.0113, Val Acc: 68.85%
-INFO:utils.context_moe_trainner:No improvement for 5 epoch(s).
-Epochs:   6%|▌         | 18/300 [02:36<39:21,  8.37s/it]INFO:utils.context_moe_trainner:Epoch[19/300] Train Loss: 0.6414, Train Acc: 80.51%
-INFO:utils.context_moe_trainner:Epoch[19/300] Val Loss: 1.1006, Val Acc: 68.45%
-INFO:utils.context_moe_trainner:No improvement for 6 epoch(s).
-Epochs:   6%|▋         | 19/300 [02:44<39:13,  8.37s/it]INFO:utils.context_moe_trainner:Epoch[20/300] Train Loss: 0.5816, Train Acc: 84.46%
-INFO:utils.context_moe_trainner:Epoch[20/300] Val Loss: 0.9988, Val Acc: 70.73%
-INFO:utils.context_moe_trainner:No improvement for 7 epoch(s).
-Epochs:   7%|▋         | 20/300 [02:53<39:26,  8.45s/it]INFO:utils.context_moe_trainner:Epoch[21/300] Train Loss: 0.5013, Train Acc: 84.59%
-INFO:utils.context_moe_trainner:Epoch[21/300] Val Loss: 0.9827, Val Acc: 73.21%
-INFO:utils.context_moe_trainner:No improvement for 8 epoch(s).
-Epochs:   7%|▋         | 21/300 [03:02<39:37,  8.52s/it]INFO:utils.context_moe_trainner:Epoch[22/300] Train Loss: 0.5777, Train Acc: 82.68%
-INFO:utils.context_moe_trainner:Epoch[22/300] Val Loss: 1.0679, Val Acc: 70.14%
-INFO:utils.context_moe_trainner:No improvement for 9 epoch(s).
-Epochs:   7%|▋         | 22/300 [03:10<39:44,  8.58s/it]INFO:utils.context_moe_trainner:Epoch[23/300] Train Loss: 0.5458, Train Acc: 83.51%
-INFO:utils.context_moe_trainner:Epoch[23/300] Val Loss: 1.0170, Val Acc: 70.09%
-INFO:utils.context_moe_trainner:No improvement for 10 epoch(s).
-Epochs:   8%|▊         | 23/300 [03:19<39:44,  8.61s/it]INFO:utils.context_moe_trainner:Epoch[24/300] Train Loss: 0.4837, Train Acc: 85.33%
-INFO:utils.context_moe_trainner:Epoch[24/300] Val Loss: 1.0128, Val Acc: 75.35%
-INFO:utils.context_moe_trainner:No improvement for 11 epoch(s).
-Epochs:   8%|▊         | 24/300 [03:28<39:47,  8.65s/it]INFO:utils.context_moe_trainner:Epoch[25/300] Train Loss: 0.4552, Train Acc: 87.63%
-INFO:utils.context_moe_trainner:Epoch[25/300] Val Loss: 0.8780, Val Acc: 75.05%
-INFO:utils.context_moe_trainner:No improvement for 12 epoch(s).
-Epochs:   8%|▊         | 25/300 [03:36<38:58,  8.50s/it]INFO:utils.context_moe_trainner:Epoch[26/300] Train Loss: 0.3413, Train Acc: 90.76%
-INFO:utils.context_moe_trainner:Epoch[26/300] Val Loss: 0.8067, Val Acc: 79.22%
-INFO:utils.context_moe_trainner:Validation accuracy improved (76.0417 -> 79.2163).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:   9%|▊         | 26/300 [03:44<38:16,  8.38s/it]INFO:utils.context_moe_trainner:Epoch[27/300] Train Loss: 0.3184, Train Acc: 91.54%
-INFO:utils.context_moe_trainner:Epoch[27/300] Val Loss: 0.9193, Val Acc: 75.84%
-INFO:utils.context_moe_trainner:No improvement for 1 epoch(s).
-Epochs:   9%|▉         | 27/300 [03:52<37:34,  8.26s/it]INFO:utils.context_moe_trainner:Epoch[28/300] Train Loss: 0.2926, Train Acc: 92.93%
-INFO:utils.context_moe_trainner:Epoch[28/300] Val Loss: 0.8776, Val Acc: 76.64%
-INFO:utils.context_moe_trainner:No improvement for 2 epoch(s).
-Epochs:   9%|▉         | 28/300 [04:00<37:03,  8.18s/it]INFO:utils.context_moe_trainner:Epoch[29/300] Train Loss: 0.2558, Train Acc: 93.53%
-INFO:utils.context_moe_trainner:Epoch[29/300] Val Loss: 0.8905, Val Acc: 76.19%
-INFO:utils.context_moe_trainner:No improvement for 3 epoch(s).
-Epochs:  10%|▉         | 29/300 [04:09<37:33,  8.32s/it]INFO:utils.context_moe_trainner:Epoch[30/300] Train Loss: 0.2793, Train Acc: 92.80%
-INFO:utils.context_moe_trainner:Epoch[30/300] Val Loss: 0.8235, Val Acc: 76.29%
-INFO:utils.context_moe_trainner:No improvement for 4 epoch(s).
-Epochs:  10%|█         | 30/300 [04:17<37:53,  8.42s/it]INFO:utils.context_moe_trainner:Epoch[31/300] Train Loss: 0.2843, Train Acc: 92.97%
-INFO:utils.context_moe_trainner:Epoch[31/300] Val Loss: 0.8000, Val Acc: 80.26%
-INFO:utils.context_moe_trainner:Validation accuracy improved (79.2163 -> 80.2579).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:  10%|█         | 31/300 [04:26<38:15,  8.53s/it]INFO:utils.context_moe_trainner:Epoch[32/300] Train Loss: 0.4475, Train Acc: 87.07%
-INFO:utils.context_moe_trainner:Epoch[32/300] Val Loss: 0.8914, Val Acc: 77.08%
-INFO:utils.context_moe_trainner:No improvement for 1 epoch(s).
-Epochs:  11%|█         | 32/300 [04:35<38:21,  8.59s/it]INFO:utils.context_moe_trainner:Epoch[33/300] Train Loss: 0.3258, Train Acc: 91.93%
-INFO:utils.context_moe_trainner:Epoch[33/300] Val Loss: 0.9880, Val Acc: 76.44%
-INFO:utils.context_moe_trainner:No improvement for 2 epoch(s).
-Epochs:  11%|█         | 33/300 [04:43<38:12,  8.59s/it]INFO:utils.context_moe_trainner:Epoch[34/300] Train Loss: 0.2774, Train Acc: 92.75%
-INFO:utils.context_moe_trainner:Epoch[34/300] Val Loss: 0.9673, Val Acc: 76.69%
-INFO:utils.context_moe_trainner:No improvement for 3 epoch(s).
-Epochs:  11%|█▏        | 34/300 [04:52<38:10,  8.61s/it]INFO:utils.context_moe_trainner:Epoch[35/300] Train Loss: 0.2844, Train Acc: 93.45%
-INFO:utils.context_moe_trainner:Epoch[35/300] Val Loss: 0.7750, Val Acc: 80.16%
-INFO:utils.context_moe_trainner:No improvement for 4 epoch(s).
-Epochs:  12%|█▏        | 35/300 [05:01<38:10,  8.64s/it]INFO:utils.context_moe_trainner:Epoch[36/300] Train Loss: 0.3226, Train Acc: 91.75%
-INFO:utils.context_moe_trainner:Epoch[36/300] Val Loss: 0.9567, Val Acc: 75.64%
-INFO:utils.context_moe_trainner:No improvement for 5 epoch(s).
-Epochs:  12%|█▏        | 36/300 [05:09<38:06,  8.66s/it]INFO:utils.context_moe_trainner:Epoch[37/300] Train Loss: 0.3408, Train Acc: 90.84%
-INFO:utils.context_moe_trainner:Epoch[37/300] Val Loss: 0.9643, Val Acc: 74.70%
-INFO:utils.context_moe_trainner:No improvement for 6 epoch(s).
-Epochs:  12%|█▏        | 37/300 [05:18<38:02,  8.68s/it]INFO:utils.context_moe_trainner:Epoch[38/300] Train Loss: 0.2906, Train Acc: 91.54%
-INFO:utils.context_moe_trainner:Epoch[38/300] Val Loss: 0.9458, Val Acc: 76.74%
-INFO:utils.context_moe_trainner:No improvement for 7 epoch(s).
-Epochs:  13%|█▎        | 38/300 [05:27<38:00,  8.70s/it]INFO:utils.context_moe_trainner:Epoch[39/300] Train Loss: 0.2933, Train Acc: 93.79%
-INFO:utils.context_moe_trainner:Epoch[39/300] Val Loss: 0.8544, Val Acc: 79.17%
-INFO:utils.context_moe_trainner:No improvement for 8 epoch(s).
-Epochs:  13%|█▎        | 39/300 [05:36<37:52,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[40/300] Train Loss: 0.2602, Train Acc: 94.23%
-INFO:utils.context_moe_trainner:Epoch[40/300] Val Loss: 0.8521, Val Acc: 77.33%
-INFO:utils.context_moe_trainner:No improvement for 9 epoch(s).
-Epochs:  13%|█▎        | 40/300 [05:44<37:43,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[41/300] Train Loss: 0.2811, Train Acc: 93.40%
-INFO:utils.context_moe_trainner:Epoch[41/300] Val Loss: 0.8371, Val Acc: 79.46%
-INFO:utils.context_moe_trainner:No improvement for 10 epoch(s).
-Epochs:  14%|█▎        | 41/300 [05:53<37:32,  8.70s/it]INFO:utils.context_moe_trainner:Epoch[42/300] Train Loss: 0.2184, Train Acc: 95.23%
-INFO:utils.context_moe_trainner:Epoch[42/300] Val Loss: 0.7279, Val Acc: 81.40%
-INFO:utils.context_moe_trainner:Validation accuracy improved (80.2579 -> 81.3988).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:  14%|█▍        | 42/300 [06:02<37:27,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[43/300] Train Loss: 0.1979, Train Acc: 95.66%
-INFO:utils.context_moe_trainner:Epoch[43/300] Val Loss: 0.8276, Val Acc: 81.30%
-INFO:utils.context_moe_trainner:No improvement for 1 epoch(s).
-Epochs:  14%|█▍        | 43/300 [06:10<37:18,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[44/300] Train Loss: 0.1805, Train Acc: 95.66%
-INFO:utils.context_moe_trainner:Epoch[44/300] Val Loss: 0.8319, Val Acc: 80.90%
-INFO:utils.context_moe_trainner:No improvement for 2 epoch(s).
-Epochs:  15%|█▍        | 44/300 [06:19<37:08,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[45/300] Train Loss: 0.1932, Train Acc: 96.01%
-INFO:utils.context_moe_trainner:Epoch[45/300] Val Loss: 0.9314, Val Acc: 78.03%
-INFO:utils.context_moe_trainner:No improvement for 3 epoch(s).
-Epochs:  15%|█▌        | 45/300 [06:28<37:04,  8.72s/it]INFO:utils.context_moe_trainner:Epoch[46/300] Train Loss: 0.2274, Train Acc: 94.05%
-INFO:utils.context_moe_trainner:Epoch[46/300] Val Loss: 0.8950, Val Acc: 80.16%
-INFO:utils.context_moe_trainner:No improvement for 4 epoch(s).
-Epochs:  15%|█▌        | 46/300 [06:37<36:52,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[47/300] Train Loss: 0.2969, Train Acc: 93.53%
-INFO:utils.context_moe_trainner:Epoch[47/300] Val Loss: 0.9696, Val Acc: 74.50%
-INFO:utils.context_moe_trainner:No improvement for 5 epoch(s).
-Epochs:  16%|█▌        | 47/300 [06:45<36:44,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[48/300] Train Loss: 0.2663, Train Acc: 93.45%
-INFO:utils.context_moe_trainner:Epoch[48/300] Val Loss: 0.9417, Val Acc: 78.08%
-INFO:utils.context_moe_trainner:No improvement for 6 epoch(s).
-Epochs:  16%|█▌        | 48/300 [06:54<36:33,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[49/300] Train Loss: 0.2484, Train Acc: 94.36%
-INFO:utils.context_moe_trainner:Epoch[49/300] Val Loss: 1.0852, Val Acc: 74.16%
-INFO:utils.context_moe_trainner:No improvement for 7 epoch(s).
-Epochs:  16%|█▋        | 49/300 [07:03<36:22,  8.70s/it]INFO:utils.context_moe_trainner:Epoch[50/300] Train Loss: 0.2114, Train Acc: 94.62%
-INFO:utils.context_moe_trainner:Epoch[50/300] Val Loss: 1.0152, Val Acc: 75.89%
-INFO:utils.context_moe_trainner:No improvement for 8 epoch(s).
-Epochs:  17%|█▋        | 50/300 [07:12<36:21,  8.73s/it]INFO:utils.context_moe_trainner:Epoch[51/300] Train Loss: 0.3292, Train Acc: 91.28%
-INFO:utils.context_moe_trainner:Epoch[51/300] Val Loss: 1.0621, Val Acc: 73.81%
-INFO:utils.context_moe_trainner:No improvement for 9 epoch(s).
-Epochs:  17%|█▋        | 51/300 [07:20<36:16,  8.74s/it]INFO:utils.context_moe_trainner:Epoch[52/300] Train Loss: 0.2562, Train Acc: 94.18%
-INFO:utils.context_moe_trainner:Epoch[52/300] Val Loss: 0.9226, Val Acc: 79.12%
-INFO:utils.context_moe_trainner:No improvement for 10 epoch(s).
-Epochs:  17%|█▋        | 52/300 [07:29<36:01,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[53/300] Train Loss: 0.1816, Train Acc: 96.35%
-INFO:utils.context_moe_trainner:Epoch[53/300] Val Loss: 0.8566, Val Acc: 77.98%
-INFO:utils.context_moe_trainner:No improvement for 11 epoch(s).
-Epochs:  18%|█▊        | 53/300 [07:38<35:50,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[54/300] Train Loss: 0.1493, Train Acc: 96.92%
-INFO:utils.context_moe_trainner:Epoch[54/300] Val Loss: 0.7290, Val Acc: 82.29%
-INFO:utils.context_moe_trainner:Validation accuracy improved (81.3988 -> 82.2917).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:  18%|█▊        | 54/300 [07:46<35:52,  8.75s/it]INFO:utils.context_moe_trainner:Epoch[55/300] Train Loss: 0.1200, Train Acc: 97.92%
-INFO:utils.context_moe_trainner:Epoch[55/300] Val Loss: 0.7528, Val Acc: 81.20%
-INFO:utils.context_moe_trainner:No improvement for 1 epoch(s).
-Epochs:  18%|█▊        | 55/300 [07:55<35:41,  8.74s/it]INFO:utils.context_moe_trainner:Epoch[56/300] Train Loss: 0.1303, Train Acc: 97.14%
-INFO:utils.context_moe_trainner:Epoch[56/300] Val Loss: 0.8237, Val Acc: 80.95%
-INFO:utils.context_moe_trainner:No improvement for 2 epoch(s).
-Epochs:  19%|█▊        | 56/300 [08:04<35:33,  8.74s/it]INFO:utils.context_moe_trainner:Epoch[57/300] Train Loss: 0.1662, Train Acc: 96.74%
-INFO:utils.context_moe_trainner:Epoch[57/300] Val Loss: 0.8583, Val Acc: 80.21%
-INFO:utils.context_moe_trainner:No improvement for 3 epoch(s).
-Epochs:  19%|█▉        | 57/300 [08:13<35:19,  8.72s/it]INFO:utils.context_moe_trainner:Epoch[58/300] Train Loss: 0.1286, Train Acc: 98.00%
-INFO:utils.context_moe_trainner:Epoch[58/300] Val Loss: 0.8542, Val Acc: 79.86%
-INFO:utils.context_moe_trainner:No improvement for 4 epoch(s).
-Epochs:  19%|█▉        | 58/300 [08:21<35:08,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[59/300] Train Loss: 0.1590, Train Acc: 97.40%
-INFO:utils.context_moe_trainner:Epoch[59/300] Val Loss: 0.8380, Val Acc: 80.90%
-INFO:utils.context_moe_trainner:No improvement for 5 epoch(s).
-Epochs:  20%|█▉        | 59/300 [08:30<35:00,  8.72s/it]INFO:utils.context_moe_trainner:Epoch[60/300] Train Loss: 0.1168, Train Acc: 98.00%
-INFO:utils.context_moe_trainner:Epoch[60/300] Val Loss: 0.8363, Val Acc: 80.90%
-INFO:utils.context_moe_trainner:No improvement for 6 epoch(s).
-Epochs:  20%|██        | 60/300 [08:39<34:51,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[61/300] Train Loss: 0.1140, Train Acc: 98.26%
-INFO:utils.context_moe_trainner:Epoch[61/300] Val Loss: 0.9394, Val Acc: 80.95%
-INFO:utils.context_moe_trainner:No improvement for 7 epoch(s).
-Epochs:  20%|██        | 61/300 [08:47<34:44,  8.72s/it]INFO:utils.context_moe_trainner:Epoch[62/300] Train Loss: 0.1425, Train Acc: 96.96%
-INFO:utils.context_moe_trainner:Epoch[62/300] Val Loss: 0.8753, Val Acc: 81.70%
-INFO:utils.context_moe_trainner:No improvement for 8 epoch(s).
-Epochs:  21%|██        | 62/300 [08:56<34:32,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[63/300] Train Loss: 0.1418, Train Acc: 96.83%
-INFO:utils.context_moe_trainner:Epoch[63/300] Val Loss: 0.9521, Val Acc: 80.21%
-INFO:utils.context_moe_trainner:No improvement for 9 epoch(s).
-Epochs:  21%|██        | 63/300 [09:05<34:25,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[64/300] Train Loss: 0.1801, Train Acc: 95.57%
-INFO:utils.context_moe_trainner:Epoch[64/300] Val Loss: 0.8615, Val Acc: 80.85%
-INFO:utils.context_moe_trainner:No improvement for 10 epoch(s).
-Epochs:  21%|██▏       | 64/300 [09:14<34:12,  8.70s/it]INFO:utils.context_moe_trainner:Epoch[65/300] Train Loss: 0.1851, Train Acc: 97.05%
-INFO:utils.context_moe_trainner:Epoch[65/300] Val Loss: 0.8377, Val Acc: 80.46%
-INFO:utils.context_moe_trainner:No improvement for 11 epoch(s).
-Epochs:  22%|██▏       | 65/300 [09:22<34:00,  8.68s/it]INFO:utils.context_moe_trainner:Epoch[66/300] Train Loss: 0.1094, Train Acc: 98.13%
-INFO:utils.context_moe_trainner:Epoch[66/300] Val Loss: 0.8296, Val Acc: 81.55%
-INFO:utils.context_moe_trainner:No improvement for 12 epoch(s).
-Epochs:  22%|██▏       | 66/300 [09:31<33:50,  8.68s/it]INFO:utils.context_moe_trainner:Epoch[67/300] Train Loss: 0.1114, Train Acc: 97.66%
-INFO:utils.context_moe_trainner:Epoch[67/300] Val Loss: 0.8082, Val Acc: 82.29%
-INFO:utils.context_moe_trainner:No improvement for 13 epoch(s).
-Epochs:  22%|██▏       | 67/300 [09:40<33:47,  8.70s/it]INFO:utils.context_moe_trainner:Epoch[68/300] Train Loss: 0.1403, Train Acc: 97.35%
-INFO:utils.context_moe_trainner:Epoch[68/300] Val Loss: 0.8420, Val Acc: 82.34%
-INFO:utils.context_moe_trainner:Validation accuracy improved (82.2917 -> 82.3413).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:  23%|██▎       | 68/300 [09:48<33:46,  8.74s/it]INFO:utils.context_moe_trainner:Epoch[69/300] Train Loss: 0.1374, Train Acc: 98.39%
-INFO:utils.context_moe_trainner:Epoch[69/300] Val Loss: 0.8609, Val Acc: 81.99%
-INFO:utils.context_moe_trainner:No improvement for 1 epoch(s).
-Epochs:  23%|██▎       | 69/300 [09:57<33:37,  8.73s/it]INFO:utils.context_moe_trainner:Epoch[70/300] Train Loss: 0.1610, Train Acc: 97.18%
-INFO:utils.context_moe_trainner:Epoch[70/300] Val Loss: 0.8761, Val Acc: 82.69%
-INFO:utils.context_moe_trainner:Validation accuracy improved (82.3413 -> 82.6885).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:  23%|██▎       | 70/300 [10:06<33:37,  8.77s/it]INFO:utils.context_moe_trainner:Epoch[71/300] Train Loss: 0.1271, Train Acc: 97.96%
-INFO:utils.context_moe_trainner:Epoch[71/300] Val Loss: 0.8764, Val Acc: 81.65%
-INFO:utils.context_moe_trainner:No improvement for 1 epoch(s).
-Epochs:  24%|██▎       | 71/300 [10:15<33:22,  8.74s/it]INFO:utils.context_moe_trainner:Epoch[72/300] Train Loss: 0.1115, Train Acc: 97.53%
-INFO:utils.context_moe_trainner:Epoch[72/300] Val Loss: 0.8809, Val Acc: 81.94%
-INFO:utils.context_moe_trainner:No improvement for 2 epoch(s).
-Epochs:  24%|██▍       | 72/300 [10:23<33:10,  8.73s/it]INFO:utils.context_moe_trainner:Epoch[73/300] Train Loss: 0.0991, Train Acc: 98.70%
-INFO:utils.context_moe_trainner:Epoch[73/300] Val Loss: 0.8520, Val Acc: 81.94%
-INFO:utils.context_moe_trainner:No improvement for 3 epoch(s).
-Epochs:  24%|██▍       | 73/300 [10:32<33:02,  8.73s/it]INFO:utils.context_moe_trainner:Epoch[74/300] Train Loss: 0.1093, Train Acc: 98.35%
-INFO:utils.context_moe_trainner:Epoch[74/300] Val Loss: 0.8587, Val Acc: 81.99%
-INFO:utils.context_moe_trainner:No improvement for 4 epoch(s).
-Epochs:  25%|██▍       | 74/300 [10:41<32:51,  8.73s/it]INFO:utils.context_moe_trainner:Epoch[75/300] Train Loss: 0.0916, Train Acc: 99.00%
-INFO:utils.context_moe_trainner:Epoch[75/300] Val Loss: 0.8638, Val Acc: 83.04%
-INFO:utils.context_moe_trainner:Validation accuracy improved (82.6885 -> 83.0357).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:  25%|██▌       | 75/300 [10:50<32:45,  8.74s/it]INFO:utils.context_moe_trainner:Epoch[76/300] Train Loss: 0.0840, Train Acc: 99.13%
-INFO:utils.context_moe_trainner:Epoch[76/300] Val Loss: 0.8200, Val Acc: 83.04%
-INFO:utils.context_moe_trainner:No improvement for 1 epoch(s).
-Epochs:  25%|██▌       | 76/300 [10:58<32:41,  8.76s/it]INFO:utils.context_moe_trainner:Epoch[77/300] Train Loss: 0.0957, Train Acc: 98.74%
-INFO:utils.context_moe_trainner:Epoch[77/300] Val Loss: 0.8440, Val Acc: 82.34%
-INFO:utils.context_moe_trainner:No improvement for 2 epoch(s).
-Epochs:  26%|██▌       | 77/300 [11:07<32:35,  8.77s/it]INFO:utils.context_moe_trainner:Epoch[78/300] Train Loss: 0.0934, Train Acc: 98.65%
-INFO:utils.context_moe_trainner:Epoch[78/300] Val Loss: 0.8150, Val Acc: 82.99%
-INFO:utils.context_moe_trainner:No improvement for 3 epoch(s).
-Epochs:  26%|██▌       | 78/300 [11:16<32:27,  8.77s/it]INFO:utils.context_moe_trainner:Epoch[79/300] Train Loss: 0.1085, Train Acc: 98.52%
-INFO:utils.context_moe_trainner:Epoch[79/300] Val Loss: 0.8366, Val Acc: 81.94%
-INFO:utils.context_moe_trainner:No improvement for 4 epoch(s).
-Epochs:  26%|██▋       | 79/300 [11:25<32:12,  8.75s/it]INFO:utils.context_moe_trainner:Epoch[80/300] Train Loss: 0.1134, Train Acc: 98.31%
-INFO:utils.context_moe_trainner:Epoch[80/300] Val Loss: 0.8604, Val Acc: 81.60%
-INFO:utils.context_moe_trainner:No improvement for 5 epoch(s).
-Epochs:  27%|██▋       | 80/300 [11:33<32:06,  8.76s/it]INFO:utils.context_moe_trainner:Epoch[81/300] Train Loss: 0.1199, Train Acc: 97.74%
-INFO:utils.context_moe_trainner:Epoch[81/300] Val Loss: 0.8528, Val Acc: 81.60%
-INFO:utils.context_moe_trainner:No improvement for 6 epoch(s).
-Epochs:  27%|██▋       | 81/300 [11:42<31:56,  8.75s/it]INFO:utils.context_moe_trainner:Epoch[82/300] Train Loss: 0.2041, Train Acc: 96.74%
-INFO:utils.context_moe_trainner:Epoch[82/300] Val Loss: 0.7990, Val Acc: 84.87%
-INFO:utils.context_moe_trainner:Validation accuracy improved (83.0357 -> 84.8710).
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/best_checkpoint.pth
-Epochs:  27%|██▋       | 82/300 [11:51<31:56,  8.79s/it]INFO:utils.context_moe_trainner:Epoch[83/300] Train Loss: 0.1316, Train Acc: 98.05%
-INFO:utils.context_moe_trainner:Epoch[83/300] Val Loss: 0.8922, Val Acc: 81.99%
-INFO:utils.context_moe_trainner:No improvement for 1 epoch(s).
-Epochs:  28%|██▊       | 83/300 [12:00<31:41,  8.76s/it]INFO:utils.context_moe_trainner:Epoch[84/300] Train Loss: 0.1091, Train Acc: 98.31%
-INFO:utils.context_moe_trainner:Epoch[84/300] Val Loss: 0.8358, Val Acc: 83.09%
-INFO:utils.context_moe_trainner:No improvement for 2 epoch(s).
-Epochs:  28%|██▊       | 84/300 [12:08<31:30,  8.75s/it]INFO:utils.context_moe_trainner:Epoch[85/300] Train Loss: 0.1681, Train Acc: 96.83%
-INFO:utils.context_moe_trainner:Epoch[85/300] Val Loss: 0.8233, Val Acc: 83.83%
-INFO:utils.context_moe_trainner:No improvement for 3 epoch(s).
-Epochs:  28%|██▊       | 85/300 [12:17<31:21,  8.75s/it]INFO:utils.context_moe_trainner:Epoch[86/300] Train Loss: 0.1474, Train Acc: 97.40%
-INFO:utils.context_moe_trainner:Epoch[86/300] Val Loss: 0.9108, Val Acc: 81.65%
-INFO:utils.context_moe_trainner:No improvement for 4 epoch(s).
-Epochs:  29%|██▊       | 86/300 [12:26<31:17,  8.77s/it]INFO:utils.context_moe_trainner:Epoch[87/300] Train Loss: 0.1749, Train Acc: 97.22%
-INFO:utils.context_moe_trainner:Epoch[87/300] Val Loss: 0.8348, Val Acc: 83.43%
-INFO:utils.context_moe_trainner:No improvement for 5 epoch(s).
-Epochs:  29%|██▉       | 87/300 [12:35<31:04,  8.75s/it]INFO:utils.context_moe_trainner:Epoch[88/300] Train Loss: 0.0882, Train Acc: 99.00%
-INFO:utils.context_moe_trainner:Epoch[88/300] Val Loss: 0.8330, Val Acc: 83.73%
-INFO:utils.context_moe_trainner:No improvement for 6 epoch(s).
-Epochs:  29%|██▉       | 88/300 [12:44<30:56,  8.76s/it]INFO:utils.context_moe_trainner:Epoch[89/300] Train Loss: 0.1253, Train Acc: 98.35%
-INFO:utils.context_moe_trainner:Epoch[89/300] Val Loss: 0.8030, Val Acc: 84.42%
-INFO:utils.context_moe_trainner:No improvement for 7 epoch(s).
-Epochs:  30%|██▉       | 89/300 [12:52<30:48,  8.76s/it]INFO:utils.context_moe_trainner:Epoch[90/300] Train Loss: 0.0873, Train Acc: 98.91%
-INFO:utils.context_moe_trainner:Epoch[90/300] Val Loss: 0.8389, Val Acc: 83.43%
-INFO:utils.context_moe_trainner:No improvement for 8 epoch(s).
-Epochs:  30%|███       | 90/300 [13:01<30:40,  8.76s/it]INFO:utils.context_moe_trainner:Epoch[91/300] Train Loss: 0.1040, Train Acc: 98.57%
-INFO:utils.context_moe_trainner:Epoch[91/300] Val Loss: 0.8174, Val Acc: 83.83%
-INFO:utils.context_moe_trainner:No improvement for 9 epoch(s).
-Epochs:  30%|███       | 91/300 [13:10<30:38,  8.79s/it]INFO:utils.context_moe_trainner:Epoch[92/300] Train Loss: 0.1230, Train Acc: 97.22%
-INFO:utils.context_moe_trainner:Epoch[92/300] Val Loss: 0.8126, Val Acc: 84.13%
-INFO:utils.context_moe_trainner:No improvement for 10 epoch(s).
-Epochs:  31%|███       | 92/300 [13:19<30:26,  8.78s/it]INFO:utils.context_moe_trainner:Epoch[93/300] Train Loss: 0.1194, Train Acc: 98.09%
-INFO:utils.context_moe_trainner:Epoch[93/300] Val Loss: 0.8520, Val Acc: 82.94%
-INFO:utils.context_moe_trainner:No improvement for 11 epoch(s).
-Epochs:  31%|███       | 93/300 [13:28<30:23,  8.81s/it]INFO:utils.context_moe_trainner:Epoch[94/300] Train Loss: 0.0931, Train Acc: 98.74%
-INFO:utils.context_moe_trainner:Epoch[94/300] Val Loss: 0.8678, Val Acc: 82.59%
-INFO:utils.context_moe_trainner:No improvement for 12 epoch(s).
-Epochs:  31%|███▏      | 94/300 [13:36<30:14,  8.81s/it]INFO:utils.context_moe_trainner:Epoch[95/300] Train Loss: 0.0866, Train Acc: 99.05%
-INFO:utils.context_moe_trainner:Epoch[95/300] Val Loss: 0.8743, Val Acc: 83.04%
-INFO:utils.context_moe_trainner:No improvement for 13 epoch(s).
-Epochs:  32%|███▏      | 95/300 [13:45<30:06,  8.81s/it]INFO:utils.context_moe_trainner:Epoch[96/300] Train Loss: 0.0748, Train Acc: 99.39%
-INFO:utils.context_moe_trainner:Epoch[96/300] Val Loss: 0.8731, Val Acc: 82.64%
-INFO:utils.context_moe_trainner:No improvement for 14 epoch(s).
-Epochs:  32%|███▏      | 96/300 [13:54<29:53,  8.79s/it]INFO:utils.context_moe_trainner:Epoch[97/300] Train Loss: 0.1366, Train Acc: 97.40%
-INFO:utils.context_moe_trainner:Epoch[97/300] Val Loss: 0.8540, Val Acc: 83.38%
-INFO:utils.context_moe_trainner:No improvement for 15 epoch(s).
-Epochs:  32%|███▏      | 97/300 [14:03<29:42,  8.78s/it]INFO:utils.context_moe_trainner:Epoch[98/300] Train Loss: 0.0763, Train Acc: 99.13%
-INFO:utils.context_moe_trainner:Epoch[98/300] Val Loss: 0.8419, Val Acc: 83.09%
-INFO:utils.context_moe_trainner:No improvement for 16 epoch(s).
-Epochs:  33%|███▎      | 98/300 [14:11<29:34,  8.78s/it]INFO:utils.context_moe_trainner:Epoch[99/300] Train Loss: 0.0950, Train Acc: 98.65%
-INFO:utils.context_moe_trainner:Epoch[99/300] Val Loss: 0.8466, Val Acc: 83.09%
-INFO:utils.context_moe_trainner:No improvement for 17 epoch(s).
-Epochs:  33%|███▎      | 99/300 [14:20<29:27,  8.79s/it]INFO:utils.context_moe_trainner:Epoch[100/300] Train Loss: 0.1226, Train Acc: 97.83%
-INFO:utils.context_moe_trainner:Epoch[100/300] Val Loss: 0.8443, Val Acc: 84.13%
-INFO:utils.context_moe_trainner:No improvement for 18 epoch(s).
-Epochs:  33%|███▎      | 100/300 [14:29<29:17,  8.79s/it]INFO:utils.context_moe_trainner:Epoch[101/300] Train Loss: 0.0882, Train Acc: 98.44%
-INFO:utils.context_moe_trainner:Epoch[101/300] Val Loss: 0.8919, Val Acc: 82.34%
-INFO:utils.context_moe_trainner:No improvement for 19 epoch(s).
-Epochs:  34%|███▎      | 101/300 [14:38<29:11,  8.80s/it]INFO:utils.context_moe_trainner:Epoch[102/300] Train Loss: 0.0836, Train Acc: 99.09%
-INFO:utils.context_moe_trainner:Epoch[102/300] Val Loss: 0.8718, Val Acc: 82.04%
-INFO:utils.context_moe_trainner:No improvement for 20 epoch(s).
-Epochs:  34%|███▍      | 102/300 [14:47<29:04,  8.81s/it]INFO:utils.context_moe_trainner:Epoch[103/300] Train Loss: 0.0754, Train Acc: 99.22%
-INFO:utils.context_moe_trainner:Epoch[103/300] Val Loss: 0.8765, Val Acc: 83.43%
-INFO:utils.context_moe_trainner:No improvement for 21 epoch(s).
-Epochs:  34%|███▍      | 103/300 [14:56<28:53,  8.80s/it]INFO:utils.context_moe_trainner:Epoch[104/300] Train Loss: 0.0916, Train Acc: 98.48%
-INFO:utils.context_moe_trainner:Epoch[104/300] Val Loss: 0.8726, Val Acc: 82.39%
-INFO:utils.context_moe_trainner:No improvement for 22 epoch(s).
-Epochs:  35%|███▍      | 104/300 [15:04<28:41,  8.78s/it]INFO:utils.context_moe_trainner:Epoch[105/300] Train Loss: 0.1320, Train Acc: 98.26%
-INFO:utils.context_moe_trainner:Epoch[105/300] Val Loss: 0.8753, Val Acc: 81.35%
-INFO:utils.context_moe_trainner:No improvement for 23 epoch(s).
-Epochs:  35%|███▌      | 105/300 [15:13<28:32,  8.78s/it]INFO:utils.context_moe_trainner:Epoch[106/300] Train Loss: 0.1265, Train Acc: 98.39%
-INFO:utils.context_moe_trainner:Epoch[106/300] Val Loss: 0.8707, Val Acc: 81.70%
-INFO:utils.context_moe_trainner:No improvement for 24 epoch(s).
-Epochs:  35%|███▌      | 106/300 [15:22<28:25,  8.79s/it]INFO:utils.context_moe_trainner:Epoch[107/300] Train Loss: 0.0764, Train Acc: 98.87%
-INFO:utils.context_moe_trainner:Epoch[107/300] Val Loss: 0.8649, Val Acc: 82.74%
-INFO:utils.context_moe_trainner:No improvement for 25 epoch(s).
-Epochs:  36%|███▌      | 107/300 [15:31<28:23,  8.83s/it]INFO:utils.context_moe_trainner:Epoch[108/300] Train Loss: 0.1315, Train Acc: 98.26%
-INFO:utils.context_moe_trainner:Epoch[108/300] Val Loss: 0.8573, Val Acc: 83.09%
-INFO:utils.context_moe_trainner:No improvement for 26 epoch(s).
-Epochs:  36%|███▌      | 108/300 [15:40<28:16,  8.84s/it]INFO:utils.context_moe_trainner:Epoch[109/300] Train Loss: 0.0935, Train Acc: 98.44%
-INFO:utils.context_moe_trainner:Epoch[109/300] Val Loss: 0.8496, Val Acc: 83.43%
-INFO:utils.context_moe_trainner:No improvement for 27 epoch(s).
-Epochs:  36%|███▋      | 109/300 [15:48<28:05,  8.83s/it]INFO:utils.context_moe_trainner:Epoch[110/300] Train Loss: 0.0818, Train Acc: 98.61%
-INFO:utils.context_moe_trainner:Epoch[110/300] Val Loss: 0.8462, Val Acc: 83.43%
-INFO:utils.context_moe_trainner:No improvement for 28 epoch(s).
-Epochs:  37%|███▋      | 110/300 [15:57<27:33,  8.70s/it]INFO:utils.context_moe_trainner:Epoch[111/300] Train Loss: 0.0789, Train Acc: 99.09%
-INFO:utils.context_moe_trainner:Epoch[111/300] Val Loss: 0.8495, Val Acc: 84.13%
-INFO:utils.context_moe_trainner:No improvement for 29 epoch(s).
-Epochs:  37%|███▋      | 111/300 [16:05<26:49,  8.52s/it]INFO:utils.context_moe_trainner:Epoch[112/300] Train Loss: 0.1122, Train Acc: 98.00%
-INFO:utils.context_moe_trainner:Epoch[112/300] Val Loss: 0.8522, Val Acc: 83.78%
-INFO:utils.context_moe_trainner:No improvement for 30 epoch(s).
-Epochs:  37%|███▋      | 112/300 [16:13<26:15,  8.38s/it]INFO:utils.context_moe_trainner:Epoch[113/300] Train Loss: 0.1155, Train Acc: 98.74%
-INFO:utils.context_moe_trainner:Epoch[113/300] Val Loss: 0.8490, Val Acc: 84.47%
-INFO:utils.context_moe_trainner:No improvement for 31 epoch(s).
-Epochs:  38%|███▊      | 113/300 [16:21<25:50,  8.29s/it]INFO:utils.context_moe_trainner:Epoch[114/300] Train Loss: 0.0736, Train Acc: 99.31%
-INFO:utils.context_moe_trainner:Epoch[114/300] Val Loss: 0.8432, Val Acc: 84.13%
-INFO:utils.context_moe_trainner:No improvement for 32 epoch(s).
-Epochs:  38%|███▊      | 114/300 [16:29<25:27,  8.21s/it]INFO:utils.context_moe_trainner:Epoch[115/300] Train Loss: 0.1285, Train Acc: 98.48%
-INFO:utils.context_moe_trainner:Epoch[115/300] Val Loss: 0.8478, Val Acc: 84.13%
-INFO:utils.context_moe_trainner:No improvement for 33 epoch(s).
-Epochs:  38%|███▊      | 115/300 [16:37<25:10,  8.17s/it]INFO:utils.context_moe_trainner:Epoch[116/300] Train Loss: 0.1187, Train Acc: 98.70%
-INFO:utils.context_moe_trainner:Epoch[116/300] Val Loss: 0.8394, Val Acc: 82.69%
-INFO:utils.context_moe_trainner:No improvement for 34 epoch(s).
-Epochs:  39%|███▊      | 116/300 [16:45<24:56,  8.13s/it]INFO:utils.context_moe_trainner:Epoch[117/300] Train Loss: 0.0703, Train Acc: 99.44%
-INFO:utils.context_moe_trainner:Epoch[117/300] Val Loss: 0.8360, Val Acc: 82.69%
-INFO:utils.context_moe_trainner:No improvement for 35 epoch(s).
-Epochs:  39%|███▉      | 117/300 [16:53<24:43,  8.11s/it]INFO:utils.context_moe_trainner:Epoch[118/300] Train Loss: 0.0907, Train Acc: 98.52%
-INFO:utils.context_moe_trainner:Epoch[118/300] Val Loss: 0.8367, Val Acc: 82.69%
-INFO:utils.context_moe_trainner:No improvement for 36 epoch(s).
-Epochs:  39%|███▉      | 118/300 [17:01<24:31,  8.08s/it]INFO:utils.context_moe_trainner:Epoch[119/300] Train Loss: 0.0681, Train Acc: 99.57%
-INFO:utils.context_moe_trainner:Epoch[119/300] Val Loss: 0.8333, Val Acc: 83.04%
-INFO:utils.context_moe_trainner:No improvement for 37 epoch(s).
-Epochs:  40%|███▉      | 119/300 [17:10<24:37,  8.16s/it]INFO:utils.context_moe_trainner:Epoch[120/300] Train Loss: 0.1445, Train Acc: 98.22%
-INFO:utils.context_moe_trainner:Epoch[120/300] Val Loss: 0.8254, Val Acc: 83.78%
-INFO:utils.context_moe_trainner:No improvement for 38 epoch(s).
-Epochs:  40%|████      | 120/300 [17:18<25:01,  8.34s/it]INFO:utils.context_moe_trainner:Epoch[121/300] Train Loss: 0.0723, Train Acc: 99.48%
-INFO:utils.context_moe_trainner:Epoch[121/300] Val Loss: 0.8202, Val Acc: 84.13%
-INFO:utils.context_moe_trainner:No improvement for 39 epoch(s).
-Epochs:  40%|████      | 121/300 [17:27<25:15,  8.47s/it]INFO:utils.context_moe_trainner:Epoch[122/300] Train Loss: 0.0734, Train Acc: 99.35%
-INFO:utils.context_moe_trainner:Epoch[122/300] Val Loss: 0.8233, Val Acc: 84.47%
-INFO:utils.context_moe_trainner:No improvement for 40 epoch(s).
-Epochs:  41%|████      | 122/300 [17:36<25:20,  8.54s/it]INFO:utils.context_moe_trainner:Epoch[123/300] Train Loss: 0.0870, Train Acc: 98.57%
-INFO:utils.context_moe_trainner:Epoch[123/300] Val Loss: 0.8246, Val Acc: 83.78%
-INFO:utils.context_moe_trainner:No improvement for 41 epoch(s).
-Epochs:  41%|████      | 123/300 [17:45<25:25,  8.62s/it]INFO:utils.context_moe_trainner:Epoch[124/300] Train Loss: 0.1419, Train Acc: 97.92%
-INFO:utils.context_moe_trainner:Epoch[124/300] Val Loss: 0.8314, Val Acc: 83.43%
-INFO:utils.context_moe_trainner:No improvement for 42 epoch(s).
-Epochs:  41%|████▏     | 124/300 [17:53<25:23,  8.66s/it]INFO:utils.context_moe_trainner:Epoch[125/300] Train Loss: 0.0751, Train Acc: 99.44%
-INFO:utils.context_moe_trainner:Epoch[125/300] Val Loss: 0.8265, Val Acc: 84.13%
-INFO:utils.context_moe_trainner:No improvement for 43 epoch(s).
-Epochs:  42%|████▏     | 125/300 [18:02<25:20,  8.69s/it]INFO:utils.context_moe_trainner:Epoch[126/300] Train Loss: 0.0690, Train Acc: 99.61%
-INFO:utils.context_moe_trainner:Epoch[126/300] Val Loss: 0.8359, Val Acc: 83.43%
-INFO:utils.context_moe_trainner:No improvement for 44 epoch(s).
-Epochs:  42%|████▏     | 126/300 [18:11<25:11,  8.69s/it]INFO:utils.context_moe_trainner:Epoch[127/300] Train Loss: 0.0895, Train Acc: 98.78%
-INFO:utils.context_moe_trainner:Epoch[127/300] Val Loss: 0.8377, Val Acc: 83.78%
-INFO:utils.context_moe_trainner:No improvement for 45 epoch(s).
-Epochs:  42%|████▏     | 127/300 [18:19<24:59,  8.67s/it]INFO:utils.context_moe_trainner:Epoch[128/300] Train Loss: 0.1838, Train Acc: 97.70%
-INFO:utils.context_moe_trainner:Epoch[128/300] Val Loss: 0.8386, Val Acc: 83.78%
-INFO:utils.context_moe_trainner:No improvement for 46 epoch(s).
-Epochs:  43%|████▎     | 128/300 [18:28<24:57,  8.70s/it]INFO:utils.context_moe_trainner:Epoch[129/300] Train Loss: 0.1643, Train Acc: 97.92%
-INFO:utils.context_moe_trainner:Epoch[129/300] Val Loss: 0.8368, Val Acc: 83.78%
-INFO:utils.context_moe_trainner:No improvement for 47 epoch(s).
-Epochs:  43%|████▎     | 129/300 [18:37<24:49,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[130/300] Train Loss: 0.1278, Train Acc: 98.70%
-INFO:utils.context_moe_trainner:Epoch[130/300] Val Loss: 0.8366, Val Acc: 83.43%
-INFO:utils.context_moe_trainner:No improvement for 48 epoch(s).
-Epochs:  43%|████▎     | 130/300 [18:46<24:41,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[131/300] Train Loss: 0.1342, Train Acc: 98.70%
-INFO:utils.context_moe_trainner:Epoch[131/300] Val Loss: 0.8359, Val Acc: 83.78%
-INFO:utils.context_moe_trainner:No improvement for 49 epoch(s).
-Epochs:  44%|████▎     | 131/300 [18:54<24:31,  8.71s/it]INFO:utils.context_moe_trainner:Epoch[132/300] Train Loss: 0.1168, Train Acc: 98.74%
-INFO:utils.context_moe_trainner:Epoch[132/300] Val Loss: 0.8300, Val Acc: 83.09%
-INFO:utils.context_moe_trainner:No improvement for 50 epoch(s).
-INFO:utils.context_moe_trainner:Early stopping triggered. No improvement in validation acc for 50 epochs.
-Epochs:  44%|████▎     | 131/300 [19:02<24:34,  8.72s/it]
-INFO:utils.context_moe_trainner:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/last_checkpoint.pth
-INFO:utils.context_moe_trainner:Training finished. Best val acc: 84.8710 at epoch 82
-INFO:utils.context_moe_trainner:Number of Expert are: 4 and top_k are 2
-INFO:utils.context_moe_trainner:Saved training plot to /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/loss_acc_plot.png, expert usage plot to /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/expert_usage.png, and expert-class heatmap to /media/data/minhht/context_moe/checkpoints/plantdoc/moe_temp0.5/mobilenetv3small_moe/4_experts/top_2/run_20260421-170551/expert_class_heatmap.png.
-INFO:__main__:================================================================================
-INFO:__main__:Training Completed Successfully
-INFO:__main__:================================================================================
+Epochs:   0%|          | 0/300 [00:00<?, ?it/s]Epochs:   0%|          | 1/300 [00:09<45:11,  9.07s/it]Epochs:   1%|          | 2/300 [00:17<42:41,  8.60s/it]Epochs:   1%|          | 3/300 [00:25<41:48,  8.44s/it]Epochs:   1%|▏         | 4/300 [00:33<41:09,  8.34s/it]Epochs:   2%|▏         | 5/300 [00:41<40:43,  8.28s/it]Epochs:   2%|▏         | 6/300 [00:50<40:26,  8.25s/it]Epochs:   2%|▏         | 7/300 [00:58<40:09,  8.22s/it]Epochs:   3%|▎         | 8/300 [01:06<40:00,  8.22s/it]Epochs:   3%|▎         | 9/300 [01:14<39:50,  8.21s/it]Epochs:   3%|▎         | 10/300 [01:23<40:35,  8.40s/it]Epochs:   4%|▎         | 11/300 [01:32<41:16,  8.57s/it]Epochs:   4%|▍         | 12/300 [01:41<41:46,  8.70s/it]Epochs:   4%|▍         | 13/300 [01:50<42:07,  8.81s/it]Epochs:   5%|▍         | 14/300 [01:59<42:21,  8.89s/it]Epochs:   5%|▌         | 15/300 [02:08<42:15,  8.90s/it]Epochs:   5%|▌         | 16/300 [02:17<42:06,  8.90s/it]Epochs:   6%|▌         | 17/300 [02:26<41:58,  8.90s/it]Epochs:   6%|▌         | 18/300 [02:35<41:45,  8.88s/it]Epochs:   6%|▋         | 19/300 [02:44<41:49,  8.93s/it]Epochs:   7%|▋         | 20/300 [02:53<41:42,  8.94s/it]Epochs:   7%|▋         | 21/300 [03:02<41:44,  8.98s/it]Epochs:   7%|▋         | 22/300 [03:11<41:35,  8.98s/it]Epochs:   8%|▊         | 23/300 [03:20<41:22,  8.96s/it]Epochs:   8%|▊         | 24/300 [03:29<41:11,  8.95s/it]Epochs:   8%|▊         | 25/300 [03:38<41:02,  8.95s/it]Epochs:   9%|▊         | 26/300 [03:47<40:55,  8.96s/it]Epochs:   9%|▉         | 27/300 [03:55<40:40,  8.94s/it]Epochs:   9%|▉         | 28/300 [04:04<40:30,  8.94s/it]Epochs:  10%|▉         | 29/300 [04:13<40:18,  8.92s/it]Epochs:  10%|█         | 30/300 [04:22<40:21,  8.97s/it]Epochs:  10%|█         | 31/300 [04:31<40:22,  9.01s/it]Epochs:  11%|█         | 32/300 [04:40<40:16,  9.02s/it]Epochs:  11%|█         | 33/300 [04:49<39:44,  8.93s/it]Epochs:  11%|█▏        | 34/300 [04:58<39:34,  8.93s/it]Epochs:  12%|█▏        | 35/300 [05:07<39:34,  8.96s/it]Epochs:  12%|█▏        | 36/300 [05:16<39:29,  8.98s/it]Epochs:  12%|█▏        | 37/300 [05:25<39:17,  8.96s/it]Epochs:  13%|█▎        | 38/300 [05:34<39:08,  8.96s/it]Epochs:  13%|█▎        | 39/300 [05:43<39:02,  8.97s/it]Epochs:  13%|█▎        | 40/300 [05:52<38:55,  8.98s/it]Epochs:  14%|█▎        | 41/300 [06:01<38:41,  8.96s/it]Epochs:  14%|█▍        | 42/300 [06:10<38:35,  8.98s/it]Epochs:  14%|█▍        | 43/300 [06:19<38:35,  9.01s/it]Epochs:  15%|█▍        | 44/300 [06:28<38:24,  9.00s/it]Epochs:  15%|█▌        | 45/300 [06:37<38:15,  9.00s/it]Epochs:  15%|█▌        | 46/300 [06:46<37:59,  8.97s/it]Epochs:  16%|█▌        | 47/300 [06:55<37:48,  8.97s/it]Epochs:  16%|█▌        | 48/300 [07:04<37:39,  8.96s/it]Epochs:  16%|█▋        | 49/300 [07:13<37:30,  8.97s/it]Epochs:  17%|█▋        | 50/300 [07:22<37:21,  8.97s/it]Epochs:  17%|█▋        | 51/300 [07:31<37:12,  8.97s/it]Epochs:  17%|█▋        | 52/300 [07:40<37:03,  8.97s/it]Epochs:  18%|█▊        | 53/300 [07:49<36:52,  8.96s/it]Epochs:  18%|█▊        | 54/300 [07:58<36:50,  8.98s/it]Epochs:  18%|█▊        | 55/300 [08:07<36:37,  8.97s/it]Epochs:  19%|█▊        | 56/300 [08:16<36:25,  8.96s/it]Epochs:  19%|█▉        | 57/300 [08:25<36:20,  8.97s/it]Epochs:  19%|█▉        | 58/300 [08:34<36:10,  8.97s/it]Epochs:  20%|█▉        | 59/300 [08:43<36:02,  8.97s/it]Epochs:  20%|██        | 60/300 [08:52<35:55,  8.98s/it]Epochs:  20%|██        | 61/300 [09:01<35:46,  8.98s/it]Epochs:  21%|██        | 62/300 [09:09<35:37,  8.98s/it]Epochs:  21%|██        | 63/300 [09:18<35:25,  8.97s/it]Epochs:  21%|██▏       | 64/300 [09:27<35:15,  8.97s/it]Epochs:  22%|██▏       | 65/300 [09:36<35:07,  8.97s/it]Epochs:  22%|██▏       | 66/300 [09:45<34:59,  8.97s/it]Epochs:  22%|██▏       | 67/300 [09:54<34:57,  9.00s/it]Epochs:  23%|██▎       | 68/300 [10:03<34:43,  8.98s/it]Epochs:  23%|██▎       | 69/300 [10:12<34:37,  8.99s/it]Epochs:  23%|██▎       | 70/300 [10:21<34:30,  9.00s/it]Epochs:  24%|██▎       | 71/300 [10:30<34:26,  9.02s/it]Epochs:  24%|██▍       | 72/300 [10:40<34:24,  9.06s/it]Epochs:  24%|██▍       | 73/300 [10:49<34:12,  9.04s/it]Epochs:  25%|██▍       | 74/300 [10:58<34:00,  9.03s/it]Epochs:  25%|██▌       | 75/300 [11:07<33:46,  9.01s/it]Epochs:  25%|██▌       | 76/300 [11:16<33:37,  9.01s/it]Epochs:  26%|██▌       | 77/300 [11:25<33:28,  9.01s/it]Epochs:  26%|██▌       | 78/300 [11:34<33:16,  9.00s/it]Epochs:  26%|██▋       | 79/300 [11:43<33:05,  8.98s/it]Epochs:  27%|██▋       | 80/300 [11:52<32:58,  8.99s/it]Epochs:  27%|██▋       | 81/300 [12:01<32:55,  9.02s/it]Epochs:  27%|██▋       | 82/300 [12:10<32:43,  9.01s/it]Epochs:  28%|██▊       | 83/300 [12:19<32:31,  8.99s/it]Epochs:  28%|██▊       | 84/300 [12:28<32:29,  9.02s/it]Epochs:  28%|██▊       | 85/300 [12:37<32:24,  9.04s/it]Epochs:  29%|██▊       | 86/300 [12:46<32:09,  9.01s/it]Epochs:  29%|██▉       | 87/300 [12:55<31:54,  8.99s/it]Epochs:  29%|██▉       | 88/300 [13:04<31:47,  9.00s/it]Epochs:  30%|██▉       | 89/300 [13:13<31:44,  9.03s/it]Epochs:  30%|███       | 90/300 [13:22<31:37,  9.04s/it]Epochs:  30%|███       | 91/300 [13:31<31:24,  9.02s/it]Epochs:  31%|███       | 92/300 [13:40<31:14,  9.01s/it]Epochs:  31%|███       | 93/300 [13:49<31:04,  9.01s/it]Epochs:  31%|███▏      | 94/300 [13:58<30:57,  9.02s/it]Epochs:  32%|███▏      | 95/300 [14:07<30:44,  9.00s/it]Epochs:  32%|███▏      | 96/300 [14:16<30:37,  9.01s/it]Epochs:  32%|███▏      | 97/300 [14:25<30:25,  8.99s/it]Epochs:  33%|███▎      | 98/300 [14:34<30:14,  8.98s/it]Epochs:  33%|███▎      | 99/300 [14:43<30:10,  9.01s/it]Epochs:  33%|███▎      | 100/300 [14:52<30:05,  9.03s/it]Epochs:  34%|███▎      | 101/300 [15:01<29:54,  9.02s/it]Epochs:  34%|███▍      | 102/300 [15:10<29:50,  9.04s/it]Epochs:  34%|███▍      | 103/300 [15:19<29:39,  9.03s/it]Epochs:  35%|███▍      | 104/300 [15:28<29:06,  8.91s/it]Epochs:  35%|███▌      | 105/300 [15:36<28:23,  8.74s/it]Epochs:  35%|███▌      | 106/300 [15:44<27:59,  8.66s/it]Epochs:  36%|███▌      | 107/300 [15:53<28:15,  8.79s/it]Epochs:  36%|███▌      | 108/300 [16:02<28:21,  8.86s/it]Epochs:  36%|███▋      | 109/300 [16:12<28:26,  8.93s/it]Epochs:  37%|███▋      | 110/300 [16:21<28:18,  8.94s/it]Epochs:  37%|███▋      | 111/300 [16:30<28:15,  8.97s/it]Epochs:  37%|███▋      | 112/300 [16:39<28:13,  9.01s/it]Epochs:  38%|███▊      | 113/300 [16:48<28:06,  9.02s/it]Epochs:  38%|███▊      | 114/300 [16:57<27:58,  9.03s/it]Epochs:  38%|███▊      | 115/300 [17:06<27:50,  9.03s/it]Epochs:  39%|███▊      | 116/300 [17:15<27:43,  9.04s/it]Epochs:  39%|███▉      | 117/300 [17:24<27:35,  9.05s/it]Epochs:  39%|███▉      | 118/300 [17:33<27:28,  9.06s/it]Epochs:  40%|███▉      | 119/300 [17:42<27:16,  9.04s/it]Epochs:  40%|████      | 120/300 [17:51<27:11,  9.07s/it]Epochs:  40%|████      | 121/300 [18:00<26:58,  9.04s/it]Epochs:  41%|████      | 122/300 [18:09<26:50,  9.05s/it]Epochs:  41%|████      | 123/300 [18:18<26:35,  9.01s/it]Epochs:  41%|████▏     | 124/300 [18:27<26:24,  9.00s/it]Epochs:  42%|████▏     | 125/300 [18:36<26:17,  9.01s/it]Epochs:  42%|████▏     | 126/300 [18:45<26:07,  9.01s/it]Epochs:  42%|████▏     | 127/300 [18:54<26:05,  9.05s/it]Epochs:  43%|████▎     | 128/300 [19:03<26:00,  9.07s/it]Epochs:  43%|████▎     | 129/300 [19:12<25:47,  9.05s/it]Epochs:  43%|████▎     | 130/300 [19:21<25:34,  9.03s/it]Epochs:  44%|████▎     | 131/300 [19:30<25:26,  9.03s/it]
