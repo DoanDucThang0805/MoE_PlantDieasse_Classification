@@ -6,11 +6,12 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
 
-from utils import Trainer
+from utils.trainer import Trainer
 from dataset.plantdoc_dataset import build_datasets
-from models.pretrained_backbone.mobilenetv3_small import model
+from models.pretrained_model.mobilenetv3_small import model
 
 
+train_dataset, validation_dataset, _ = build_datasets(use_context=False)
 BATCH_SIZE = 64
 train_ds = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 val_ds = DataLoader(validation_dataset, batch_size=BATCH_SIZE, shuffle=False)
@@ -26,9 +27,9 @@ class_weights = compute_class_weight(
     classes=np.arange(num_classes),
     y=labels
 )
-
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=0.001)
+class_weights = torch.tensor(class_weights,dtype=torch.float32).to(device)
+criterion = nn.CrossEntropyLoss(weight=class_weights)
+optimizer = optim.AdamW(model.parameters(), lr=0.001, weight_decay=0.001)
 
 trainer = Trainer(
     num_epochs=200,

@@ -23,8 +23,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-from dataset.plantdoc_dataset import test_dataset
-from models.pretrained_model.shufflenet import model
+from dataset.plantdoc_dataset import build_datasets
+from models.pretrained_model.mobilenetv3_small import model
 
 
 # ============================================================================
@@ -32,9 +32,9 @@ from models.pretrained_model.shufflenet import model
 # ============================================================================
 
 # Thông tin mô hình và checkpoint
-MODEL_NAME = 'shufflenet'  # Tên mô hình (phù hợp với tên thư mục checkpoint)
+MODEL_NAME = 'mobilenetv3_small'  # Tên mô hình (phù hợp với tên thư mục checkpoint)
 MODEL_TYPE = 'pretrain_weight'
-RUN_TIME = 'run_20260325-124056'  # Timestamp của lần chạy huấn luyện
+RUN_TIME = 'run_20260424-223530'  # Timestamp của lần chạy huấn luyện
 DATASET_NAME = 'plantdoc'
 
 # Tham số tải dữ liệu
@@ -68,6 +68,7 @@ report_dir = (
 # Tải Dữ Liệu Kiểm Tra
 # ============================================================================
 
+_, _, test_dataset = build_datasets(False)
 # Tạo data loader cho tập kiểm tra
 test_ds = DataLoader(
     test_dataset,
@@ -113,7 +114,7 @@ all_labels = []
 # Suy luận trên từng batch
 print("Đang thực hiện suy luận trên tập kiểm tra...")
 with torch.inference_mode(True):
-    for images, labels in test_ds:
+    for images, labels, _ in test_ds:
         # Chuyển dữ liệu sang thiết bị
         images, labels = images.to(device), labels.to(device)
         
