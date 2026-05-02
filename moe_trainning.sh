@@ -17,13 +17,13 @@ run_training() {
     
     echo "🚀 Running: $num_experts experts, top_k=$top_k, seed=$seed"
     python -m trainning.moe_train \
-        --type_model moe_contextaware_temp0.7 \
+        --type_model moe_contextaware_temp1.0 \
         --num_experts $num_experts \
         --top_k $top_k \
         --router_mode context_aware \
         --batch_size 32 \
         --num_epochs 300 \
-        --temperature 0.7 \
+        --temperature 1.0 \
         --moe_alpha 0.05 \
         --use_context \
         --seed $seed
