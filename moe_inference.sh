@@ -18,10 +18,10 @@ echo "Batch Inference - All MoE Models"
 echo "=========================================="
 echo ""
 
-CHECKPOINT_ROOT="../checkpoints/plantdoc/moe_contextaware_temp1.0/mobilenetv3small_moe"
+CHECKPOINT_ROOT="../checkpoints/plantdoc/moe_contextaware_temp0.3/mobilenetv3small_moe"
 DATASET_NAME="plantdoc"
 MODEL_NAME="mobilenetv3small_moe"
-TYPE_MODEL="moe_contextaware_temp1.0"
+TYPE_MODEL="moe_contextaware_temp0.3"
 
 # Check if checkpoint directory exists
 if [ ! -d "$CHECKPOINT_ROOT" ]; then
