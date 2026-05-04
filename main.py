@@ -1,49 +1,20 @@
 import torch
-import torch.nn as nn
-from torchvision.models import efficientnet_v2_m, EfficientNet_V2_M_Weights
+from torchinfo import summary
+from thop import profile
+
+from src.models.moe.model import MoEModel
 
 
-class EfficientNetV2MBackbone(nn.Module):
-    """
-    EfficientNetV2-M backbone for feature extraction
-    Output: feature vector [B, 1280]
-    """
+dummt_input = torch.randn(1, 3, 224, 224)
+context_input = torch.randn(1, 6)
+model_config = {
+    "context_dim": 6,
+    "num_classes": 8,
+    "num_experts": 4,
+    "top_k": 4,
+    "router_mode": "context_aware",
+    "temperature": 0.5
+}
 
-    def __init__(self, pretrained=True, freeze_backbone=False):
-        super().__init__()
-
-        weights = EfficientNet_V2_M_Weights.DEFAULT if pretrained else None
-
-        model = efficientnet_v2_m(weights=weights)
-
-        # backbone CNN
-        self.features = model.features
-
-        # global pooling
-        self.pool = nn.AdaptiveAvgPool2d(1)
-
-        # embedding dimension
-        self.feature_dim = model.classifier[1].in_features
-
-        if freeze_backbone:
-            for p in self.features.parameters():
-                p.requires_grad = False
-
-    def forward(self, x):
-
-        x = self.features(x)
-
-        x = self.pool(x)
-
-        x = torch.flatten(x, 1)
-
-        return x
-    
-model = EfficientNetV2MBackbone()
-
-x = torch.randn(2,3,224,224)
-
-feat = model(x)
-
-print(feat.shape)
-print(torch.cuda.is_available())
+model = MoEModel(**model_config)
+summary(model, input_data=[dummt_input, context_input], col_names=["input_size", "output_size", "num_params", "trainable"])

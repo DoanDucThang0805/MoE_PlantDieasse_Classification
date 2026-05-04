@@ -8,3 +8,4 @@ expert_1.pth
 expert_2.pth
 vit_b16_plant.pth
 .vscode/
+venv1/

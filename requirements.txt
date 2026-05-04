@@ -13,3 +13,4 @@ pillow
 albumentations
 timm
 scikit-fuzzy
+thop

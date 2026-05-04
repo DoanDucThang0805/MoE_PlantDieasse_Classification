@@ -280,3 +280,109 @@ class ContextAwareGating(nn.Module, BaseNoiseGatingMixin):
         combined_weights = F.softmax(top_k_logits / self.temperature, dim=-1)
 
         return combined_weights, top_k_indices, clean_logits
+
+
+class ContextAwareLinearGating(nn.Module, BaseNoiseGatingMixin):
+    """
+    Context-aware linear gating mechanism for Mixture of Experts.
+    
+    Enhances expert selection by incorporating contextual information alongside
+    the main embedding. Fuses both signals to make informed routing decisions.
+    """
+    
+    def __init__(
+        self,
+        model_dim: int,
+        context_dim: int,
+        num_experts: int,
+        top_k: int,
+        temperature: float = 1.0,
+        noise_stddev: float = 1.0,
+        context_proj_dim: int = 32
+    ) -> None:
+        """
+        Initialize the context-aware gating module.
+        
+        Args:
+            model_dim: Dimension of input embeddings
+            context_dim: Dimension of context feature vectors
+            num_experts: Total number of experts in MoE layer
+            top_k: Number of top experts to select
+            temperature: Temperature for softmax normalization
+            noise_stddev: Standard deviation of noise during training
+            context_proj_dim: Dimension for context projection
+        
+        Raises:
+            AssertionError: If top_k > num_experts
+        """
+        super().__init__()
+        assert top_k <= num_experts, "top_k must be less than or equal to num_experts"
+
+        self.model_dim = model_dim
+        self.context_dim = context_dim
+        self.num_experts = num_experts
+        self.top_k = top_k
+        self.noise_stddev = noise_stddev
+        self.temperature = temperature
+        
+        fusion_dim = model_dim + context_proj_dim
+
+        # Normalize inputs independently
+        self.embedding_norm = nn.LayerNorm(model_dim)
+        self.context_norm = nn.LayerNorm(context_dim)
+        self.context_proj_norm = nn.LayerNorm(context_proj_dim)
+        self.fusion_norm = nn.LayerNorm(fusion_dim)
+
+        # Project context to fixed dimension
+        self.context_projector = nn.Sequential(
+            nn.Linear(context_dim, context_proj_dim),
+            nn.GELU(),
+            nn.Linear(context_proj_dim, context_proj_dim),
+        )
+
+        # Predict noise magnitude from fused features
+        self.noise_layer = nn.Linear(fusion_dim, num_experts, bias=False)
+        
+        # Multi-layer MLP for expert selection
+        self.gate_projector = nn.Linear(fusion_dim, num_experts)
+    
+    def forward(self, x: torch.Tensor, context: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Generate gating weights for expert selection using context information.
+        
+        Args:
+            x: Input embedding tensor of shape [batch_size, model_dim]
+            context: Context feature tensor of shape [batch_size, context_dim]
+        
+        Returns:
+            Tuple of:
+                - combined_weights: Softmax normalized weights [batch_size, top_k]
+                - top_k_indices: Indices of selected experts [batch_size, top_k]
+                - clean_logits: Raw expert logits [batch_size, num_experts]
+        """
+        # Normalize inputs
+        embedding = self.embedding_norm(x)
+        context = self.context_norm(context)
+
+        # Project and normalize context
+        context_features = self.context_projector(context)
+        context_features = self.context_proj_norm(context_features)
+
+        # Fuse embedding and context
+        fusion_features = torch.cat([embedding, context_features], dim=-1)
+        fusion_features = self.fusion_norm(fusion_features)
+        
+        # Compute clean logits
+        clean_logits = self.gate_projector(fusion_features)
+        
+        # Apply noise during training
+        noisy_logits = self.apply_noise_to_logits(
+            clean_logits, self.noise_layer, self.noise_stddev, self.training, fusion_features
+        )
+        
+        # Select top-k experts
+        top_k_logits, top_k_indices = torch.topk(noisy_logits, self.top_k, dim=-1)
+        # Normalize with temperature scaling
+        combined_weights = F.softmax(top_k_logits / self.temperature, dim=-1)
+
+        return combined_weights, top_k_indices, clean_logits
