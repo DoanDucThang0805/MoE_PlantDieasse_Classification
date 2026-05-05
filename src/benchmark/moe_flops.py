@@ -27,9 +27,6 @@ def complete_flops_analysis():
     print(f"Total FLOPs: {flops / 1e9:.3f} GFLOPs")
     print(f"Total Params: {params}")
     
-    # Per-sample FLOPs
-    print(f"\nFLOPs per sample: {flops / batch_size / 1e6:.2f} MFLOPs")
-
 
 if __name__ == "__main__":
     complete_flops_analysis()

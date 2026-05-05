@@ -8,10 +8,10 @@ source venv/Scripts/activate
 cd src
 
 # Config
-SEEDS=(42 43 44 45 46)
+SEEDS=(45)
 
 run_training() {
-    local num_experts=$4
+    local num_experts=$1
     local top_k=$2
     local seed=$3
     

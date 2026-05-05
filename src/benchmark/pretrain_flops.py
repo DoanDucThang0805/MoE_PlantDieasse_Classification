@@ -17,4 +17,3 @@ flops, params = profile(
 
 print(f"Total FLOPs: {flops / 1e9:.3f} GFLOPs")
 print(f"Total Params: {params}")
-print(f"\nFLOPs per sample: {flops / 1 / 1e6:.2f} MFLOPs")
