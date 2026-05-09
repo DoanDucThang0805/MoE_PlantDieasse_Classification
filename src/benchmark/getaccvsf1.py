@@ -412,7 +412,14 @@ class GetAccandmF1ScoreMoE:
         logger.debug(f"Raw results DataFrame: {len(df)} rows")
         logger.debug(f"Columns: {list(df.columns)}")
         
-        df = df.groupby(["num_experts", "top_k"])[["accuracy", "macro_f1"]].mean().reset_index()
+        # Calculate both mean and std for accuracy and macro_f1
+        agg_dict = {
+            "accuracy": ["mean", "std"],
+            "macro_f1": ["mean", "std"]
+        }
+        df = df.groupby(["num_experts", "top_k"])[["accuracy", "macro_f1"]].agg(agg_dict).reset_index()
+        df.columns = ["num_experts", "top_k", "accuracy_mean", "accuracy_std", "macro_f1_mean", "macro_f1_std"]
+        
         logger.info(f"Aggregated results by (num_experts, top_k): {len(df)} rows")
         logger.debug(f"\nAggregated Results:\n{df.to_string()}")
         

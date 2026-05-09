@@ -20,7 +20,7 @@ from collections import Counter
 
 
 # Path to cropped tomato disease dataset
-cropped_data_path = Path(__file__).resolve().parents[2] / 'data' / 'tomato30percent'
+cropped_data_path = Path(__file__).resolve().parents[2] / 'data' / 'tomato_only'
 
 
 # Augmentation cho tập huấn luyện

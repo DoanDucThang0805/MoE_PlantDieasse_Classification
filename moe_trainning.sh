@@ -8,7 +8,7 @@ source venv/Scripts/activate
 cd src
 
 # Config
-SEEDS=(45)
+SEEDS=(42 43 44)
 
 run_training() {
     local num_experts=$1
@@ -17,7 +17,7 @@ run_training() {
     
     echo "🚀 Running: $num_experts experts, top_k=$top_k, seed=$seed"
     python -m trainning.moe_train \
-        --type_model moe_linearcontextaware_temp0.5 \
+        --type_model moe_30percentdata_contextaware_temp0.5 \
         --num_experts $num_experts \
         --top_k $top_k \
         --router_mode context_aware \
