@@ -6,14 +6,25 @@ import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import DataLoader
 
+from models.moe.gating import ContextAwareLinearGating
 from models.moe.model import MoEModel
 from dataset.plantdoc_dataset import build_datasets
 
 
 class MoeRoutingDiagnostics:
-    def __init__(self, checkpoint_path: Path, output_dir: Path):
+    def __init__(
+        self,
+        checkpoint_path: Path,
+        output_dir: Path,
+        split: str,
+        csv_name: str,
+        plot_name: str,
+    ):
         self.checkpoint_path = Path(checkpoint_path)
         self.output_dir = Path(output_dir)
+        self.split = split
+        self.csv_name = csv_name
+        self.plot_name = plot_name
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -59,9 +70,22 @@ class MoeRoutingDiagnostics:
     
 
     def create_dataloader(self, batch_size: int = 32) -> DataLoader:
-        _, _, test_dataset = build_datasets(use_context=True)
-        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-        return test_loader
+        train_dataset, val_dataset, test_dataset = build_datasets(use_context=True)
+        datasets = {
+            "train": train_dataset,
+            "validation": val_dataset,
+            "test": test_dataset,
+        }
+        dataset = datasets[self.split]
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        return dataloader
+
+    @staticmethod
+    def uses_linear_context_gating(state_dict: dict) -> bool:
+        return (
+            "moe_layer.gating.gate_projector.weight" in state_dict
+            and "moe_layer.gating.gate_projector.0.weight" not in state_dict
+        )
     
     def collect_global_expert_usage(
         self,
@@ -98,20 +122,20 @@ class MoeRoutingDiagnostics:
         })
 
     def save_global_expert_usage(self, usage_df: pd.DataFrame):
-        csv_path = self.output_dir / "global_expert_usage.csv"
-        plot_path = self.output_dir / "global_expert_usage.png"
+        csv_path = self.output_dir / self.csv_name
+        plot_path = self.output_dir / self.plot_name
 
         usage_df.to_csv(csv_path, index=False)
 
         plt.figure(figsize=(6, 4))
         plt.bar(
-            usage_df["expert"].astype(str),
+            (usage_df["expert"] + 1).astype(str),
             usage_df["usage_percent"],
             color="#4C78A8",
         )
         plt.xlabel("Expert")
         plt.ylabel("Usage (%)")
-        plt.title("Global Expert Usage on Test Set")
+        plt.title(f"Global Expert Utilization")
         plt.ylim(0, 100)
         plt.tight_layout()
         plt.savefig(plot_path, dpi=300)
@@ -129,6 +153,14 @@ class MoeRoutingDiagnostics:
             context_dim=checkpoint_info["context_dim"],
             router_mode=checkpoint_info["router_mode"],
         )
+        if self.uses_linear_context_gating(checkpoint_info["model_state_dict"]):
+            model.moe_layer.gating = ContextAwareLinearGating(
+                model_dim=model.feature_extractor.output_dim,
+                context_dim=checkpoint_info["context_dim"],
+                num_experts=checkpoint_info["num_experts"],
+                top_k=checkpoint_info["top_k"],
+                temperature=checkpoint_info["temperature"],
+            )
         model.load_state_dict(checkpoint_info["model_state_dict"])
         model.to(self.device)
         model.eval()
@@ -163,10 +195,29 @@ def get_args():
         help="Directory to save diagnostic CSV and plots",
     )
     parser.add_argument(
+        "--split",
+        type=str,
+        default="test",
+        choices=["train", "validation", "test"],
+        help="Dataset split for diagnostics",
+    )
+    parser.add_argument(
         "--batch_size",
         type=int,
         default=32,
         help="Batch size for diagnostic inference",
+    )
+    parser.add_argument(
+        "--csv_name",
+        type=str,
+        default="global_expert_usage.csv",
+        help="Output CSV file name",
+    )
+    parser.add_argument(
+        "--plot_name",
+        type=str,
+        default="global_expert_usage.png",
+        help="Output plot file name",
     )
     return parser.parse_args()
 
@@ -176,6 +227,9 @@ def main():
     diagnostics = MoeRoutingDiagnostics(
         checkpoint_path=args.checkpoint,
         output_dir=args.output_dir,
+        split=args.split,
+        csv_name=args.csv_name,
+        plot_name=args.plot_name,
     )
     diagnostics.run_diagnostics(batch_size=args.batch_size)
 

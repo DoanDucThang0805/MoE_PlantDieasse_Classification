@@ -139,13 +139,13 @@ class MoEClassWiseRouting:
             cmap="Blues",
             vmin=0.0,
             vmax=1.0,
-            xticklabels=[f"E{expert_id}" for expert_id in range(rho_np.shape[1])],
+            xticklabels=[str(expert_id + 1) for expert_id in range(rho_np.shape[1])],
             yticklabels=class_names,
             cbar_kws={"label": "Activation rate"},
         )
         plt.xlabel("Expert")
         plt.ylabel("Class")
-        plt.title(f"Class-wise Expert Activation Rate ({self.split})")
+        plt.title(f"Class-wise Expert Activation Heatmap")
         plt.tight_layout()
         plt.savefig(heatmap_path, dpi=300)
         plt.close()
