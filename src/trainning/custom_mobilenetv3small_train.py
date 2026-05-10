@@ -10,7 +10,7 @@ from sklearn.utils.class_weight import compute_class_weight
 
 from utils.trainer import Trainer
 from dataset.plantdoc_dataset import build_datasets
-from models.pretrained_model.custom_mobilenetv3small import model
+from models.pretrained_model.widense_mlp_head import model
 
 
 def set_seed(seed=42):
