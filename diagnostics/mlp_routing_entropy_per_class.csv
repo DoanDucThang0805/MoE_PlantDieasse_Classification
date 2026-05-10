@@ -1,0 +1,9 @@
+class_id,class_name,num_samples,entropy,normalized_entropy
+0,Tomato Early blight leaf,20,1.3493656,0.9733615
+1,Tomato Septoria leaf spot,42,0.9746858,0.70308715
+2,Tomato leaf,40,1.1376637,0.8206509
+3,Tomato leaf bacterial spot,27,1.2093861,0.87238765
+4,Tomato leaf late blight,22,1.2957901,0.934715
+5,Tomato leaf mosaic virus,26,1.2561482,0.9061194
+6,Tomato leaf yellow virus,79,1.2641938,0.91192305
+7,Tomato mold leaf,29,1.1704186,0.8442786
