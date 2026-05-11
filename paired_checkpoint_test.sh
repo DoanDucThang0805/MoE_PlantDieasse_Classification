@@ -15,6 +15,8 @@ usage() {
     echo "  --split SPLIT           Dataset split: train, validation, test (default: test)"
     echo "  --batch_size N          Batch size for inference (default: 32)"
     echo "  --seeds IDS             Comma-separated seeds (default: 42,43,44,45,46)"
+    echo "  --paired_seedwise_csv P  Output CSV for paired seed-wise values"
+    echo "  --allow_missing_pairs   Allow exploratory tests with fewer requested pairs"
     echo "  -h, --help              Show this help"
     echo ""
     echo "Example:"
@@ -38,9 +40,11 @@ MODEL_B_NAME=""
 MODEL_B_DIR=""
 MODEL_B_TYPE=""
 OUTPUT_CSV=""
+PAIRED_SEEDWISE_CSV=""
 SPLIT="test"
 BATCH_SIZE=32
 SEEDS="42,43,44,45,46"
+ALLOW_MISSING_PAIRS=0
 REPO_ROOT="$(pwd)"
 
 while [ $# -gt 0 ]; do
@@ -73,6 +77,10 @@ while [ $# -gt 0 ]; do
             OUTPUT_CSV="$2"
             shift 2
             ;;
+        --paired_seedwise_csv)
+            PAIRED_SEEDWISE_CSV="$2"
+            shift 2
+            ;;
         --split)
             SPLIT="$2"
             shift 2
@@ -84,6 +92,10 @@ while [ $# -gt 0 ]; do
         --seeds)
             SEEDS="$2"
             shift 2
+            ;;
+        --allow_missing_pairs)
+            ALLOW_MISSING_PAIRS=1
+            shift
             ;;
         -h|--help)
             usage
@@ -129,6 +141,11 @@ resolve_path() {
 MODEL_A_DIR_ABS="$(resolve_path "$MODEL_A_DIR")"
 MODEL_B_DIR_ABS="$(resolve_path "$MODEL_B_DIR")"
 OUTPUT_CSV_ABS="$(resolve_path "$OUTPUT_CSV")"
+if [ -n "$PAIRED_SEEDWISE_CSV" ]; then
+    PAIRED_SEEDWISE_CSV_ABS="$(resolve_path "$PAIRED_SEEDWISE_CSV")"
+else
+    PAIRED_SEEDWISE_CSV_ABS=""
+fi
 
 if [ ! -d "$MODEL_A_DIR_ABS" ]; then
     echo "ERROR: model_a_dir not found: $MODEL_A_DIR_ABS"
@@ -160,12 +177,24 @@ echo "Model A dir: $MODEL_A_DIR_ABS"
 echo "Model B    : $MODEL_B_NAME ($MODEL_B_TYPE)"
 echo "Model B dir: $MODEL_B_DIR_ABS"
 echo "Output CSV : $OUTPUT_CSV_ABS"
+if [ -n "$PAIRED_SEEDWISE_CSV_ABS" ]; then
+    echo "Seed CSV   : $PAIRED_SEEDWISE_CSV_ABS"
+fi
 echo "Split      : $SPLIT"
 echo "Batch size : $BATCH_SIZE"
 echo "Seeds      : $SEEDS"
+echo "Allow miss : $ALLOW_MISSING_PAIRS"
 echo "=========================================="
 
 cd src
+
+EXTRA_ARGS=()
+if [ -n "$PAIRED_SEEDWISE_CSV_ABS" ]; then
+    EXTRA_ARGS+=(--paired_seedwise_csv "$PAIRED_SEEDWISE_CSV_ABS")
+fi
+if [ "$ALLOW_MISSING_PAIRS" -eq 1 ]; then
+    EXTRA_ARGS+=(--allow_missing_pairs)
+fi
 
 python -m statistical_tests.paired_checkpoint_test \
     --model_a_name "$MODEL_A_NAME" \
@@ -177,6 +206,7 @@ python -m statistical_tests.paired_checkpoint_test \
     --output_csv "$OUTPUT_CSV_ABS" \
     --split "$SPLIT" \
     --batch_size "$BATCH_SIZE" \
-    --seeds "$SEEDS"
+    --seeds "$SEEDS" \
+    "${EXTRA_ARGS[@]}"
 
 echo "Done. Results saved to: $OUTPUT_CSV_ABS"

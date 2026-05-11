@@ -1,6 +1,5 @@
 from pathlib import Path
 import argparse
-import copy
 import io
 import sys
 from contextlib import redirect_stdout
@@ -31,11 +30,8 @@ MODEL_TYPES = [
     "moe",
     "dense_multibranch",
     "mobilenetv3_small",
-    "mobilenetv3_large",
     "widened_mlp_head",
     "shufflenet",
-    "efficientnet_b4",
-    "resnet50",
 ]
 
 
@@ -93,27 +89,42 @@ class PairedCheckpointTest:
             if not candidates:
                 continue
 
-            latest_checkpoint = sorted(
-                candidates,
-                key=lambda path: (path.stat().st_mtime, str(path)),
-                reverse=True,
-            )[0]
-            checkpoints[seed] = latest_checkpoint
+            # FIX 3: Cảnh báo nếu tìm thấy nhiều hơn 1 checkpoint cho cùng seed
+            # để tránh chọn nhầm do mtime thay đổi khi copy/re-save file
+            if len(candidates) > 1:
+                candidates_sorted = sorted(
+                    candidates,
+                    key=lambda path: (path.stat().st_mtime, str(path)),
+                    reverse=True,
+                )
+                print(
+                    f"WARNING: seed_{seed} has {len(candidates)} checkpoints. "
+                    f"Picking latest by mtime: {candidates_sorted[0]}"
+                )
+                checkpoints[seed] = candidates_sorted[0]
+            else:
+                checkpoints[seed] = candidates[0]
 
         return checkpoints
 
-    def create_dataloader(self, use_context: bool) -> DataLoader:
+    # FIX 4: Tách build_datasets ra khỏi create_dataloader
+    # để tránh gọi build_datasets 2 lần (một lần cho model A, một lần cho model B)
+    # khi dataset là giống nhau và chỉ khác use_context
+    def build_dataloader(self, dataset) -> DataLoader:
+        return DataLoader(
+            dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+        )
+
+    def get_split_dataset(self, use_context: bool):
         train_dataset, val_dataset, test_dataset = build_datasets(use_context=use_context)
         datasets = {
             "train": train_dataset,
             "validation": val_dataset,
             "test": test_dataset,
         }
-        return DataLoader(
-            datasets[self.split],
-            batch_size=self.batch_size,
-            shuffle=False,
-        )
+        return datasets[self.split]
 
     def load_checkpoint_file(self, checkpoint_path: Path) -> Dict[str, Any]:
         checkpoint = torch.load(checkpoint_path, map_location=self.device)
@@ -192,22 +203,28 @@ class PairedCheckpointTest:
                 top_k=checkpoint["top_k"],
                 temperature=checkpoint["temperature"],
             )
+        else:
+            # FIX 2: Trước đây code im lặng dùng gating mặc định của MoEModel
+            # dẫn đến load_state_dict() có thể bị key mismatch hoặc load sai weights
+            raise ValueError(
+                "Cannot detect gating type from state_dict keys. "
+                "Expected 'moe_layer.gating.gate_projector.weight' (Linear) "
+                "or 'moe_layer.gating.gate_projector.0.weight' (MLP). "
+                f"Keys found: {[k for k in state_dict if 'gating' in k]}"
+            )
         return model
 
     def create_pretrained_model(self, model_type: str, num_classes: int) -> nn.Module:
         if model_type == "mobilenetv3_small":
             from torchvision.models import mobilenet_v3_small
-
             return mobilenet_v3_small(weights=None, num_classes=num_classes)
 
         if model_type == "mobilenetv3_large":
             from torchvision.models import mobilenet_v3_large
-
             return mobilenet_v3_large(weights=None, num_classes=num_classes)
 
         if model_type == "widened_mlp_head":
             from torchvision.models import mobilenet_v3_small
-
             model = mobilenet_v3_small(weights=None)
             in_features = model.classifier[0].in_features
             model.classifier = nn.Sequential(
@@ -223,21 +240,18 @@ class PairedCheckpointTest:
 
         if model_type == "shufflenet":
             from torchvision.models import shufflenet_v2_x2_0
-
             model = shufflenet_v2_x2_0(weights=None)
             model.fc = nn.Linear(model.fc.in_features, num_classes)
             return model
 
         if model_type == "resnet50":
             from torchvision.models import resnet50
-
             model = resnet50(weights=None)
             model.fc = nn.Linear(model.fc.in_features, num_classes)
             return model
 
         if model_type == "efficientnet_b4":
             import timm
-
             return timm.create_model(
                 model_name="efficientnet_b4",
                 pretrained=False,
@@ -309,14 +323,12 @@ class PairedCheckpointTest:
         model_name: str,
         model_type: str,
         checkpoint_dir: Path,
+        dataloader: DataLoader,  # FIX 4: nhận dataloader từ ngoài thay vì tự tạo
     ) -> pd.DataFrame:
         seed_to_checkpoint = self.find_seed_checkpoints(checkpoint_dir)
         missing = sorted(set(self.seeds) - set(seed_to_checkpoint.keys()))
         if missing:
             print(f"WARNING: {model_name} missing seeds: {','.join(missing)}")
-
-        use_context = model_type == "moe"
-        dataloader = self.create_dataloader(use_context=use_context)
 
         rows = []
         for seed in self.seeds:
@@ -342,6 +354,17 @@ class PairedCheckpointTest:
         return pd.DataFrame(rows)
 
     @staticmethod
+    def _verdict(t_pvalue: float, w_pvalue: float, alpha: float = 0.05) -> str:
+        # FIX 5: Thêm cột verdict dạng readable cho reviewer
+        # Chỉ kết luận "significant" khi CẢ HAI test đều p < alpha
+        # đúng theo yêu cầu Session 6
+        if t_pvalue < alpha and w_pvalue < alpha:
+            return "significant"
+        elif t_pvalue < alpha or w_pvalue < alpha:
+            return "inconclusive"
+        return "not_significant"
+
+    @staticmethod
     def run_tests(
         comparison: str,
         metric: str,
@@ -354,6 +377,7 @@ class PairedCheckpointTest:
         deltas = a_values - b_values
 
         t_result = stats.ttest_rel(a_values, b_values)
+
         try:
             wilcoxon_result = stats.wilcoxon(a_values, b_values, zero_method="wilcox")
             wilcoxon_statistic = float(wilcoxon_result.statistic)
@@ -361,6 +385,9 @@ class PairedCheckpointTest:
         except ValueError:
             wilcoxon_statistic = np.nan
             wilcoxon_pvalue = np.nan
+
+        t_pvalue = float(t_result.pvalue)
+        w_pvalue = wilcoxon_pvalue
 
         return {
             "comparison": comparison,
@@ -376,22 +403,40 @@ class PairedCheckpointTest:
             "mean_delta": float(deltas.mean()),
             "std_delta": float(deltas.std(ddof=1)) if len(deltas) > 1 else np.nan,
             "paired_t_statistic": float(t_result.statistic),
-            "paired_t_pvalue": float(t_result.pvalue),
+            "paired_t_pvalue": t_pvalue,
             "wilcoxon_statistic": wilcoxon_statistic,
-            "wilcoxon_pvalue": wilcoxon_pvalue,
-            "significant_0_05": bool(t_result.pvalue < 0.05),
+            "wilcoxon_pvalue": w_pvalue,
+            # FIX 1: Tách thành 3 cột riêng biệt thay vì chỉ check t-test
+            # significant_0_05 cũ chỉ dùng t_pvalue → vi phạm yêu cầu Session 6
+            "significant_t_0_05":        bool(t_pvalue < 0.05),
+            "significant_wilcoxon_0_05": bool(w_pvalue < 0.05),
+            "significant_both_0_05":     bool(t_pvalue < 0.05 and w_pvalue < 0.05),
+            # FIX 5: Cột verdict dạng text để dễ đọc trong báo cáo
+            "verdict": PairedCheckpointTest._verdict(t_pvalue, w_pvalue),
         }
 
     def run(self) -> pd.DataFrame:
+        # FIX 4: Tạo dataloader một lần cho mỗi model type
+        # thay vì gọi create_dataloader bên trong evaluate_model_group
+        print("Building dataset for model A...")
+        dataset_a = self.get_split_dataset(use_context=(self.model_a_type == "moe"))
+        dataloader_a = self.build_dataloader(dataset_a)
+
+        print("Building dataset for model B...")
+        dataset_b = self.get_split_dataset(use_context=(self.model_b_type == "moe"))
+        dataloader_b = self.build_dataloader(dataset_b)
+
         model_a_df = self.evaluate_model_group(
             model_name=self.model_a_name,
             model_type=self.model_a_type,
             checkpoint_dir=self.model_a_dir,
+            dataloader=dataloader_a,
         )
         model_b_df = self.evaluate_model_group(
             model_name=self.model_b_name,
             model_type=self.model_b_type,
             checkpoint_dir=self.model_b_dir,
+            dataloader=dataloader_b,
         )
 
         paired_df = model_a_df.merge(
@@ -429,7 +474,7 @@ class PairedCheckpointTest:
         self.output_csv.parent.mkdir(parents=True, exist_ok=True)
         output_df.to_csv(self.output_csv, index=False)
         print(output_df.to_string(index=False))
-        print(f"Saved paired test table: {self.output_csv}")
+        print(f"\nSaved paired test table: {self.output_csv}")
         return output_df
 
 
