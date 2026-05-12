@@ -122,8 +122,8 @@ if __name__ == "__main__":
     Example usage: Export MobileNetV3-Small model with optional checkpoint loading.
     """
     # Define paths
-    output_onnx_path = Path("./onnx/mobilenetv3small_moe.onnx")
-    checkpoint_path = Path("/media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/mobilenetv3_small/seed_42/run_20260511-170211/best_checkpoint.pth")  # Optional
+    output_onnx_path = Path("/media/data/minhht/context_moe/onnx/mobilenetv3small.onnx")
+    checkpoint_path = Path("/media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_weight/mobilenetv3_small/seed_42/run_20260511-170211/best_checkpoint.pth")  # Optional
     
     # Export model
     export_mobilenetv3small_to_onnx(

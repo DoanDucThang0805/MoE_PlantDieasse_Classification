@@ -164,8 +164,8 @@ if __name__ == "__main__":
     Example usage: Export MobileNetV3-Small Dense Multi-Branch model with optional checkpoint loading.
     """
     # Define paths
-    output_onnx_path = Path("./onnx/mobilenetv3small_dense_multibranch.onnx")
-    checkpoint_path = Path("./checkpoints/plantdoc/dense_multibranch/model.pt")  # Optional
+    output_onnx_path = Path("/media/data/minhht/context_moe/onnx/mobilenetv3small_dense_multibranch.onnx")
+    checkpoint_path = Path("/media/data/minhht/context_moe/checkpoints/plantdoc/dense_multibranch/mobilenetv3small_dense_multibranch/4_experts/seed_42/run_20260508-163557/best_checkpoint.pth")  # Optional
     
     print("=" * 80)
     print("MobileNetV3-Small Dense Multi-Branch - ONNX Export")

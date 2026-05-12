@@ -151,8 +151,8 @@ if __name__ == "__main__":
     Example usage: Export MobileNetV3-Small with widened dense head model with optional checkpoint loading.
     """
     # Define paths
-    output_onnx_path = Path("./onnx/mobilenetv3small_widense.onnx")
-    checkpoint_path = Path("./checkpoints/plantdoc/pretrain_weight/model.pt")  # Optional
+    output_onnx_path = Path("/media/data/minhht/context_moe/onnx/mobilenetv3small_widense.onnx")
+    checkpoint_path = Path("/media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_weight/widened_MLP _head/seed_42/run_20260508-143909/best_checkpoint.pth")  # Optional
     
     print("=" * 80)
     print("MobileNetV3-Small with Widened Dense Classifier Head - ONNX Export")
