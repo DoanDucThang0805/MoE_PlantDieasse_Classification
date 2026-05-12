@@ -14,3 +14,7 @@ albumentations
 timm
 scikit-fuzzy
 thop
+memory_profiler
+onnx
+onnxscript
+onnxruntime

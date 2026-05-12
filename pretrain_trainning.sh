@@ -4,10 +4,7 @@ source venv/bin/activate
 cd src
 
 models=(
-  "trainning.shufflenetv2_train"
-  "trainning.squeezenet_train"
-  "trainning.efficientnetb0_train"
-  "trainning.ghostnet_train"
+  "trainning.mobilenetv3_small_train"
 )
 
 seeds=(42 43 44 45 46)

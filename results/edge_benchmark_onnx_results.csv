@@ -1,0 +1,2 @@
+model_name,model_size_mb,cpu_peak_memory_mb,cpu_inference_time_ms
+mobilenetv3_small_moe_onnx,22.802,115.879,1.995
