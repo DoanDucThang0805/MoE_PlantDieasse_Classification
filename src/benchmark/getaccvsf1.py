@@ -33,7 +33,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, f1_score
 
-from models.moe.model import MoEModel
+from models.moe.modelv2 import MoEModel
 from dataset.plantdoc_dataset import build_datasets
 
 import logging

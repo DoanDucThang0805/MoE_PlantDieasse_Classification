@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 
 from .backbone import Mobilenetv3SmallFeatureExtractor
-from .gating import NoisyTopKGating, ContextAwareLinearGating
+from .gating import NoisyTopKGating, ContextAwareLinearGating, ContextAwareGating
 
 
 class MoELayer(nn.Module):
@@ -58,7 +58,7 @@ class MoELayer(nn.Module):
                 temperature=self.temperature,
             )
         elif self.router_mode == "context_aware":
-            self.gating = ContextAwareLinearGating(
+            self.gating = ContextAwareGating(
                 model_dim=model_dim,
                 context_dim=context_dim,
                 num_experts=self.num_experts,
