@@ -7,7 +7,7 @@ models=(
   "trainning.mobilenetv3_small_train"
 )
 
-seeds=(42)
+seeds=(43)
 
 for model in "${models[@]}"; do
   for seed in "${seeds[@]}"; do

@@ -24,6 +24,7 @@ import seaborn as sns
 import pandas as pd
 
 from dataset.plantdoc_dataset import build_datasets
+from dataset.plantdoc_datasetv2 import build_datasets as build_datasets_v2
 from models.pretrained_model.mobilenetv3_small import model
 
 
@@ -34,7 +35,7 @@ from models.pretrained_model.mobilenetv3_small import model
 # Thông tin mô hình và checkpoint
 MODEL_NAME = 'mobilenetv3_small'  # Tên mô hình (phù hợp với tên thư mục checkpoint)
 MODEL_TYPE = 'pretrain_models'
-RUN_TIME = 'run_20260513-021232'  # Timestamp của lần chạy huấn luyện
+RUN_TIME = 'run_20260513-022731'  # Timestamp của lần chạy huấn luyện
 DATASET_NAME = 'plantdoc'
 SEED = 42
 
@@ -69,7 +70,9 @@ report_dir = (
 # Tải Dữ Liệu Kiểm Tra
 # ============================================================================
 
-_, _, test_dataset = build_datasets(False)
+# _, _, test_dataset = build_datasets(False)
+_, _, test_dataset = build_datasets_v2()
+
 # Tạo data loader cho tập kiểm tra
 test_ds = DataLoader(
     test_dataset,
@@ -115,7 +118,7 @@ all_labels = []
 # Suy luận trên từng batch
 print("Đang thực hiện suy luận trên tập kiểm tra...")
 with torch.inference_mode(True):
-    for images, labels, _ in test_ds:
+    for images, labels in test_ds:
         # Chuyển dữ liệu sang thiết bị
         images, labels = images.to(device), labels.to(device)
         

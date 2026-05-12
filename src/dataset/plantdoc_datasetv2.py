@@ -69,32 +69,43 @@ test_transform = A.Compose([
     ToTensorV2()  # Thay cho transforms.ToTensor()
 ])
 
-train_dataset = LoadDataset(
-    root_dir=cropped_data_path,
-    split='train',
-    train_ratio=0.8,
-    transform=train_transform
-)
+def build_datasets():
+    """
+    Build train, validation, and test datasets for pretrain.
 
-validation_dataset = LoadDataset(
-    root_dir=cropped_data_path,
-    split='validation',
-    train_ratio=0.8,
-    transform=val_transform
-)
+    Returns:
+        Tuple[LoadDataset, LoadDataset, LoadDataset]: train, validation, test datasets.
+    """
+    train_dataset = LoadDataset(
+        root_dir=cropped_data_path,
+        split='train',
+        train_ratio=0.8,
+        transform=train_transform
+    )
 
-test_dataset = LoadDataset(
-    root_dir=cropped_data_path,
-    split='test',
-    train_ratio=0.8,
-    transform=test_transform
-)
+    validation_dataset = LoadDataset(
+        root_dir=cropped_data_path,
+        split='validation',
+        train_ratio=0.8,
+        transform=val_transform
+    )
 
-print(f"Train size: {len(train_dataset)}")
-print(f"Validation size: {len(validation_dataset)}")
-print(f"Test size: {len(test_dataset)}")
-print(f"Numbers of train labels: {Counter(train_dataset.labels)}")
-print(f"Numbers of validation labels: {Counter(validation_dataset.labels)}")
-print(f"Numbers of test labels: {Counter(test_dataset.labels)}")
-print(train_dataset.class_to_idx)
+    test_dataset = LoadDataset(
+        root_dir=cropped_data_path,
+        split='test',
+        train_ratio=0.8,
+        transform=test_transform
+    )
 
+    return train_dataset, validation_dataset, test_dataset
+
+
+if __name__ == "__main__":
+    train_dataset, validation_dataset, test_dataset = build_datasets()
+    print(f"Train size: {len(train_dataset)}")
+    print(f"Validation size: {len(validation_dataset)}")
+    print(f"Test size: {len(test_dataset)}")
+    print(f"Numbers of train labels: {Counter(train_dataset.labels)}")
+    print(f"Numbers of validation labels: {Counter(validation_dataset.labels)}")
+    print(f"Numbers of test labels: {Counter(test_dataset.labels)}")
+    print(train_dataset.class_to_idx)
