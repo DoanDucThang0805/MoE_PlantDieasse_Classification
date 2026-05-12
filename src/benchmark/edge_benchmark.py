@@ -194,7 +194,7 @@ if __name__ == "__main__":
     dataframe = benchmark.run_benchmarks()
     output_file = benchmark.export_to_csv(
         dataframe,
-        filename="edge_benchmark_onnx_results.csv",
-        export_dir=Path("results"),
+        filename="edge_benchmark_onnx_results_on_pi.csv",
+        export_dir=Path("/home/icnlab/Desktop/moe/results"),
     )
     print(f"Saved benchmark results to {output_file}")
