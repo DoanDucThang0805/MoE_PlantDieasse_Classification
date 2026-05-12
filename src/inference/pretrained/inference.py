@@ -24,7 +24,7 @@ import seaborn as sns
 import pandas as pd
 
 from dataset.plantdoc_dataset import test_dataset
-from models.pretrained_model.efficientnet_b4 import model
+from models.pretrained_model.mobilenetv3_small import model
 
 
 # ============================================================================
@@ -32,10 +32,11 @@ from models.pretrained_model.efficientnet_b4 import model
 # ============================================================================
 
 # Thông tin mô hình và checkpoint
-MODEL_NAME = 'efficientnet_b4'  # Tên mô hình (phù hợp với tên thư mục checkpoint)
+MODEL_NAME = 'mobilenetv3_small'  # Tên mô hình (phù hợp với tên thư mục checkpoint)
 MODEL_TYPE = 'pretrain_weight'
-RUN_TIME = 'run_20260325-221625'  # Timestamp của lần chạy huấn luyện
+RUN_TIME = 'run_20260512-185011'  # Timestamp của lần chạy huấn luyện
 DATASET_NAME = 'plantdoc'
+SEED = 46
 
 # Tham số tải dữ liệu
 BATCH_SIZE = 32
@@ -56,12 +57,12 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Xác định đường dẫn checkpoint (tương đối với vị trí file này, bao gồm các CWD khác)
 checkpoint_path = (
     Path(__file__).resolve().parents[3] / 'checkpoints' / DATASET_NAME / MODEL_TYPE / 
-    MODEL_NAME / RUN_TIME / 'best_checkpoint.pth'
+    MODEL_NAME / f'seed_{SEED}' / RUN_TIME / 'best_checkpoint.pth'
 )
 
 # Xác định thư mục lưu báo cáo
 report_dir = (
-    Path(__file__).resolve().parents[3] / 'reports' / DATASET_NAME / MODEL_TYPE / MODEL_NAME / RUN_TIME
+    Path(__file__).resolve().parents[3] / 'reports' / DATASET_NAME / MODEL_TYPE / MODEL_NAME / f'seed_{SEED}' / RUN_TIME
 )
 
 # ============================================================================
