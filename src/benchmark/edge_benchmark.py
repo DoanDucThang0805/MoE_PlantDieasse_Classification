@@ -10,9 +10,12 @@ import pandas as pd
 import psutil
 from memory_profiler import memory_usage
 
-
+onnx_root_dir = Path(__file__).parent.parent.parent / "onnx"
 ONNX_MODEL_PATHS = {
-    "mobilenetv3_small_moe_onnx": Path("onnx/mobilenetv3small_moe.onnx"),
+    "mobilenetv3_small_baseline": onnx_root_dir / "mobilenetv3small.onnx",
+    "mobilenetv3_small_widense": onnx_root_dir / "mobilenetv3small_widense.onnx",
+    "mobilenetv3_small_dense_multibranch": onnx_root_dir / "mobilenetv3small_dense_multibranch.onnx",
+    "mobilenetv3_small_moe": onnx_root_dir / "mobilenetv3small_moe.onnx",
 }
 
 
