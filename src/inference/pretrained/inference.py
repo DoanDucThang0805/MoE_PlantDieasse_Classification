@@ -33,9 +33,10 @@ from models.pretrained_model.mobilenetv3_small import model
 
 # Thông tin mô hình và checkpoint
 MODEL_NAME = 'mobilenetv3_small'  # Tên mô hình (phù hợp với tên thư mục checkpoint)
-MODEL_TYPE = 'pretrain_weight'
-RUN_TIME = 'run_20260424-223530'  # Timestamp của lần chạy huấn luyện
+MODEL_TYPE = 'pretrain_models'
+RUN_TIME = 'run_20260513-021232'  # Timestamp của lần chạy huấn luyện
 DATASET_NAME = 'plantdoc'
+SEED = 42
 
 # Tham số tải dữ liệu
 BATCH_SIZE = 32
@@ -56,12 +57,12 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Xác định đường dẫn checkpoint (tương đối với vị trí file này, bao gồm các CWD khác)
 checkpoint_path = (
     Path(__file__).resolve().parents[3] / 'checkpoints' / DATASET_NAME / MODEL_TYPE / 
-    MODEL_NAME / RUN_TIME / 'best_checkpoint.pth'
+    MODEL_NAME / f'seed_{SEED}' / RUN_TIME / 'best_checkpoint.pth'
 )
 
 # Xác định thư mục lưu báo cáo
 report_dir = (
-    Path(__file__).resolve().parents[3] / 'reports' / DATASET_NAME / MODEL_TYPE / MODEL_NAME / RUN_TIME
+    Path(__file__).resolve().parents[3] / 'reports' / DATASET_NAME / MODEL_TYPE / MODEL_NAME /  f'seed_{SEED}' / RUN_TIME
 )
 
 # ============================================================================

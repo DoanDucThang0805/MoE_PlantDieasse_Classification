@@ -10,7 +10,7 @@ import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
 
 from utils.trainer import Trainer
-from dataset.plantdoc_dataset import build_datasets
+from dataset.plantdoc_datasetv2 import train_dataset, validation_dataset
 from models.pretrained_model.mobilenetv3_small import model
 
 
@@ -32,7 +32,7 @@ args = parse.parse_args()
 set_seed(args.seed)
 
 
-train_dataset, validation_dataset, _ = build_datasets(use_context=False)
+# train_dataset, validation_dataset, _ = build_datasets(use_context=False)
 BATCH_SIZE = 64
 
 generator = torch.Generator()
@@ -79,7 +79,7 @@ trainer = Trainer(
         output_dir
         / "checkpoints"
         / "plantdoc"
-        / "pretrain_weight"
+        / "pretrain_models"
         / "mobilenetv3_small"
         / f"seed_{args.seed}"
     )
