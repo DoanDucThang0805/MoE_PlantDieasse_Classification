@@ -1,0 +1,385 @@
+Epoch[1/200] Train Loss: 1.3411, Train Acc: 55.38%
+Epoch[1/200] Val Loss: 1.1810, Val Acc: 59.87%
+Validation accuracy improved (-inf -> 59.8710).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[2/200] Train Loss: 1.0470, Train Acc: 64.50%
+Epoch[2/200] Val Loss: 1.0830, Val Acc: 64.48%
+Validation accuracy improved (59.8710 -> 64.4841).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[3/200] Train Loss: 0.8657, Train Acc: 71.27%
+Epoch[3/200] Val Loss: 1.0180, Val Acc: 66.57%
+Validation accuracy improved (64.4841 -> 66.5675).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[4/200] Train Loss: 0.8583, Train Acc: 71.92%
+Epoch[4/200] Val Loss: 0.9906, Val Acc: 68.70%
+Validation accuracy improved (66.5675 -> 68.7004).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[5/200] Train Loss: 0.7499, Train Acc: 74.18%
+Epoch[5/200] Val Loss: 1.0042, Val Acc: 69.15%
+Validation accuracy improved (68.7004 -> 69.1468).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[6/200] Train Loss: 0.7170, Train Acc: 75.43%
+Epoch[6/200] Val Loss: 0.9979, Val Acc: 72.22%
+Validation accuracy improved (69.1468 -> 72.2222).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[7/200] Train Loss: 0.6108, Train Acc: 78.73%
+Epoch[7/200] Val Loss: 0.9736, Val Acc: 74.40%
+Validation accuracy improved (72.2222 -> 74.4048).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[8/200] Train Loss: 0.5805, Train Acc: 80.12%
+Epoch[8/200] Val Loss: 1.2504, Val Acc: 69.84%
+No improvement for 1 epoch(s).
+Epoch[9/200] Train Loss: 0.5585, Train Acc: 80.08%
+Epoch[9/200] Val Loss: 0.8986, Val Acc: 70.59%
+No improvement for 2 epoch(s).
+Epoch[10/200] Train Loss: 0.5215, Train Acc: 81.68%
+Epoch[10/200] Val Loss: 0.9794, Val Acc: 75.50%
+Validation accuracy improved (74.4048 -> 75.4960).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[11/200] Train Loss: 0.4697, Train Acc: 83.55%
+Epoch[11/200] Val Loss: 0.9144, Val Acc: 69.35%
+No improvement for 1 epoch(s).
+Epoch[12/200] Train Loss: 0.3782, Train Acc: 86.11%
+Epoch[12/200] Val Loss: 0.9200, Val Acc: 73.36%
+No improvement for 2 epoch(s).
+Epoch[13/200] Train Loss: 0.4075, Train Acc: 86.98%
+Epoch[13/200] Val Loss: 1.0346, Val Acc: 70.98%
+No improvement for 3 epoch(s).
+Epoch[14/200] Train Loss: 0.3621, Train Acc: 87.63%
+Epoch[14/200] Val Loss: 1.2156, Val Acc: 70.83%
+No improvement for 4 epoch(s).
+Epoch[15/200] Train Loss: 0.4616, Train Acc: 84.24%
+Epoch[15/200] Val Loss: 1.2092, Val Acc: 68.01%
+No improvement for 5 epoch(s).
+Epoch[16/200] Train Loss: 0.4115, Train Acc: 85.20%
+Epoch[16/200] Val Loss: 0.9403, Val Acc: 69.89%
+No improvement for 6 epoch(s).
+Epoch[17/200] Train Loss: 0.3259, Train Acc: 88.98%
+Epoch[17/200] Val Loss: 1.0378, Val Acc: 76.44%
+Validation accuracy improved (75.4960 -> 76.4385).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[18/200] Train Loss: 0.4026, Train Acc: 87.89%
+Epoch[18/200] Val Loss: 1.1419, Val Acc: 71.63%
+No improvement for 1 epoch(s).
+Epoch[19/200] Train Loss: 0.3640, Train Acc: 87.54%
+Epoch[19/200] Val Loss: 1.0129, Val Acc: 74.65%
+No improvement for 2 epoch(s).
+Epoch[20/200] Train Loss: 0.2426, Train Acc: 91.41%
+Epoch[20/200] Val Loss: 1.2768, Val Acc: 72.67%
+No improvement for 3 epoch(s).
+Epoch[21/200] Train Loss: 0.2432, Train Acc: 89.02%
+Epoch[21/200] Val Loss: 1.1008, Val Acc: 72.97%
+No improvement for 4 epoch(s).
+Epoch[22/200] Train Loss: 0.3261, Train Acc: 89.58%
+Epoch[22/200] Val Loss: 1.1068, Val Acc: 75.40%
+No improvement for 5 epoch(s).
+Epoch[23/200] Train Loss: 0.2429, Train Acc: 91.32%
+Epoch[23/200] Val Loss: 1.3993, Val Acc: 76.79%
+Validation accuracy improved (76.4385 -> 76.7857).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[24/200] Train Loss: 0.2575, Train Acc: 91.71%
+Epoch[24/200] Val Loss: 1.3289, Val Acc: 74.45%
+No improvement for 1 epoch(s).
+Epoch[25/200] Train Loss: 0.2238, Train Acc: 91.75%
+Epoch[25/200] Val Loss: 1.2171, Val Acc: 76.14%
+No improvement for 2 epoch(s).
+Epoch[26/200] Train Loss: 0.2434, Train Acc: 92.19%
+Epoch[26/200] Val Loss: 1.1576, Val Acc: 74.36%
+No improvement for 3 epoch(s).
+Epoch[27/200] Train Loss: 0.2317, Train Acc: 91.84%
+Epoch[27/200] Val Loss: 1.0504, Val Acc: 75.30%
+No improvement for 4 epoch(s).
+Epoch[28/200] Train Loss: 0.1899, Train Acc: 93.58%
+Epoch[28/200] Val Loss: 1.0584, Val Acc: 76.84%
+Validation accuracy improved (76.7857 -> 76.8353).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[29/200] Train Loss: 0.2663, Train Acc: 91.10%
+Epoch[29/200] Val Loss: 1.2269, Val Acc: 76.84%
+No improvement for 1 epoch(s).
+Epoch[30/200] Train Loss: 0.2340, Train Acc: 92.23%
+Epoch[30/200] Val Loss: 1.2205, Val Acc: 75.15%
+No improvement for 2 epoch(s).
+Epoch[31/200] Train Loss: 0.2768, Train Acc: 90.58%
+Epoch[31/200] Val Loss: 1.2594, Val Acc: 73.76%
+No improvement for 3 epoch(s).
+Epoch[32/200] Train Loss: 0.2295, Train Acc: 92.66%
+Epoch[32/200] Val Loss: 1.2366, Val Acc: 77.58%
+Validation accuracy improved (76.8353 -> 77.5794).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[33/200] Train Loss: 0.2470, Train Acc: 91.71%
+Epoch[33/200] Val Loss: 1.2007, Val Acc: 78.57%
+Validation accuracy improved (77.5794 -> 78.5714).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[34/200] Train Loss: 0.1752, Train Acc: 94.27%
+Epoch[34/200] Val Loss: 1.1075, Val Acc: 77.58%
+No improvement for 1 epoch(s).
+Epoch[35/200] Train Loss: 0.1602, Train Acc: 94.01%
+Epoch[35/200] Val Loss: 1.1953, Val Acc: 77.23%
+No improvement for 2 epoch(s).
+Epoch[36/200] Train Loss: 0.2491, Train Acc: 92.10%
+Epoch[36/200] Val Loss: 1.2228, Val Acc: 78.62%
+Validation accuracy improved (78.5714 -> 78.6210).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[37/200] Train Loss: 0.2732, Train Acc: 90.76%
+Epoch[37/200] Val Loss: 1.2208, Val Acc: 78.97%
+Validation accuracy improved (78.6210 -> 78.9683).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[38/200] Train Loss: 0.2454, Train Acc: 91.54%
+Epoch[38/200] Val Loss: 1.2157, Val Acc: 77.53%
+No improvement for 1 epoch(s).
+Epoch[39/200] Train Loss: 0.2283, Train Acc: 92.01%
+Epoch[39/200] Val Loss: 1.1604, Val Acc: 77.33%
+No improvement for 2 epoch(s).
+Epoch[40/200] Train Loss: 0.2263, Train Acc: 91.93%
+Epoch[40/200] Val Loss: 1.2258, Val Acc: 78.62%
+No improvement for 3 epoch(s).
+Epoch[41/200] Train Loss: 0.1883, Train Acc: 93.71%
+Epoch[41/200] Val Loss: 1.2719, Val Acc: 77.58%
+No improvement for 4 epoch(s).
+Epoch[42/200] Train Loss: 0.1741, Train Acc: 93.97%
+Epoch[42/200] Val Loss: 1.2167, Val Acc: 74.06%
+No improvement for 5 epoch(s).
+Epoch[43/200] Train Loss: 0.1815, Train Acc: 93.88%
+Epoch[43/200] Val Loss: 1.0880, Val Acc: 79.27%
+Validation accuracy improved (78.9683 -> 79.2659).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[44/200] Train Loss: 0.2241, Train Acc: 91.32%
+Epoch[44/200] Val Loss: 1.3012, Val Acc: 76.49%
+No improvement for 1 epoch(s).
+Epoch[45/200] Train Loss: 0.2165, Train Acc: 92.06%
+Epoch[45/200] Val Loss: 0.9777, Val Acc: 80.01%
+Validation accuracy improved (79.2659 -> 80.0099).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[46/200] Train Loss: 0.1783, Train Acc: 93.53%
+Epoch[46/200] Val Loss: 1.1739, Val Acc: 78.72%
+No improvement for 1 epoch(s).
+Epoch[47/200] Train Loss: 0.1935, Train Acc: 93.62%
+Epoch[47/200] Val Loss: 1.1835, Val Acc: 75.45%
+No improvement for 2 epoch(s).
+Epoch[48/200] Train Loss: 0.2566, Train Acc: 91.49%
+Epoch[48/200] Val Loss: 1.0560, Val Acc: 77.83%
+No improvement for 3 epoch(s).
+Epoch[49/200] Train Loss: 0.1754, Train Acc: 93.01%
+Epoch[49/200] Val Loss: 1.0689, Val Acc: 79.32%
+No improvement for 4 epoch(s).
+Epoch[50/200] Train Loss: 0.1971, Train Acc: 92.71%
+Epoch[50/200] Val Loss: 1.1943, Val Acc: 76.79%
+No improvement for 5 epoch(s).
+Epoch[51/200] Train Loss: 0.1837, Train Acc: 92.75%
+Epoch[51/200] Val Loss: 1.2854, Val Acc: 78.22%
+No improvement for 6 epoch(s).
+Epoch[52/200] Train Loss: 0.1978, Train Acc: 94.23%
+Epoch[52/200] Val Loss: 1.0504, Val Acc: 78.27%
+No improvement for 7 epoch(s).
+Epoch[53/200] Train Loss: 0.2354, Train Acc: 91.23%
+Epoch[53/200] Val Loss: 1.2867, Val Acc: 74.75%
+No improvement for 8 epoch(s).
+Epoch[54/200] Train Loss: 0.1491, Train Acc: 95.40%
+Epoch[54/200] Val Loss: 1.2370, Val Acc: 75.84%
+No improvement for 9 epoch(s).
+Epoch[55/200] Train Loss: 0.1419, Train Acc: 95.40%
+Epoch[55/200] Val Loss: 1.1420, Val Acc: 78.57%
+No improvement for 10 epoch(s).
+Epoch[56/200] Train Loss: 0.1073, Train Acc: 96.22%
+Epoch[56/200] Val Loss: 1.0618, Val Acc: 80.36%
+Validation accuracy improved (80.0099 -> 80.3571).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[57/200] Train Loss: 0.1441, Train Acc: 95.31%
+Epoch[57/200] Val Loss: 1.1114, Val Acc: 78.92%
+No improvement for 1 epoch(s).
+Epoch[58/200] Train Loss: 0.1203, Train Acc: 95.75%
+Epoch[58/200] Val Loss: 1.3180, Val Acc: 74.31%
+No improvement for 2 epoch(s).
+Epoch[59/200] Train Loss: 0.1118, Train Acc: 96.66%
+Epoch[59/200] Val Loss: 1.1937, Val Acc: 76.54%
+No improvement for 3 epoch(s).
+Epoch[60/200] Train Loss: 0.1684, Train Acc: 95.44%
+Epoch[60/200] Val Loss: 0.9901, Val Acc: 79.32%
+No improvement for 4 epoch(s).
+Epoch[61/200] Train Loss: 0.1596, Train Acc: 94.97%
+Epoch[61/200] Val Loss: 1.0684, Val Acc: 77.88%
+No improvement for 5 epoch(s).
+Epoch[62/200] Train Loss: 0.1097, Train Acc: 96.53%
+Epoch[62/200] Val Loss: 1.1517, Val Acc: 77.18%
+No improvement for 6 epoch(s).
+Epoch[63/200] Train Loss: 0.1699, Train Acc: 93.79%
+Epoch[63/200] Val Loss: 1.1596, Val Acc: 77.18%
+No improvement for 7 epoch(s).
+Epoch[64/200] Train Loss: 0.1127, Train Acc: 95.96%
+Epoch[64/200] Val Loss: 1.2485, Val Acc: 81.05%
+Validation accuracy improved (80.3571 -> 81.0516).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[65/200] Train Loss: 0.1356, Train Acc: 95.14%
+Epoch[65/200] Val Loss: 1.1338, Val Acc: 80.21%
+No improvement for 1 epoch(s).
+Epoch[66/200] Train Loss: 0.1469, Train Acc: 95.18%
+Epoch[66/200] Val Loss: 1.1835, Val Acc: 79.32%
+No improvement for 2 epoch(s).
+Epoch[67/200] Train Loss: 0.1144, Train Acc: 96.05%
+Epoch[67/200] Val Loss: 1.2071, Val Acc: 79.66%
+No improvement for 3 epoch(s).
+Epoch[68/200] Train Loss: 0.0819, Train Acc: 97.35%
+Epoch[68/200] Val Loss: 0.9909, Val Acc: 82.74%
+Validation accuracy improved (81.0516 -> 82.7381).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[69/200] Train Loss: 0.0880, Train Acc: 96.88%
+Epoch[69/200] Val Loss: 1.1852, Val Acc: 79.61%
+No improvement for 1 epoch(s).
+Epoch[70/200] Train Loss: 0.1149, Train Acc: 96.61%
+Epoch[70/200] Val Loss: 0.9977, Val Acc: 85.22%
+Validation accuracy improved (82.7381 -> 85.2183).
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/best_checkpoint.pth
+Epoch[71/200] Train Loss: 0.1606, Train Acc: 93.53%
+Epoch[71/200] Val Loss: 1.0970, Val Acc: 79.32%
+No improvement for 1 epoch(s).
+Epoch[72/200] Train Loss: 0.1579, Train Acc: 94.70%
+Epoch[72/200] Val Loss: 1.1872, Val Acc: 79.56%
+No improvement for 2 epoch(s).
+Epoch[73/200] Train Loss: 0.2066, Train Acc: 93.45%
+Epoch[73/200] Val Loss: 0.9976, Val Acc: 82.79%
+No improvement for 3 epoch(s).
+Epoch[74/200] Train Loss: 0.1615, Train Acc: 94.62%
+Epoch[74/200] Val Loss: 1.1839, Val Acc: 81.05%
+No improvement for 4 epoch(s).
+Epoch[75/200] Train Loss: 0.1347, Train Acc: 95.88%
+Epoch[75/200] Val Loss: 1.0625, Val Acc: 81.40%
+No improvement for 5 epoch(s).
+Epoch[76/200] Train Loss: 0.1427, Train Acc: 95.05%
+Epoch[76/200] Val Loss: 1.0829, Val Acc: 78.92%
+No improvement for 6 epoch(s).
+Epoch[77/200] Train Loss: 0.0920, Train Acc: 97.14%
+Epoch[77/200] Val Loss: 1.2185, Val Acc: 80.31%
+No improvement for 7 epoch(s).
+Epoch[78/200] Train Loss: 0.0918, Train Acc: 95.88%
+Epoch[78/200] Val Loss: 1.1204, Val Acc: 78.97%
+No improvement for 8 epoch(s).
+Epoch[79/200] Train Loss: 0.0704, Train Acc: 97.01%
+Epoch[79/200] Val Loss: 1.2370, Val Acc: 79.61%
+No improvement for 9 epoch(s).
+Epoch[80/200] Train Loss: 0.1322, Train Acc: 95.01%
+Epoch[80/200] Val Loss: 1.1067, Val Acc: 79.96%
+No improvement for 10 epoch(s).
+Epoch[81/200] Train Loss: 0.2000, Train Acc: 93.32%
+Epoch[81/200] Val Loss: 1.3274, Val Acc: 79.61%
+No improvement for 11 epoch(s).
+Epoch[82/200] Train Loss: 0.0922, Train Acc: 96.53%
+Epoch[82/200] Val Loss: 1.0718, Val Acc: 81.40%
+No improvement for 12 epoch(s).
+Epoch[83/200] Train Loss: 0.0978, Train Acc: 97.22%
+Epoch[83/200] Val Loss: 1.1674, Val Acc: 82.09%
+No improvement for 13 epoch(s).
+Epoch[84/200] Train Loss: 0.0476, Train Acc: 98.61%
+Epoch[84/200] Val Loss: 1.0242, Val Acc: 82.44%
+No improvement for 14 epoch(s).
+Epoch[85/200] Train Loss: 0.0646, Train Acc: 97.53%
+Epoch[85/200] Val Loss: 1.1568, Val Acc: 80.70%
+No improvement for 15 epoch(s).
+Epoch[86/200] Train Loss: 0.0357, Train Acc: 98.57%
+Epoch[86/200] Val Loss: 1.1195, Val Acc: 81.70%
+No improvement for 16 epoch(s).
+Epoch[87/200] Train Loss: 0.0591, Train Acc: 97.83%
+Epoch[87/200] Val Loss: 1.0905, Val Acc: 79.51%
+No improvement for 17 epoch(s).
+Epoch[88/200] Train Loss: 0.0728, Train Acc: 97.48%
+Epoch[88/200] Val Loss: 1.1156, Val Acc: 81.05%
+No improvement for 18 epoch(s).
+Epoch[89/200] Train Loss: 0.0716, Train Acc: 97.18%
+Epoch[89/200] Val Loss: 1.2729, Val Acc: 80.01%
+No improvement for 19 epoch(s).
+Epoch[90/200] Train Loss: 0.0604, Train Acc: 97.66%
+Epoch[90/200] Val Loss: 1.0827, Val Acc: 81.75%
+No improvement for 20 epoch(s).
+Epoch[91/200] Train Loss: 0.0451, Train Acc: 98.13%
+Epoch[91/200] Val Loss: 1.0580, Val Acc: 83.13%
+No improvement for 21 epoch(s).
+Epoch[92/200] Train Loss: 0.0793, Train Acc: 97.18%
+Epoch[92/200] Val Loss: 1.1730, Val Acc: 80.36%
+No improvement for 22 epoch(s).
+Epoch[93/200] Train Loss: 0.0671, Train Acc: 98.00%
+Epoch[93/200] Val Loss: 1.1765, Val Acc: 81.00%
+No improvement for 23 epoch(s).
+Epoch[94/200] Train Loss: 0.0318, Train Acc: 98.96%
+Epoch[94/200] Val Loss: 1.1486, Val Acc: 81.40%
+No improvement for 24 epoch(s).
+Epoch[95/200] Train Loss: 0.0617, Train Acc: 97.74%
+Epoch[95/200] Val Loss: 1.1524, Val Acc: 81.40%
+No improvement for 25 epoch(s).
+Epoch[96/200] Train Loss: 0.0557, Train Acc: 98.48%
+Epoch[96/200] Val Loss: 1.2065, Val Acc: 81.40%
+No improvement for 26 epoch(s).
+Epoch[97/200] Train Loss: 0.0381, Train Acc: 98.52%
+Epoch[97/200] Val Loss: 1.1627, Val Acc: 81.05%
+No improvement for 27 epoch(s).
+Epoch[98/200] Train Loss: 0.0440, Train Acc: 98.52%
+Epoch[98/200] Val Loss: 1.1146, Val Acc: 82.44%
+No improvement for 28 epoch(s).
+Epoch[99/200] Train Loss: 0.0330, Train Acc: 99.05%
+Epoch[99/200] Val Loss: 1.1330, Val Acc: 83.09%
+No improvement for 29 epoch(s).
+Epoch[100/200] Train Loss: 0.0768, Train Acc: 97.70%
+Epoch[100/200] Val Loss: 1.0607, Val Acc: 82.09%
+No improvement for 30 epoch(s).
+Epoch[101/200] Train Loss: 0.0567, Train Acc: 98.31%
+Epoch[101/200] Val Loss: 1.0067, Val Acc: 84.18%
+No improvement for 31 epoch(s).
+Epoch[102/200] Train Loss: 0.0421, Train Acc: 98.52%
+Epoch[102/200] Val Loss: 1.1552, Val Acc: 81.05%
+No improvement for 32 epoch(s).
+Epoch[103/200] Train Loss: 0.0309, Train Acc: 98.61%
+Epoch[103/200] Val Loss: 1.1015, Val Acc: 83.13%
+No improvement for 33 epoch(s).
+Epoch[104/200] Train Loss: 0.1032, Train Acc: 98.26%
+Epoch[104/200] Val Loss: 1.1248, Val Acc: 82.44%
+No improvement for 34 epoch(s).
+Epoch[105/200] Train Loss: 0.1118, Train Acc: 98.00%
+Epoch[105/200] Val Loss: 1.1203, Val Acc: 81.75%
+No improvement for 35 epoch(s).
+Epoch[106/200] Train Loss: 0.0772, Train Acc: 97.66%
+Epoch[106/200] Val Loss: 1.1537, Val Acc: 80.01%
+No improvement for 36 epoch(s).
+Epoch[107/200] Train Loss: 0.0292, Train Acc: 99.00%
+Epoch[107/200] Val Loss: 1.1771, Val Acc: 78.27%
+No improvement for 37 epoch(s).
+Epoch[108/200] Train Loss: 0.0201, Train Acc: 98.65%
+Epoch[108/200] Val Loss: 1.1250, Val Acc: 80.36%
+No improvement for 38 epoch(s).
+Epoch[109/200] Train Loss: 0.0249, Train Acc: 99.39%
+Epoch[109/200] Val Loss: 1.1218, Val Acc: 81.75%
+No improvement for 39 epoch(s).
+Epoch[110/200] Train Loss: 0.0267, Train Acc: 98.83%
+Epoch[110/200] Val Loss: 1.1402, Val Acc: 80.70%
+No improvement for 40 epoch(s).
+Epoch[111/200] Train Loss: 0.0303, Train Acc: 99.00%
+Epoch[111/200] Val Loss: 1.0892, Val Acc: 81.40%
+No improvement for 41 epoch(s).
+Epoch[112/200] Train Loss: 0.0426, Train Acc: 98.57%
+Epoch[112/200] Val Loss: 1.0940, Val Acc: 81.40%
+No improvement for 42 epoch(s).
+Epoch[113/200] Train Loss: 0.0392, Train Acc: 97.66%
+Epoch[113/200] Val Loss: 1.1615, Val Acc: 80.70%
+No improvement for 43 epoch(s).
+Epoch[114/200] Train Loss: 0.0134, Train Acc: 99.52%
+Epoch[114/200] Val Loss: 1.1317, Val Acc: 82.09%
+No improvement for 44 epoch(s).
+Epoch[115/200] Train Loss: 0.0172, Train Acc: 99.74%
+Epoch[115/200] Val Loss: 1.1337, Val Acc: 82.44%
+No improvement for 45 epoch(s).
+Epoch[116/200] Train Loss: 0.0294, Train Acc: 98.96%
+Epoch[116/200] Val Loss: 1.1465, Val Acc: 82.79%
+No improvement for 46 epoch(s).
+Epoch[117/200] Train Loss: 0.0125, Train Acc: 99.61%
+Epoch[117/200] Val Loss: 1.1112, Val Acc: 83.43%
+No improvement for 47 epoch(s).
+Epoch[118/200] Train Loss: 0.0268, Train Acc: 98.78%
+Epoch[118/200] Val Loss: 1.1958, Val Acc: 81.75%
+No improvement for 48 epoch(s).
+Epoch[119/200] Train Loss: 0.0146, Train Acc: 99.09%
+Epoch[119/200] Val Loss: 1.1777, Val Acc: 82.74%
+No improvement for 49 epoch(s).
+Epoch[120/200] Train Loss: 0.0342, Train Acc: 98.65%
+Epoch[120/200] Val Loss: 1.1886, Val Acc: 83.48%
+No improvement for 50 epoch(s).
+Early stopping triggered. No improvement in validation acc for 50 epochs.
+Saved checkpoint: /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/last_checkpoint.pth
+Training finished. Best val acc: 85.2183 at epoch 70
+Saved training plot to /media/icnlab/Data/Thang/plan_dieases/context_moe/checkpoints/plantdoc/pretrain_weight/efficientnetb0/seed_44/run_20260511-081333/loss_acc_plot.png
