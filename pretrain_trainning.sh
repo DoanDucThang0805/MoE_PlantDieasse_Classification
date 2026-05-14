@@ -1,13 +1,13 @@
 #!/bin/bash
 
-source venv1/bin/activate
+source venv2/bin/activate
 cd src
 
 models=(
   "trainning.mobilenetv3_small_train"
 )
 
-seeds=(43)
+seeds=(42)
 
 for model in "${models[@]}"; do
   for seed in "${seeds[@]}"; do

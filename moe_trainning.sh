@@ -3,12 +3,12 @@
 # MoE Configuration Experiments Runner
 # Skip: 4 experts, top_k=2 (already done)
 
-source venv/bin/activate
-source venv/Scripts/activate
+source venv1/bin/activate
+source venv1/Scripts/activate
 cd src
 
 # Config
-SEEDS=(42 43 44)
+SEEDS=(42)
 
 run_training() {
     local num_experts=$1
@@ -17,7 +17,7 @@ run_training() {
     
     echo "🚀 Running: $num_experts experts, top_k=$top_k, seed=$seed"
     python -m trainning.moe_train \
-        --type_model moe_30percentdata_contextaware_temp0.5 \
+        --type_model moe_contextaware_temp0.5v1 \
         --num_experts $num_experts \
         --top_k $top_k \
         --router_mode context_aware \

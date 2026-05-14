@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script to compute accuracy and F1 scores for all MoE checkpoints
-source venv/bin/activate
+source venv1/bin/activate
 source venv/Scripts/activate
 cd src
 clear

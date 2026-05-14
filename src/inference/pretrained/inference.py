@@ -35,7 +35,7 @@ from models.pretrained_model.mobilenetv3_small import model
 # Thông tin mô hình và checkpoint
 MODEL_NAME = 'mobilenetv3_small'  # Tên mô hình (phù hợp với tên thư mục checkpoint)
 MODEL_TYPE = 'pretrain_models'
-RUN_TIME = 'run_20260513-022731'  # Timestamp của lần chạy huấn luyện
+RUN_TIME = 'run_20260513-093609'  # Timestamp của lần chạy huấn luyện
 DATASET_NAME = 'plantdoc'
 SEED = 42
 

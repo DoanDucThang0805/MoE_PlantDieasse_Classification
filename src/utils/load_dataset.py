@@ -78,6 +78,7 @@ class LoadDataset(Dataset):
         self.context_extractor = context_extractor
         self.image_paths, self.labels, self.class_to_idx, self.idx_to_class = self._split_dataset()
 
+
     def _load_image(self, root_dir: Path) -> Tuple[List[str], List[int], Dict[str, int], Dict[int, str]]:
         """
         Load all images and labels from the root directory.
@@ -106,11 +107,12 @@ class LoadDataset(Dataset):
         labels = []
         for class_name in class_names:
             class_dir = os.path.join(root_dir, class_name)
-            for fname in os.listdir(class_dir):
+            for fname in sorted(os.listdir(class_dir)):
                 if fname.lower().endswith(('.png', '.jpg', '.jpeg')):
                     image_paths.append(os.path.join(class_dir, fname))
                     labels.append(class_to_idx[class_name])
         return image_paths, labels, class_to_idx, idx_to_class
+
 
     def _split_dataset(self) -> Tuple[List[str], List[int], Dict[str, int], Dict[int, str]]:
         """
@@ -149,6 +151,7 @@ class LoadDataset(Dataset):
         else:
             raise ValueError("split must be 'train', 'validation', or 'test'")
 
+
     def __len__(self) -> int:
         """
         Return the total number of samples in this dataset split.
@@ -157,6 +160,7 @@ class LoadDataset(Dataset):
             int: Number of images in the current split
         """
         return len(self.image_paths)
+    
     
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int, Optional[torch.Tensor]]:
         """

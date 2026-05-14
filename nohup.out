@@ -1,901 +1,0 @@
-/media/data/minhht/context_moe/venv1/lib/python3.11/site-packages/albumentations/core/validation.py:114: UserWarning: ShiftScaleRotate is a special case of Affine transform. Please use Affine transform instead.
-  original_init(self, **validated_kwargs)
-======================================================================================================================================================
-Layer (type:depth-idx)                             Input Shape               Output Shape              Param #                   Mult-Adds
-======================================================================================================================================================
-MobileNetV3                                        [1, 3, 224, 224]          [1, 8]                    --                        --
-├─Sequential: 1-1                                  [1, 3, 224, 224]          [1, 576, 7, 7]            --                        --
-│    └─Conv2dNormActivation: 2-1                   [1, 3, 224, 224]          [1, 16, 112, 112]         --                        --
-│    │    └─Conv2d: 3-1                            [1, 3, 224, 224]          [1, 16, 112, 112]         432                       5,419,008
-│    │    └─BatchNorm2d: 3-2                       [1, 16, 112, 112]         [1, 16, 112, 112]         32                        32
-│    │    └─Hardswish: 3-3                         [1, 16, 112, 112]         [1, 16, 112, 112]         --                        --
-│    └─InvertedResidual: 2-2                       [1, 16, 112, 112]         [1, 16, 56, 56]           --                        --
-│    │    └─Sequential: 3-4                        [1, 16, 112, 112]         [1, 16, 56, 56]           744                       1,254,744
-│    └─InvertedResidual: 2-3                       [1, 16, 56, 56]           [1, 24, 28, 28]           --                        --
-│    │    └─Sequential: 3-5                        [1, 16, 56, 56]           [1, 24, 28, 28]           3,864                     5,475,792
-│    └─InvertedResidual: 2-4                       [1, 24, 28, 28]           [1, 24, 28, 28]           --                        --
-│    │    └─Sequential: 3-6                        [1, 24, 28, 28]           [1, 24, 28, 28]           5,416                     3,932,944
-│    └─InvertedResidual: 2-5                       [1, 24, 28, 28]           [1, 40, 14, 14]           --                        --
-│    │    └─Sequential: 3-7                        [1, 24, 28, 28]           [1, 40, 14, 14]           13,736                    3,034,568
-│    └─InvertedResidual: 2-6                       [1, 40, 14, 14]           [1, 40, 14, 14]           --                        --
-│    │    └─Sequential: 3-8                        [1, 40, 14, 14]           [1, 40, 14, 14]           57,264                    4,971,264
-│    └─InvertedResidual: 2-7                       [1, 40, 14, 14]           [1, 40, 14, 14]           --                        --
-│    │    └─Sequential: 3-9                        [1, 40, 14, 14]           [1, 40, 14, 14]           57,264                    4,971,264
-│    └─InvertedResidual: 2-8                       [1, 40, 14, 14]           [1, 48, 14, 14]           --                        --
-│    │    └─Sequential: 3-10                       [1, 40, 14, 14]           [1, 48, 14, 14]           21,968                    2,666,168
-│    └─InvertedResidual: 2-9                       [1, 48, 14, 14]           [1, 48, 14, 14]           --                        --
-│    │    └─Sequential: 3-11                       [1, 48, 14, 14]           [1, 48, 14, 14]           29,800                    3,427,480
-│    └─InvertedResidual: 2-10                      [1, 48, 14, 14]           [1, 96, 7, 7]             --                        --
-│    │    └─Sequential: 3-12                       [1, 48, 14, 14]           [1, 96, 7, 7]             91,848                    4,460,232
-│    └─InvertedResidual: 2-11                      [1, 96, 7, 7]             [1, 96, 7, 7]             --                        --
-│    │    └─Sequential: 3-13                       [1, 96, 7, 7]             [1, 96, 7, 7]             294,096                   6,293,712
-│    └─InvertedResidual: 2-12                      [1, 96, 7, 7]             [1, 96, 7, 7]             --                        --
-│    │    └─Sequential: 3-14                       [1, 96, 7, 7]             [1, 96, 7, 7]             294,096                   6,293,712
-│    └─Conv2dNormActivation: 2-13                  [1, 96, 7, 7]             [1, 576, 7, 7]            --                        --
-│    │    └─Conv2d: 3-15                           [1, 96, 7, 7]             [1, 576, 7, 7]            55,296                    2,709,504
-│    │    └─BatchNorm2d: 3-16                      [1, 576, 7, 7]            [1, 576, 7, 7]            1,152                     1,152
-│    │    └─Hardswish: 3-17                        [1, 576, 7, 7]            [1, 576, 7, 7]            --                        --
-├─AdaptiveAvgPool2d: 1-2                           [1, 576, 7, 7]            [1, 576, 1, 1]            --                        --
-├─Sequential: 1-3                                  [1, 576]                  [1, 8]                    --                        --
-│    └─Linear: 2-14                                [1, 576]                  [1, 1024]                 590,848                   590,848
-│    └─Hardswish: 2-15                             [1, 1024]                 [1, 1024]                 --                        --
-│    └─Dropout: 2-16                               [1, 1024]                 [1, 1024]                 --                        --
-│    └─Linear: 2-17                                [1, 1024]                 [1, 8]                    8,200                     8,200
-======================================================================================================================================================
-Total params: 1,526,056
-Trainable params: 1,526,056
-Non-trainable params: 0
-Total mult-adds (Units.MEGABYTES): 55.51
-======================================================================================================================================================
-Input size (MB): 0.60
-Forward/backward pass size (MB): 22.64
-Params size (MB): 6.10
-Estimated Total Size (MB): 29.34
-======================================================================================================================================================
-Epochs:   0%|          | 0/200 [00:00<?, ?it/s]INFO:utils.trainer:Epoch[1/200] Train Loss: 1.4682, Train Acc: 46.73%
-INFO:utils.trainer:Epoch[1/200] Val Loss: 1.8429, Val Acc: 48.35%
-INFO:utils.trainer:Validation accuracy improved (-inf -> 48.3482).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:   0%|          | 1/200 [00:05<18:36,  5.61s/it]INFO:utils.trainer:Epoch[2/200] Train Loss: 0.9777, Train Acc: 65.86%
-INFO:utils.trainer:Epoch[2/200] Val Loss: 1.4300, Val Acc: 62.23%
-INFO:utils.trainer:Validation accuracy improved (48.3482 -> 62.2321).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:   1%|          | 2/200 [00:10<18:00,  5.46s/it]INFO:utils.trainer:Epoch[3/200] Train Loss: 0.7371, Train Acc: 74.23%
-INFO:utils.trainer:Epoch[3/200] Val Loss: 1.4381, Val Acc: 55.00%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:   2%|▏         | 3/200 [00:16<17:47,  5.42s/it]INFO:utils.trainer:Epoch[4/200] Train Loss: 0.6255, Train Acc: 77.82%
-INFO:utils.trainer:Epoch[4/200] Val Loss: 1.6501, Val Acc: 58.53%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:   2%|▏         | 4/200 [00:21<17:30,  5.36s/it]INFO:utils.trainer:Epoch[5/200] Train Loss: 0.5492, Train Acc: 80.90%
-INFO:utils.trainer:Epoch[5/200] Val Loss: 1.8255, Val Acc: 59.38%
-INFO:utils.trainer:No improvement for 3 epoch(s).
-Epochs:   2%|▎         | 5/200 [00:26<17:24,  5.35s/it]INFO:utils.trainer:Epoch[6/200] Train Loss: 0.4614, Train Acc: 84.81%
-INFO:utils.trainer:Epoch[6/200] Val Loss: 1.6674, Val Acc: 59.38%
-INFO:utils.trainer:No improvement for 4 epoch(s).
-Epochs:   3%|▎         | 6/200 [00:32<17:13,  5.33s/it]INFO:utils.trainer:Epoch[7/200] Train Loss: 0.4002, Train Acc: 86.41%
-INFO:utils.trainer:Epoch[7/200] Val Loss: 1.7245, Val Acc: 56.16%
-INFO:utils.trainer:No improvement for 5 epoch(s).
-Epochs:   4%|▎         | 7/200 [00:37<17:02,  5.30s/it]INFO:utils.trainer:Epoch[8/200] Train Loss: 0.3382, Train Acc: 87.37%
-INFO:utils.trainer:Epoch[8/200] Val Loss: 1.6193, Val Acc: 67.68%
-INFO:utils.trainer:Validation accuracy improved (62.2321 -> 67.6786).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:   4%|▍         | 8/200 [00:42<17:05,  5.34s/it]INFO:utils.trainer:Epoch[9/200] Train Loss: 0.3014, Train Acc: 88.91%
-INFO:utils.trainer:Epoch[9/200] Val Loss: 2.5873, Val Acc: 55.62%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:   4%|▍         | 9/200 [00:48<16:51,  5.30s/it]INFO:utils.trainer:Epoch[10/200] Train Loss: 0.2946, Train Acc: 89.25%
-INFO:utils.trainer:Epoch[10/200] Val Loss: 1.5662, Val Acc: 69.02%
-INFO:utils.trainer:Validation accuracy improved (67.6786 -> 69.0179).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:   5%|▌         | 10/200 [00:53<16:49,  5.31s/it]INFO:utils.trainer:Epoch[11/200] Train Loss: 0.2424, Train Acc: 91.47%
-INFO:utils.trainer:Epoch[11/200] Val Loss: 1.4127, Val Acc: 68.30%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:   6%|▌         | 11/200 [00:58<16:40,  5.29s/it]INFO:utils.trainer:Epoch[12/200] Train Loss: 0.1982, Train Acc: 92.63%
-INFO:utils.trainer:Epoch[12/200] Val Loss: 1.5655, Val Acc: 70.13%
-INFO:utils.trainer:Validation accuracy improved (69.0179 -> 70.1339).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:   6%|▌         | 12/200 [01:04<16:37,  5.31s/it]INFO:utils.trainer:Epoch[13/200] Train Loss: 0.2119, Train Acc: 92.85%
-INFO:utils.trainer:Epoch[13/200] Val Loss: 1.2736, Val Acc: 73.12%
-INFO:utils.trainer:Validation accuracy improved (70.1339 -> 73.1250).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:   6%|▋         | 13/200 [01:09<16:32,  5.31s/it]INFO:utils.trainer:Epoch[14/200] Train Loss: 0.1799, Train Acc: 93.90%
-INFO:utils.trainer:Epoch[14/200] Val Loss: 1.6016, Val Acc: 73.17%
-INFO:utils.trainer:Validation accuracy improved (73.1250 -> 73.1696).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:   7%|▋         | 14/200 [01:14<16:25,  5.30s/it]INFO:utils.trainer:Epoch[15/200] Train Loss: 0.1975, Train Acc: 92.93%
-INFO:utils.trainer:Epoch[15/200] Val Loss: 1.5625, Val Acc: 69.33%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:   8%|▊         | 15/200 [01:19<16:24,  5.32s/it]INFO:utils.trainer:Epoch[16/200] Train Loss: 0.1544, Train Acc: 94.53%
-INFO:utils.trainer:Epoch[16/200] Val Loss: 1.4607, Val Acc: 74.42%
-INFO:utils.trainer:Validation accuracy improved (73.1696 -> 74.4196).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:   8%|▊         | 16/200 [01:25<16:16,  5.30s/it]INFO:utils.trainer:Epoch[17/200] Train Loss: 0.1645, Train Acc: 93.82%
-INFO:utils.trainer:Epoch[17/200] Val Loss: 1.7359, Val Acc: 71.29%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:   8%|▊         | 17/200 [01:30<16:16,  5.34s/it]INFO:utils.trainer:Epoch[18/200] Train Loss: 0.1785, Train Acc: 93.11%
-INFO:utils.trainer:Epoch[18/200] Val Loss: 1.8242, Val Acc: 66.21%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:   9%|▉         | 18/200 [01:36<16:12,  5.34s/it]INFO:utils.trainer:Epoch[19/200] Train Loss: 0.1380, Train Acc: 95.15%
-INFO:utils.trainer:Epoch[19/200] Val Loss: 1.3881, Val Acc: 75.71%
-INFO:utils.trainer:Validation accuracy improved (74.4196 -> 75.7143).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:  10%|▉         | 19/200 [01:41<16:03,  5.32s/it]INFO:utils.trainer:Epoch[20/200] Train Loss: 0.1252, Train Acc: 95.41%
-INFO:utils.trainer:Epoch[20/200] Val Loss: 1.6782, Val Acc: 72.10%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:  10%|█         | 20/200 [01:46<15:59,  5.33s/it]INFO:utils.trainer:Epoch[21/200] Train Loss: 0.1040, Train Acc: 96.67%
-INFO:utils.trainer:Epoch[21/200] Val Loss: 1.3620, Val Acc: 77.32%
-INFO:utils.trainer:Validation accuracy improved (75.7143 -> 77.3214).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:  10%|█         | 21/200 [01:51<15:51,  5.32s/it]INFO:utils.trainer:Epoch[22/200] Train Loss: 0.1050, Train Acc: 96.67%
-INFO:utils.trainer:Epoch[22/200] Val Loss: 1.4548, Val Acc: 79.46%
-INFO:utils.trainer:Validation accuracy improved (77.3214 -> 79.4643).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:  11%|█         | 22/200 [01:57<15:55,  5.37s/it]INFO:utils.trainer:Epoch[23/200] Train Loss: 0.1460, Train Acc: 95.11%
-INFO:utils.trainer:Epoch[23/200] Val Loss: 1.3638, Val Acc: 77.14%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:  12%|█▏        | 23/200 [02:02<15:45,  5.34s/it]INFO:utils.trainer:Epoch[24/200] Train Loss: 0.1260, Train Acc: 95.45%
-INFO:utils.trainer:Epoch[24/200] Val Loss: 1.3517, Val Acc: 75.58%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:  12%|█▏        | 24/200 [02:08<15:42,  5.35s/it]INFO:utils.trainer:Epoch[25/200] Train Loss: 0.0970, Train Acc: 96.36%
-INFO:utils.trainer:Epoch[25/200] Val Loss: 1.3663, Val Acc: 74.91%
-INFO:utils.trainer:No improvement for 3 epoch(s).
-Epochs:  12%|█▎        | 25/200 [02:13<15:38,  5.36s/it]INFO:utils.trainer:Epoch[26/200] Train Loss: 0.1069, Train Acc: 96.71%
-INFO:utils.trainer:Epoch[26/200] Val Loss: 1.5860, Val Acc: 71.61%
-INFO:utils.trainer:No improvement for 4 epoch(s).
-Epochs:  13%|█▎        | 26/200 [02:18<15:31,  5.36s/it]INFO:utils.trainer:Epoch[27/200] Train Loss: 0.1009, Train Acc: 95.70%
-INFO:utils.trainer:Epoch[27/200] Val Loss: 1.1969, Val Acc: 76.03%
-INFO:utils.trainer:No improvement for 5 epoch(s).
-Epochs:  14%|█▎        | 27/200 [02:24<15:31,  5.39s/it]INFO:utils.trainer:Epoch[28/200] Train Loss: 0.0863, Train Acc: 96.92%
-INFO:utils.trainer:Epoch[28/200] Val Loss: 1.3381, Val Acc: 76.88%
-INFO:utils.trainer:No improvement for 6 epoch(s).
-Epochs:  14%|█▍        | 28/200 [02:29<15:18,  5.34s/it]INFO:utils.trainer:Epoch[29/200] Train Loss: 0.0873, Train Acc: 97.05%
-INFO:utils.trainer:Epoch[29/200] Val Loss: 1.5589, Val Acc: 72.63%
-INFO:utils.trainer:No improvement for 7 epoch(s).
-Epochs:  14%|█▍        | 29/200 [02:34<15:15,  5.35s/it]INFO:utils.trainer:Epoch[30/200] Train Loss: 0.1111, Train Acc: 96.66%
-INFO:utils.trainer:Epoch[30/200] Val Loss: 1.4664, Val Acc: 73.26%
-INFO:utils.trainer:No improvement for 8 epoch(s).
-Epochs:  15%|█▌        | 30/200 [02:40<15:09,  5.35s/it]INFO:utils.trainer:Epoch[31/200] Train Loss: 0.1108, Train Acc: 96.37%
-INFO:utils.trainer:Epoch[31/200] Val Loss: 1.4530, Val Acc: 77.19%
-INFO:utils.trainer:No improvement for 9 epoch(s).
-Epochs:  16%|█▌        | 31/200 [02:45<15:01,  5.34s/it]INFO:utils.trainer:Epoch[32/200] Train Loss: 0.1007, Train Acc: 96.35%
-INFO:utils.trainer:Epoch[32/200] Val Loss: 1.5460, Val Acc: 73.66%
-INFO:utils.trainer:No improvement for 10 epoch(s).
-Epochs:  16%|█▌        | 32/200 [02:50<15:02,  5.37s/it]INFO:utils.trainer:Epoch[33/200] Train Loss: 0.1158, Train Acc: 96.15%
-INFO:utils.trainer:Epoch[33/200] Val Loss: 1.7188, Val Acc: 67.99%
-INFO:utils.trainer:No improvement for 11 epoch(s).
-Epochs:  16%|█▋        | 33/200 [02:56<14:51,  5.34s/it]INFO:utils.trainer:Epoch[34/200] Train Loss: 0.0675, Train Acc: 97.35%
-INFO:utils.trainer:Epoch[34/200] Val Loss: 1.3292, Val Acc: 75.13%
-INFO:utils.trainer:No improvement for 12 epoch(s).
-Epochs:  17%|█▋        | 34/200 [03:01<14:46,  5.34s/it]INFO:utils.trainer:Epoch[35/200] Train Loss: 0.0401, Train Acc: 98.45%
-INFO:utils.trainer:Epoch[35/200] Val Loss: 1.3126, Val Acc: 78.26%
-INFO:utils.trainer:No improvement for 13 epoch(s).
-Epochs:  18%|█▊        | 35/200 [03:06<14:41,  5.35s/it]INFO:utils.trainer:Epoch[36/200] Train Loss: 0.0264, Train Acc: 99.00%
-INFO:utils.trainer:Epoch[36/200] Val Loss: 1.2445, Val Acc: 80.00%
-INFO:utils.trainer:Validation accuracy improved (79.4643 -> 80.0000).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:  18%|█▊        | 36/200 [03:12<14:34,  5.34s/it]INFO:utils.trainer:Epoch[37/200] Train Loss: 0.0204, Train Acc: 99.14%
-INFO:utils.trainer:Epoch[37/200] Val Loss: 1.1886, Val Acc: 81.96%
-INFO:utils.trainer:Validation accuracy improved (80.0000 -> 81.9643).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:  18%|█▊        | 37/200 [03:17<14:34,  5.36s/it]INFO:utils.trainer:Epoch[38/200] Train Loss: 0.0176, Train Acc: 99.52%
-INFO:utils.trainer:Epoch[38/200] Val Loss: 1.2272, Val Acc: 79.29%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:  19%|█▉        | 38/200 [03:23<14:27,  5.36s/it]INFO:utils.trainer:Epoch[39/200] Train Loss: 0.0165, Train Acc: 99.18%
-INFO:utils.trainer:Epoch[39/200] Val Loss: 1.1629, Val Acc: 81.96%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:  20%|█▉        | 39/200 [03:28<14:19,  5.34s/it]INFO:utils.trainer:Epoch[40/200] Train Loss: 0.0134, Train Acc: 99.48%
-INFO:utils.trainer:Epoch[40/200] Val Loss: 1.1086, Val Acc: 80.31%
-INFO:utils.trainer:No improvement for 3 epoch(s).
-Epochs:  20%|██        | 40/200 [03:33<14:16,  5.35s/it]INFO:utils.trainer:Epoch[41/200] Train Loss: 0.0123, Train Acc: 99.52%
-INFO:utils.trainer:Epoch[41/200] Val Loss: 1.1521, Val Acc: 81.03%
-INFO:utils.trainer:No improvement for 4 epoch(s).
-Epochs:  20%|██        | 41/200 [03:39<14:08,  5.34s/it]INFO:utils.trainer:Epoch[42/200] Train Loss: 0.0143, Train Acc: 99.39%
-INFO:utils.trainer:Epoch[42/200] Val Loss: 1.3025, Val Acc: 81.88%
-INFO:utils.trainer:No improvement for 5 epoch(s).
-Epochs:  21%|██        | 42/200 [03:44<14:06,  5.36s/it]INFO:utils.trainer:Epoch[43/200] Train Loss: 0.0126, Train Acc: 99.57%
-INFO:utils.trainer:Epoch[43/200] Val Loss: 1.2409, Val Acc: 82.59%
-INFO:utils.trainer:Validation accuracy improved (81.9643 -> 82.5893).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:  22%|██▏       | 43/200 [03:49<14:01,  5.36s/it]INFO:utils.trainer:Epoch[44/200] Train Loss: 0.0125, Train Acc: 99.48%
-INFO:utils.trainer:Epoch[44/200] Val Loss: 1.2330, Val Acc: 83.93%
-INFO:utils.trainer:Validation accuracy improved (82.5893 -> 83.9286).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/best_checkpoint.pth
-Epochs:  22%|██▏       | 44/200 [03:55<13:57,  5.37s/it]INFO:utils.trainer:Epoch[45/200] Train Loss: 0.0109, Train Acc: 99.70%
-INFO:utils.trainer:Epoch[45/200] Val Loss: 1.2239, Val Acc: 82.50%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:  22%|██▎       | 45/200 [04:00<13:49,  5.35s/it]INFO:utils.trainer:Epoch[46/200] Train Loss: 0.0155, Train Acc: 99.61%
-INFO:utils.trainer:Epoch[46/200] Val Loss: 1.3850, Val Acc: 80.85%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:  23%|██▎       | 46/200 [04:05<13:40,  5.33s/it]INFO:utils.trainer:Epoch[47/200] Train Loss: 0.0210, Train Acc: 99.26%
-INFO:utils.trainer:Epoch[47/200] Val Loss: 1.1843, Val Acc: 81.34%
-INFO:utils.trainer:No improvement for 3 epoch(s).
-Epochs:  24%|██▎       | 47/200 [04:11<13:34,  5.32s/it]INFO:utils.trainer:Epoch[48/200] Train Loss: 0.0202, Train Acc: 99.26%
-INFO:utils.trainer:Epoch[48/200] Val Loss: 1.2550, Val Acc: 80.09%
-INFO:utils.trainer:No improvement for 4 epoch(s).
-Epochs:  24%|██▍       | 48/200 [04:16<13:31,  5.34s/it]INFO:utils.trainer:Epoch[49/200] Train Loss: 0.0241, Train Acc: 99.44%
-INFO:utils.trainer:Epoch[49/200] Val Loss: 1.2399, Val Acc: 83.30%
-INFO:utils.trainer:No improvement for 5 epoch(s).
-Epochs:  24%|██▍       | 49/200 [04:21<13:23,  5.32s/it]INFO:utils.trainer:Epoch[50/200] Train Loss: 0.0170, Train Acc: 99.48%
-INFO:utils.trainer:Epoch[50/200] Val Loss: 1.2944, Val Acc: 80.62%
-INFO:utils.trainer:No improvement for 6 epoch(s).
-Epochs:  25%|██▌       | 50/200 [04:27<13:20,  5.34s/it]INFO:utils.trainer:Epoch[51/200] Train Loss: 0.0174, Train Acc: 99.18%
-INFO:utils.trainer:Epoch[51/200] Val Loss: 1.3209, Val Acc: 81.56%
-INFO:utils.trainer:No improvement for 7 epoch(s).
-Epochs:  26%|██▌       | 51/200 [04:32<13:15,  5.34s/it]INFO:utils.trainer:Epoch[52/200] Train Loss: 0.0173, Train Acc: 99.39%
-INFO:utils.trainer:Epoch[52/200] Val Loss: 1.1619, Val Acc: 80.71%
-INFO:utils.trainer:No improvement for 8 epoch(s).
-Epochs:  26%|██▌       | 52/200 [04:37<13:08,  5.33s/it]INFO:utils.trainer:Epoch[53/200] Train Loss: 0.0151, Train Acc: 99.35%
-INFO:utils.trainer:Epoch[53/200] Val Loss: 1.4808, Val Acc: 79.78%
-INFO:utils.trainer:No improvement for 9 epoch(s).
-Epochs:  26%|██▋       | 53/200 [04:43<13:05,  5.34s/it]INFO:utils.trainer:Epoch[54/200] Train Loss: 0.0162, Train Acc: 99.44%
-INFO:utils.trainer:Epoch[54/200] Val Loss: 1.3628, Val Acc: 80.40%
-INFO:utils.trainer:No improvement for 10 epoch(s).
-Epochs:  27%|██▋       | 54/200 [04:48<12:57,  5.32s/it]INFO:utils.trainer:Epoch[55/200] Train Loss: 0.0107, Train Acc: 99.52%
-INFO:utils.trainer:Epoch[55/200] Val Loss: 1.4109, Val Acc: 80.71%
-INFO:utils.trainer:No improvement for 11 epoch(s).
-Epochs:  28%|██▊       | 55/200 [04:53<12:49,  5.31s/it]INFO:utils.trainer:Epoch[56/200] Train Loss: 0.0094, Train Acc: 99.52%
-INFO:utils.trainer:Epoch[56/200] Val Loss: 1.3858, Val Acc: 80.71%
-INFO:utils.trainer:No improvement for 12 epoch(s).
-Epochs:  28%|██▊       | 56/200 [04:58<12:44,  5.31s/it]INFO:utils.trainer:Epoch[57/200] Train Loss: 0.0084, Train Acc: 99.70%
-INFO:utils.trainer:Epoch[57/200] Val Loss: 1.3808, Val Acc: 81.34%
-INFO:utils.trainer:No improvement for 13 epoch(s).
-Epochs:  28%|██▊       | 57/200 [05:04<12:36,  5.29s/it]INFO:utils.trainer:Epoch[58/200] Train Loss: 0.0063, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[58/200] Val Loss: 1.3831, Val Acc: 80.62%
-INFO:utils.trainer:No improvement for 14 epoch(s).
-Epochs:  29%|██▉       | 58/200 [05:09<12:35,  5.32s/it]INFO:utils.trainer:Epoch[59/200] Train Loss: 0.0079, Train Acc: 99.70%
-INFO:utils.trainer:Epoch[59/200] Val Loss: 1.4442, Val Acc: 80.62%
-INFO:utils.trainer:No improvement for 15 epoch(s).
-Epochs:  30%|██▉       | 59/200 [05:14<12:27,  5.30s/it]INFO:utils.trainer:Epoch[60/200] Train Loss: 0.0076, Train Acc: 99.57%
-INFO:utils.trainer:Epoch[60/200] Val Loss: 1.4871, Val Acc: 81.65%
-INFO:utils.trainer:No improvement for 16 epoch(s).
-Epochs:  30%|███       | 60/200 [05:20<12:22,  5.30s/it]INFO:utils.trainer:Epoch[61/200] Train Loss: 0.0062, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[61/200] Val Loss: 1.4189, Val Acc: 81.96%
-INFO:utils.trainer:No improvement for 17 epoch(s).
-Epochs:  30%|███       | 61/200 [05:25<12:17,  5.30s/it]INFO:utils.trainer:Epoch[62/200] Train Loss: 0.0045, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[62/200] Val Loss: 1.4372, Val Acc: 82.28%
-INFO:utils.trainer:No improvement for 18 epoch(s).
-Epochs:  31%|███       | 62/200 [05:30<12:10,  5.30s/it]INFO:utils.trainer:Epoch[63/200] Train Loss: 0.0059, Train Acc: 99.74%
-INFO:utils.trainer:Epoch[63/200] Val Loss: 1.3367, Val Acc: 81.65%
-INFO:utils.trainer:No improvement for 19 epoch(s).
-Epochs:  32%|███▏      | 63/200 [05:36<12:09,  5.33s/it]INFO:utils.trainer:Epoch[64/200] Train Loss: 0.0085, Train Acc: 99.65%
-INFO:utils.trainer:Epoch[64/200] Val Loss: 1.4210, Val Acc: 82.37%
-INFO:utils.trainer:No improvement for 20 epoch(s).
-Epochs:  32%|███▏      | 64/200 [05:41<12:00,  5.30s/it]INFO:utils.trainer:Epoch[65/200] Train Loss: 0.0084, Train Acc: 99.61%
-INFO:utils.trainer:Epoch[65/200] Val Loss: 1.4122, Val Acc: 81.03%
-INFO:utils.trainer:No improvement for 21 epoch(s).
-Epochs:  32%|███▎      | 65/200 [05:46<11:54,  5.30s/it]INFO:utils.trainer:Epoch[66/200] Train Loss: 0.0085, Train Acc: 99.78%
-INFO:utils.trainer:Epoch[66/200] Val Loss: 1.3804, Val Acc: 81.03%
-INFO:utils.trainer:No improvement for 22 epoch(s).
-Epochs:  33%|███▎      | 66/200 [05:51<11:48,  5.29s/it]INFO:utils.trainer:Epoch[67/200] Train Loss: 0.0060, Train Acc: 99.74%
-INFO:utils.trainer:Epoch[67/200] Val Loss: 1.3863, Val Acc: 81.65%
-INFO:utils.trainer:No improvement for 23 epoch(s).
-Epochs:  34%|███▎      | 67/200 [05:57<11:42,  5.28s/it]INFO:utils.trainer:Epoch[68/200] Train Loss: 0.0062, Train Acc: 99.74%
-INFO:utils.trainer:Epoch[68/200] Val Loss: 1.3815, Val Acc: 82.59%
-INFO:utils.trainer:No improvement for 24 epoch(s).
-Epochs:  34%|███▍      | 68/200 [06:02<11:38,  5.30s/it]INFO:utils.trainer:Epoch[69/200] Train Loss: 0.0061, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[69/200] Val Loss: 1.3920, Val Acc: 82.28%
-INFO:utils.trainer:No improvement for 25 epoch(s).
-Epochs:  34%|███▍      | 69/200 [06:07<11:35,  5.31s/it]INFO:utils.trainer:Epoch[70/200] Train Loss: 0.0102, Train Acc: 99.75%
-INFO:utils.trainer:Epoch[70/200] Val Loss: 1.3940, Val Acc: 82.37%
-INFO:utils.trainer:No improvement for 26 epoch(s).
-Epochs:  35%|███▌      | 70/200 [06:13<11:34,  5.34s/it]INFO:utils.trainer:Epoch[71/200] Train Loss: 0.0043, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[71/200] Val Loss: 1.4439, Val Acc: 80.40%
-INFO:utils.trainer:No improvement for 27 epoch(s).
-Epochs:  36%|███▌      | 71/200 [06:18<11:25,  5.32s/it]INFO:utils.trainer:Epoch[72/200] Train Loss: 0.0054, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[72/200] Val Loss: 1.4384, Val Acc: 80.71%
-INFO:utils.trainer:No improvement for 28 epoch(s).
-Epochs:  36%|███▌      | 72/200 [06:23<11:19,  5.31s/it]INFO:utils.trainer:Epoch[73/200] Train Loss: 0.0097, Train Acc: 99.65%
-INFO:utils.trainer:Epoch[73/200] Val Loss: 1.4423, Val Acc: 82.28%
-INFO:utils.trainer:No improvement for 29 epoch(s).
-Epochs:  36%|███▋      | 73/200 [06:29<11:14,  5.31s/it]INFO:utils.trainer:Epoch[74/200] Train Loss: 0.0054, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[74/200] Val Loss: 1.4406, Val Acc: 82.59%
-INFO:utils.trainer:No improvement for 30 epoch(s).
-Epochs:  37%|███▋      | 74/200 [06:34<11:05,  5.28s/it]INFO:utils.trainer:Epoch[75/200] Train Loss: 0.0048, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[75/200] Val Loss: 1.4196, Val Acc: 81.96%
-INFO:utils.trainer:No improvement for 31 epoch(s).
-Epochs:  38%|███▊      | 75/200 [06:39<11:05,  5.32s/it]INFO:utils.trainer:Epoch[76/200] Train Loss: 0.0047, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[76/200] Val Loss: 1.3995, Val Acc: 81.65%
-INFO:utils.trainer:No improvement for 32 epoch(s).
-Epochs:  38%|███▊      | 76/200 [06:44<10:54,  5.28s/it]INFO:utils.trainer:Epoch[77/200] Train Loss: 0.0052, Train Acc: 99.74%
-INFO:utils.trainer:Epoch[77/200] Val Loss: 1.4182, Val Acc: 82.59%
-INFO:utils.trainer:No improvement for 33 epoch(s).
-Epochs:  38%|███▊      | 77/200 [06:50<10:54,  5.32s/it]INFO:utils.trainer:Epoch[78/200] Train Loss: 0.0046, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[78/200] Val Loss: 1.4256, Val Acc: 82.59%
-INFO:utils.trainer:No improvement for 34 epoch(s).
-Epochs:  39%|███▉      | 78/200 [06:55<10:46,  5.30s/it]INFO:utils.trainer:Epoch[79/200] Train Loss: 0.0029, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[79/200] Val Loss: 1.4373, Val Acc: 81.96%
-INFO:utils.trainer:No improvement for 35 epoch(s).
-Epochs:  40%|███▉      | 79/200 [07:00<10:41,  5.30s/it]INFO:utils.trainer:Epoch[80/200] Train Loss: 0.0024, Train Acc: 99.96%
-INFO:utils.trainer:Epoch[80/200] Val Loss: 1.4391, Val Acc: 82.28%
-INFO:utils.trainer:No improvement for 36 epoch(s).
-Epochs:  40%|████      | 80/200 [07:06<10:37,  5.31s/it]INFO:utils.trainer:Epoch[81/200] Train Loss: 0.0043, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[81/200] Val Loss: 1.4400, Val Acc: 81.34%
-INFO:utils.trainer:No improvement for 37 epoch(s).
-Epochs:  40%|████      | 81/200 [07:11<10:28,  5.28s/it]INFO:utils.trainer:Epoch[82/200] Train Loss: 0.0044, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[82/200] Val Loss: 1.4321, Val Acc: 81.34%
-INFO:utils.trainer:No improvement for 38 epoch(s).
-Epochs:  41%|████      | 82/200 [07:16<10:23,  5.29s/it]INFO:utils.trainer:Epoch[83/200] Train Loss: 0.0035, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[83/200] Val Loss: 1.4298, Val Acc: 81.96%
-INFO:utils.trainer:No improvement for 39 epoch(s).
-Epochs:  42%|████▏     | 83/200 [07:22<10:17,  5.28s/it]INFO:utils.trainer:Epoch[84/200] Train Loss: 0.0034, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[84/200] Val Loss: 1.4207, Val Acc: 81.96%
-INFO:utils.trainer:No improvement for 40 epoch(s).
-Epochs:  42%|████▏     | 84/200 [07:27<10:12,  5.28s/it]INFO:utils.trainer:Epoch[85/200] Train Loss: 0.0026, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[85/200] Val Loss: 1.4243, Val Acc: 82.59%
-INFO:utils.trainer:No improvement for 41 epoch(s).
-Epochs:  42%|████▎     | 85/200 [07:32<10:06,  5.28s/it]INFO:utils.trainer:Epoch[86/200] Train Loss: 0.0027, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[86/200] Val Loss: 1.4221, Val Acc: 82.28%
-INFO:utils.trainer:No improvement for 42 epoch(s).
-Epochs:  43%|████▎     | 86/200 [07:37<09:59,  5.26s/it]INFO:utils.trainer:Epoch[87/200] Train Loss: 0.0033, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[87/200] Val Loss: 1.4209, Val Acc: 82.28%
-INFO:utils.trainer:No improvement for 43 epoch(s).
-Epochs:  44%|████▎     | 87/200 [07:43<09:56,  5.28s/it]INFO:utils.trainer:Epoch[88/200] Train Loss: 0.0027, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[88/200] Val Loss: 1.4251, Val Acc: 82.59%
-INFO:utils.trainer:No improvement for 44 epoch(s).
-Epochs:  44%|████▍     | 88/200 [07:48<09:51,  5.28s/it]INFO:utils.trainer:Epoch[89/200] Train Loss: 0.0033, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[89/200] Val Loss: 1.4260, Val Acc: 82.28%
-INFO:utils.trainer:No improvement for 45 epoch(s).
-Epochs:  44%|████▍     | 89/200 [07:53<09:50,  5.32s/it]INFO:utils.trainer:Epoch[90/200] Train Loss: 0.0049, Train Acc: 99.70%
-INFO:utils.trainer:Epoch[90/200] Val Loss: 1.4273, Val Acc: 82.59%
-INFO:utils.trainer:No improvement for 46 epoch(s).
-Epochs:  45%|████▌     | 90/200 [07:59<09:44,  5.31s/it]INFO:utils.trainer:Epoch[91/200] Train Loss: 0.0044, Train Acc: 99.78%
-INFO:utils.trainer:Epoch[91/200] Val Loss: 1.4242, Val Acc: 82.59%
-INFO:utils.trainer:No improvement for 47 epoch(s).
-Epochs:  46%|████▌     | 91/200 [08:04<09:39,  5.32s/it]INFO:utils.trainer:Epoch[92/200] Train Loss: 0.0024, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[92/200] Val Loss: 1.4267, Val Acc: 82.59%
-INFO:utils.trainer:No improvement for 48 epoch(s).
-Epochs:  46%|████▌     | 92/200 [08:09<09:33,  5.31s/it]INFO:utils.trainer:Epoch[93/200] Train Loss: 0.0038, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[93/200] Val Loss: 1.4279, Val Acc: 82.59%
-INFO:utils.trainer:No improvement for 49 epoch(s).
-Epochs:  46%|████▋     | 93/200 [08:15<09:26,  5.29s/it]INFO:utils.trainer:Epoch[94/200] Train Loss: 0.0027, Train Acc: 99.96%
-INFO:utils.trainer:Epoch[94/200] Val Loss: 1.4330, Val Acc: 82.90%
-INFO:utils.trainer:No improvement for 50 epoch(s).
-INFO:utils.trainer:Early stopping triggered. No improvement in validation acc for 50 epochs.
-Epochs:  46%|████▋     | 93/200 [08:20<09:35,  5.38s/it]
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/last_checkpoint.pth
-INFO:utils.trainer:Training finished. Best val acc: 83.9286 at epoch 44
-INFO:utils.trainer:Saved training plot to /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_42/run_20260513-021232/loss_acc_plot.png
-/media/data/minhht/context_moe/venv1/lib/python3.11/site-packages/albumentations/core/validation.py:114: UserWarning: ShiftScaleRotate is a special case of Affine transform. Please use Affine transform instead.
-  original_init(self, **validated_kwargs)
-Train size: 2274
-Validation size: 284
-Test size: 285
-Numbers of train labels: Counter({6: 633, 1: 337, 2: 318, 7: 226, 3: 210, 5: 209, 4: 176, 0: 165})
-Numbers of validation labels: Counter({6: 79, 1: 42, 2: 40, 7: 28, 3: 26, 5: 26, 4: 22, 0: 21})
-Numbers of test labels: Counter({6: 79, 1: 42, 2: 40, 7: 29, 3: 27, 5: 26, 4: 22, 0: 20})
-{'Tomato Early blight leaf': 0, 'Tomato Septoria leaf spot': 1, 'Tomato leaf': 2, 'Tomato leaf bacterial spot': 3, 'Tomato leaf late blight': 4, 'Tomato leaf mosaic virus': 5, 'Tomato leaf yellow virus': 6, 'Tomato mold leaf': 7}
-======================================================================================================================================================
-Layer (type:depth-idx)                             Input Shape               Output Shape              Param #                   Mult-Adds
-======================================================================================================================================================
-MobileNetV3                                        [1, 3, 224, 224]          [1, 8]                    --                        --
-├─Sequential: 1-1                                  [1, 3, 224, 224]          [1, 576, 7, 7]            --                        --
-│    └─Conv2dNormActivation: 2-1                   [1, 3, 224, 224]          [1, 16, 112, 112]         --                        --
-│    │    └─Conv2d: 3-1                            [1, 3, 224, 224]          [1, 16, 112, 112]         432                       5,419,008
-│    │    └─BatchNorm2d: 3-2                       [1, 16, 112, 112]         [1, 16, 112, 112]         32                        32
-│    │    └─Hardswish: 3-3                         [1, 16, 112, 112]         [1, 16, 112, 112]         --                        --
-│    └─InvertedResidual: 2-2                       [1, 16, 112, 112]         [1, 16, 56, 56]           --                        --
-│    │    └─Sequential: 3-4                        [1, 16, 112, 112]         [1, 16, 56, 56]           744                       1,254,744
-│    └─InvertedResidual: 2-3                       [1, 16, 56, 56]           [1, 24, 28, 28]           --                        --
-│    │    └─Sequential: 3-5                        [1, 16, 56, 56]           [1, 24, 28, 28]           3,864                     5,475,792
-│    └─InvertedResidual: 2-4                       [1, 24, 28, 28]           [1, 24, 28, 28]           --                        --
-│    │    └─Sequential: 3-6                        [1, 24, 28, 28]           [1, 24, 28, 28]           5,416                     3,932,944
-│    └─InvertedResidual: 2-5                       [1, 24, 28, 28]           [1, 40, 14, 14]           --                        --
-│    │    └─Sequential: 3-7                        [1, 24, 28, 28]           [1, 40, 14, 14]           13,736                    3,034,568
-│    └─InvertedResidual: 2-6                       [1, 40, 14, 14]           [1, 40, 14, 14]           --                        --
-│    │    └─Sequential: 3-8                        [1, 40, 14, 14]           [1, 40, 14, 14]           57,264                    4,971,264
-│    └─InvertedResidual: 2-7                       [1, 40, 14, 14]           [1, 40, 14, 14]           --                        --
-│    │    └─Sequential: 3-9                        [1, 40, 14, 14]           [1, 40, 14, 14]           57,264                    4,971,264
-│    └─InvertedResidual: 2-8                       [1, 40, 14, 14]           [1, 48, 14, 14]           --                        --
-│    │    └─Sequential: 3-10                       [1, 40, 14, 14]           [1, 48, 14, 14]           21,968                    2,666,168
-│    └─InvertedResidual: 2-9                       [1, 48, 14, 14]           [1, 48, 14, 14]           --                        --
-│    │    └─Sequential: 3-11                       [1, 48, 14, 14]           [1, 48, 14, 14]           29,800                    3,427,480
-│    └─InvertedResidual: 2-10                      [1, 48, 14, 14]           [1, 96, 7, 7]             --                        --
-│    │    └─Sequential: 3-12                       [1, 48, 14, 14]           [1, 96, 7, 7]             91,848                    4,460,232
-│    └─InvertedResidual: 2-11                      [1, 96, 7, 7]             [1, 96, 7, 7]             --                        --
-│    │    └─Sequential: 3-13                       [1, 96, 7, 7]             [1, 96, 7, 7]             294,096                   6,293,712
-│    └─InvertedResidual: 2-12                      [1, 96, 7, 7]             [1, 96, 7, 7]             --                        --
-│    │    └─Sequential: 3-14                       [1, 96, 7, 7]             [1, 96, 7, 7]             294,096                   6,293,712
-│    └─Conv2dNormActivation: 2-13                  [1, 96, 7, 7]             [1, 576, 7, 7]            --                        --
-│    │    └─Conv2d: 3-15                           [1, 96, 7, 7]             [1, 576, 7, 7]            55,296                    2,709,504
-│    │    └─BatchNorm2d: 3-16                      [1, 576, 7, 7]            [1, 576, 7, 7]            1,152                     1,152
-│    │    └─Hardswish: 3-17                        [1, 576, 7, 7]            [1, 576, 7, 7]            --                        --
-├─AdaptiveAvgPool2d: 1-2                           [1, 576, 7, 7]            [1, 576, 1, 1]            --                        --
-├─Sequential: 1-3                                  [1, 576]                  [1, 8]                    --                        --
-│    └─Linear: 2-14                                [1, 576]                  [1, 1024]                 590,848                   590,848
-│    └─Hardswish: 2-15                             [1, 1024]                 [1, 1024]                 --                        --
-│    └─Dropout: 2-16                               [1, 1024]                 [1, 1024]                 --                        --
-│    └─Linear: 2-17                                [1, 1024]                 [1, 8]                    8,200                     8,200
-======================================================================================================================================================
-Total params: 1,526,056
-Trainable params: 1,526,056
-Non-trainable params: 0
-Total mult-adds (Units.MEGABYTES): 55.51
-======================================================================================================================================================
-Input size (MB): 0.60
-Forward/backward pass size (MB): 22.64
-Params size (MB): 6.10
-Estimated Total Size (MB): 29.34
-======================================================================================================================================================
-Epochs:   0%|          | 0/200 [00:00<?, ?it/s]INFO:utils.trainer:Epoch[1/200] Train Loss: 1.4464, Train Acc: 49.53%
-INFO:utils.trainer:Epoch[1/200] Val Loss: 1.7753, Val Acc: 41.21%
-INFO:utils.trainer:Validation accuracy improved (-inf -> 41.2054).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:   0%|          | 1/200 [00:04<15:40,  4.73s/it]INFO:utils.trainer:Epoch[2/200] Train Loss: 0.9514, Train Acc: 67.19%
-INFO:utils.trainer:Epoch[2/200] Val Loss: 1.7981, Val Acc: 45.13%
-INFO:utils.trainer:Validation accuracy improved (41.2054 -> 45.1339).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:   1%|          | 2/200 [00:09<14:46,  4.48s/it]INFO:utils.trainer:Epoch[3/200] Train Loss: 0.7574, Train Acc: 74.01%
-INFO:utils.trainer:Epoch[3/200] Val Loss: 1.4944, Val Acc: 60.18%
-INFO:utils.trainer:Validation accuracy improved (45.1339 -> 60.1786).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:   2%|▏         | 3/200 [00:13<14:31,  4.42s/it]INFO:utils.trainer:Epoch[4/200] Train Loss: 0.6568, Train Acc: 77.74%
-INFO:utils.trainer:Epoch[4/200] Val Loss: 1.4286, Val Acc: 61.25%
-INFO:utils.trainer:Validation accuracy improved (60.1786 -> 61.2500).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:   2%|▏         | 4/200 [00:17<14:22,  4.40s/it]INFO:utils.trainer:Epoch[5/200] Train Loss: 0.4918, Train Acc: 83.05%
-INFO:utils.trainer:Epoch[5/200] Val Loss: 1.3387, Val Acc: 63.39%
-INFO:utils.trainer:Validation accuracy improved (61.2500 -> 63.3929).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:   2%|▎         | 5/200 [00:22<14:15,  4.39s/it]INFO:utils.trainer:Epoch[6/200] Train Loss: 0.4156, Train Acc: 85.44%
-INFO:utils.trainer:Epoch[6/200] Val Loss: 1.4296, Val Acc: 70.04%
-INFO:utils.trainer:Validation accuracy improved (63.3929 -> 70.0446).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:   3%|▎         | 6/200 [00:26<14:06,  4.36s/it]INFO:utils.trainer:Epoch[7/200] Train Loss: 0.4049, Train Acc: 85.10%
-INFO:utils.trainer:Epoch[7/200] Val Loss: 1.8483, Val Acc: 69.11%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:   4%|▎         | 7/200 [00:30<13:54,  4.32s/it]INFO:utils.trainer:Epoch[8/200] Train Loss: 0.3271, Train Acc: 88.28%
-INFO:utils.trainer:Epoch[8/200] Val Loss: 1.3176, Val Acc: 69.87%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:   4%|▍         | 8/200 [00:34<13:45,  4.30s/it]INFO:utils.trainer:Epoch[9/200] Train Loss: 0.2924, Train Acc: 90.05%
-INFO:utils.trainer:Epoch[9/200] Val Loss: 1.1386, Val Acc: 70.76%
-INFO:utils.trainer:Validation accuracy improved (70.0446 -> 70.7589).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:   4%|▍         | 9/200 [00:39<13:41,  4.30s/it]INFO:utils.trainer:Epoch[10/200] Train Loss: 0.2606, Train Acc: 90.58%
-INFO:utils.trainer:Epoch[10/200] Val Loss: 1.3602, Val Acc: 69.42%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:   5%|▌         | 10/200 [00:43<13:34,  4.28s/it]INFO:utils.trainer:Epoch[11/200] Train Loss: 0.2275, Train Acc: 91.28%
-INFO:utils.trainer:Epoch[11/200] Val Loss: 1.2683, Val Acc: 70.76%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:   6%|▌         | 11/200 [00:47<13:31,  4.29s/it]INFO:utils.trainer:Epoch[12/200] Train Loss: 0.2353, Train Acc: 91.71%
-INFO:utils.trainer:Epoch[12/200] Val Loss: 1.3006, Val Acc: 69.64%
-INFO:utils.trainer:No improvement for 3 epoch(s).
-Epochs:   6%|▌         | 12/200 [00:52<13:28,  4.30s/it]INFO:utils.trainer:Epoch[13/200] Train Loss: 0.2293, Train Acc: 92.46%
-INFO:utils.trainer:Epoch[13/200] Val Loss: 1.2877, Val Acc: 68.57%
-INFO:utils.trainer:No improvement for 4 epoch(s).
-Epochs:   6%|▋         | 13/200 [00:56<13:22,  4.29s/it]INFO:utils.trainer:Epoch[14/200] Train Loss: 0.1920, Train Acc: 93.55%
-INFO:utils.trainer:Epoch[14/200] Val Loss: 1.1506, Val Acc: 72.63%
-INFO:utils.trainer:Validation accuracy improved (70.7589 -> 72.6339).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:   7%|▋         | 14/200 [01:00<13:19,  4.30s/it]INFO:utils.trainer:Epoch[15/200] Train Loss: 0.1773, Train Acc: 92.90%
-INFO:utils.trainer:Epoch[15/200] Val Loss: 1.4064, Val Acc: 73.17%
-INFO:utils.trainer:Validation accuracy improved (72.6339 -> 73.1696).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:   8%|▊         | 15/200 [01:05<13:16,  4.30s/it]INFO:utils.trainer:Epoch[16/200] Train Loss: 0.1537, Train Acc: 95.10%
-INFO:utils.trainer:Epoch[16/200] Val Loss: 1.4318, Val Acc: 67.37%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:   8%|▊         | 16/200 [01:09<13:10,  4.30s/it]INFO:utils.trainer:Epoch[17/200] Train Loss: 0.1136, Train Acc: 96.44%
-INFO:utils.trainer:Epoch[17/200] Val Loss: 1.3174, Val Acc: 75.85%
-INFO:utils.trainer:Validation accuracy improved (73.1696 -> 75.8482).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:   8%|▊         | 17/200 [01:13<13:06,  4.30s/it]INFO:utils.trainer:Epoch[18/200] Train Loss: 0.1014, Train Acc: 96.02%
-INFO:utils.trainer:Epoch[18/200] Val Loss: 1.6694, Val Acc: 73.04%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:   9%|▉         | 18/200 [01:17<12:59,  4.28s/it]INFO:utils.trainer:Epoch[19/200] Train Loss: 0.1713, Train Acc: 93.74%
-INFO:utils.trainer:Epoch[19/200] Val Loss: 1.6533, Val Acc: 73.44%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:  10%|▉         | 19/200 [01:22<12:51,  4.26s/it]INFO:utils.trainer:Epoch[20/200] Train Loss: 0.1479, Train Acc: 94.76%
-INFO:utils.trainer:Epoch[20/200] Val Loss: 1.7981, Val Acc: 68.08%
-INFO:utils.trainer:No improvement for 3 epoch(s).
-Epochs:  10%|█         | 20/200 [01:26<12:48,  4.27s/it]INFO:utils.trainer:Epoch[21/200] Train Loss: 0.1512, Train Acc: 94.99%
-INFO:utils.trainer:Epoch[21/200] Val Loss: 1.3358, Val Acc: 76.03%
-INFO:utils.trainer:Validation accuracy improved (75.8482 -> 76.0268).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:  10%|█         | 21/200 [01:30<12:45,  4.28s/it]INFO:utils.trainer:Epoch[22/200] Train Loss: 0.0963, Train Acc: 96.36%
-INFO:utils.trainer:Epoch[22/200] Val Loss: 1.3518, Val Acc: 76.56%
-INFO:utils.trainer:Validation accuracy improved (76.0268 -> 76.5625).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:  11%|█         | 22/200 [01:35<12:46,  4.31s/it]INFO:utils.trainer:Epoch[23/200] Train Loss: 0.1205, Train Acc: 96.19%
-INFO:utils.trainer:Epoch[23/200] Val Loss: 1.5801, Val Acc: 70.04%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:  12%|█▏        | 23/200 [01:39<12:42,  4.31s/it]INFO:utils.trainer:Epoch[24/200] Train Loss: 0.1567, Train Acc: 94.70%
-INFO:utils.trainer:Epoch[24/200] Val Loss: 1.4618, Val Acc: 72.54%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:  12%|█▏        | 24/200 [01:43<12:37,  4.30s/it]INFO:utils.trainer:Epoch[25/200] Train Loss: 0.1489, Train Acc: 95.72%
-INFO:utils.trainer:Epoch[25/200] Val Loss: 1.3992, Val Acc: 72.81%
-INFO:utils.trainer:No improvement for 3 epoch(s).
-Epochs:  12%|█▎        | 25/200 [01:47<12:34,  4.31s/it]INFO:utils.trainer:Epoch[26/200] Train Loss: 0.0993, Train Acc: 96.36%
-INFO:utils.trainer:Epoch[26/200] Val Loss: 1.6861, Val Acc: 73.48%
-INFO:utils.trainer:No improvement for 4 epoch(s).
-Epochs:  13%|█▎        | 26/200 [01:52<12:32,  4.32s/it]INFO:utils.trainer:Epoch[27/200] Train Loss: 0.0722, Train Acc: 97.05%
-INFO:utils.trainer:Epoch[27/200] Val Loss: 1.3279, Val Acc: 76.79%
-INFO:utils.trainer:Validation accuracy improved (76.5625 -> 76.7857).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:  14%|█▎        | 27/200 [01:56<12:31,  4.35s/it]INFO:utils.trainer:Epoch[28/200] Train Loss: 0.0796, Train Acc: 97.14%
-INFO:utils.trainer:Epoch[28/200] Val Loss: 1.6051, Val Acc: 76.25%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:  14%|█▍        | 28/200 [02:00<12:22,  4.31s/it]INFO:utils.trainer:Epoch[29/200] Train Loss: 0.1052, Train Acc: 96.45%
-INFO:utils.trainer:Epoch[29/200] Val Loss: 1.4654, Val Acc: 76.88%
-INFO:utils.trainer:Validation accuracy improved (76.7857 -> 76.8750).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:  14%|█▍        | 29/200 [02:05<12:21,  4.33s/it]INFO:utils.trainer:Epoch[30/200] Train Loss: 0.0860, Train Acc: 96.92%
-INFO:utils.trainer:Epoch[30/200] Val Loss: 1.4060, Val Acc: 76.79%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:  15%|█▌        | 30/200 [02:09<12:14,  4.32s/it]INFO:utils.trainer:Epoch[31/200] Train Loss: 0.0731, Train Acc: 96.93%
-INFO:utils.trainer:Epoch[31/200] Val Loss: 1.5428, Val Acc: 76.25%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:  16%|█▌        | 31/200 [02:13<12:08,  4.31s/it]INFO:utils.trainer:Epoch[32/200] Train Loss: 0.0749, Train Acc: 97.57%
-INFO:utils.trainer:Epoch[32/200] Val Loss: 1.4172, Val Acc: 76.38%
-INFO:utils.trainer:No improvement for 3 epoch(s).
-Epochs:  16%|█▌        | 32/200 [02:18<12:03,  4.31s/it]INFO:utils.trainer:Epoch[33/200] Train Loss: 0.0488, Train Acc: 98.05%
-INFO:utils.trainer:Epoch[33/200] Val Loss: 1.4625, Val Acc: 78.12%
-INFO:utils.trainer:Validation accuracy improved (76.8750 -> 78.1250).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:  16%|█▋        | 33/200 [02:22<12:03,  4.33s/it]INFO:utils.trainer:Epoch[34/200] Train Loss: 0.0592, Train Acc: 97.75%
-INFO:utils.trainer:Epoch[34/200] Val Loss: 1.3295, Val Acc: 80.71%
-INFO:utils.trainer:Validation accuracy improved (78.1250 -> 80.7143).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:  17%|█▋        | 34/200 [02:26<12:01,  4.35s/it]INFO:utils.trainer:Epoch[35/200] Train Loss: 0.1061, Train Acc: 96.81%
-INFO:utils.trainer:Epoch[35/200] Val Loss: 1.7075, Val Acc: 76.47%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:  18%|█▊        | 35/200 [02:31<11:53,  4.32s/it]INFO:utils.trainer:Epoch[36/200] Train Loss: 0.1066, Train Acc: 96.76%
-INFO:utils.trainer:Epoch[36/200] Val Loss: 1.1880, Val Acc: 78.21%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:  18%|█▊        | 36/200 [02:35<11:48,  4.32s/it]INFO:utils.trainer:Epoch[37/200] Train Loss: 0.0754, Train Acc: 97.57%
-INFO:utils.trainer:Epoch[37/200] Val Loss: 1.5412, Val Acc: 79.46%
-INFO:utils.trainer:No improvement for 3 epoch(s).
-Epochs:  18%|█▊        | 37/200 [02:39<11:43,  4.32s/it]INFO:utils.trainer:Epoch[38/200] Train Loss: 0.0827, Train Acc: 97.23%
-INFO:utils.trainer:Epoch[38/200] Val Loss: 1.7446, Val Acc: 73.53%
-INFO:utils.trainer:No improvement for 4 epoch(s).
-Epochs:  19%|█▉        | 38/200 [02:44<11:38,  4.31s/it]INFO:utils.trainer:Epoch[39/200] Train Loss: 0.0551, Train Acc: 97.87%
-INFO:utils.trainer:Epoch[39/200] Val Loss: 1.6974, Val Acc: 74.69%
-INFO:utils.trainer:No improvement for 5 epoch(s).
-Epochs:  20%|█▉        | 39/200 [02:48<11:33,  4.31s/it]INFO:utils.trainer:Epoch[40/200] Train Loss: 0.0727, Train Acc: 97.88%
-INFO:utils.trainer:Epoch[40/200] Val Loss: 1.6808, Val Acc: 77.28%
-INFO:utils.trainer:No improvement for 6 epoch(s).
-Epochs:  20%|██        | 40/200 [02:52<11:29,  4.31s/it]INFO:utils.trainer:Epoch[41/200] Train Loss: 0.0740, Train Acc: 97.45%
-INFO:utils.trainer:Epoch[41/200] Val Loss: 1.5927, Val Acc: 77.19%
-INFO:utils.trainer:No improvement for 7 epoch(s).
-Epochs:  20%|██        | 41/200 [02:57<11:25,  4.31s/it]INFO:utils.trainer:Epoch[42/200] Train Loss: 0.0825, Train Acc: 97.18%
-INFO:utils.trainer:Epoch[42/200] Val Loss: 1.8622, Val Acc: 72.68%
-INFO:utils.trainer:No improvement for 8 epoch(s).
-Epochs:  21%|██        | 42/200 [03:01<11:21,  4.31s/it]INFO:utils.trainer:Epoch[43/200] Train Loss: 0.0955, Train Acc: 96.89%
-INFO:utils.trainer:Epoch[43/200] Val Loss: 2.0961, Val Acc: 68.48%
-INFO:utils.trainer:No improvement for 9 epoch(s).
-Epochs:  22%|██▏       | 43/200 [03:05<11:20,  4.33s/it]INFO:utils.trainer:Epoch[44/200] Train Loss: 0.0703, Train Acc: 97.57%
-INFO:utils.trainer:Epoch[44/200] Val Loss: 1.5288, Val Acc: 78.97%
-INFO:utils.trainer:No improvement for 10 epoch(s).
-Epochs:  22%|██▏       | 44/200 [03:10<11:16,  4.34s/it]INFO:utils.trainer:Epoch[45/200] Train Loss: 0.0683, Train Acc: 97.76%
-INFO:utils.trainer:Epoch[45/200] Val Loss: 1.1270, Val Acc: 78.88%
-INFO:utils.trainer:No improvement for 11 epoch(s).
-Epochs:  22%|██▎       | 45/200 [03:14<11:11,  4.33s/it]INFO:utils.trainer:Epoch[46/200] Train Loss: 0.0470, Train Acc: 98.31%
-INFO:utils.trainer:Epoch[46/200] Val Loss: 1.0853, Val Acc: 81.38%
-INFO:utils.trainer:Validation accuracy improved (80.7143 -> 81.3839).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:  23%|██▎       | 46/200 [03:18<11:06,  4.33s/it]INFO:utils.trainer:Epoch[47/200] Train Loss: 0.0256, Train Acc: 99.26%
-INFO:utils.trainer:Epoch[47/200] Val Loss: 0.9593, Val Acc: 83.08%
-INFO:utils.trainer:Validation accuracy improved (81.3839 -> 83.0804).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:  24%|██▎       | 47/200 [03:23<11:04,  4.34s/it]INFO:utils.trainer:Epoch[48/200] Train Loss: 0.0131, Train Acc: 99.70%
-INFO:utils.trainer:Epoch[48/200] Val Loss: 1.0102, Val Acc: 84.42%
-INFO:utils.trainer:Validation accuracy improved (83.0804 -> 84.4196).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:  24%|██▍       | 48/200 [03:27<11:02,  4.36s/it]INFO:utils.trainer:Epoch[49/200] Train Loss: 0.0136, Train Acc: 99.31%
-INFO:utils.trainer:Epoch[49/200] Val Loss: 0.9826, Val Acc: 82.46%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:  24%|██▍       | 49/200 [03:31<10:56,  4.35s/it]INFO:utils.trainer:Epoch[50/200] Train Loss: 0.0101, Train Acc: 99.65%
-INFO:utils.trainer:Epoch[50/200] Val Loss: 1.0976, Val Acc: 83.08%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:  25%|██▌       | 50/200 [03:36<10:53,  4.36s/it]INFO:utils.trainer:Epoch[51/200] Train Loss: 0.0108, Train Acc: 99.65%
-INFO:utils.trainer:Epoch[51/200] Val Loss: 1.1201, Val Acc: 83.71%
-INFO:utils.trainer:No improvement for 3 epoch(s).
-Epochs:  26%|██▌       | 51/200 [03:40<10:46,  4.34s/it]INFO:utils.trainer:Epoch[52/200] Train Loss: 0.0082, Train Acc: 99.74%
-INFO:utils.trainer:Epoch[52/200] Val Loss: 1.1661, Val Acc: 84.33%
-INFO:utils.trainer:No improvement for 4 epoch(s).
-Epochs:  26%|██▌       | 52/200 [03:44<10:40,  4.33s/it]INFO:utils.trainer:Epoch[53/200] Train Loss: 0.0132, Train Acc: 99.61%
-INFO:utils.trainer:Epoch[53/200] Val Loss: 1.0919, Val Acc: 83.30%
-INFO:utils.trainer:No improvement for 5 epoch(s).
-Epochs:  26%|██▋       | 53/200 [03:49<10:37,  4.33s/it]INFO:utils.trainer:Epoch[54/200] Train Loss: 0.0106, Train Acc: 99.70%
-INFO:utils.trainer:Epoch[54/200] Val Loss: 1.0726, Val Acc: 84.96%
-INFO:utils.trainer:Validation accuracy improved (84.4196 -> 84.9554).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:  27%|██▋       | 54/200 [03:53<10:38,  4.37s/it]INFO:utils.trainer:Epoch[55/200] Train Loss: 0.0119, Train Acc: 99.70%
-INFO:utils.trainer:Epoch[55/200] Val Loss: 1.0601, Val Acc: 84.24%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:  28%|██▊       | 55/200 [03:57<10:32,  4.36s/it]INFO:utils.trainer:Epoch[56/200] Train Loss: 0.0100, Train Acc: 99.70%
-INFO:utils.trainer:Epoch[56/200] Val Loss: 1.0938, Val Acc: 84.96%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:  28%|██▊       | 56/200 [04:02<10:25,  4.34s/it]INFO:utils.trainer:Epoch[57/200] Train Loss: 0.0073, Train Acc: 99.70%
-INFO:utils.trainer:Epoch[57/200] Val Loss: 1.0756, Val Acc: 84.33%
-INFO:utils.trainer:No improvement for 3 epoch(s).
-Epochs:  28%|██▊       | 57/200 [04:06<10:19,  4.33s/it]INFO:utils.trainer:Epoch[58/200] Train Loss: 0.0131, Train Acc: 99.61%
-INFO:utils.trainer:Epoch[58/200] Val Loss: 1.0784, Val Acc: 83.08%
-INFO:utils.trainer:No improvement for 4 epoch(s).
-Epochs:  29%|██▉       | 58/200 [04:10<10:15,  4.33s/it]INFO:utils.trainer:Epoch[59/200] Train Loss: 0.0116, Train Acc: 99.52%
-INFO:utils.trainer:Epoch[59/200] Val Loss: 1.0993, Val Acc: 85.58%
-INFO:utils.trainer:Validation accuracy improved (84.9554 -> 85.5804).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:  30%|██▉       | 59/200 [04:15<10:15,  4.37s/it]INFO:utils.trainer:Epoch[60/200] Train Loss: 0.0063, Train Acc: 99.70%
-INFO:utils.trainer:Epoch[60/200] Val Loss: 1.0686, Val Acc: 86.21%
-INFO:utils.trainer:Validation accuracy improved (85.5804 -> 86.2054).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:  30%|███       | 60/200 [04:19<10:12,  4.37s/it]INFO:utils.trainer:Epoch[61/200] Train Loss: 0.0102, Train Acc: 99.57%
-INFO:utils.trainer:Epoch[61/200] Val Loss: 1.1049, Val Acc: 84.55%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:  30%|███       | 61/200 [04:24<10:06,  4.36s/it]INFO:utils.trainer:Epoch[62/200] Train Loss: 0.0154, Train Acc: 99.39%
-INFO:utils.trainer:Epoch[62/200] Val Loss: 1.2461, Val Acc: 84.24%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:  31%|███       | 62/200 [04:28<10:00,  4.35s/it]INFO:utils.trainer:Epoch[63/200] Train Loss: 0.0189, Train Acc: 99.48%
-INFO:utils.trainer:Epoch[63/200] Val Loss: 1.3110, Val Acc: 81.88%
-INFO:utils.trainer:No improvement for 3 epoch(s).
-Epochs:  32%|███▏      | 63/200 [04:32<09:52,  4.33s/it]INFO:utils.trainer:Epoch[64/200] Train Loss: 0.0092, Train Acc: 99.66%
-INFO:utils.trainer:Epoch[64/200] Val Loss: 1.3834, Val Acc: 84.96%
-INFO:utils.trainer:No improvement for 4 epoch(s).
-Epochs:  32%|███▏      | 64/200 [04:36<09:45,  4.31s/it]INFO:utils.trainer:Epoch[65/200] Train Loss: 0.0150, Train Acc: 99.48%
-INFO:utils.trainer:Epoch[65/200] Val Loss: 1.3843, Val Acc: 83.30%
-INFO:utils.trainer:No improvement for 5 epoch(s).
-Epochs:  32%|███▎      | 65/200 [04:41<09:43,  4.32s/it]INFO:utils.trainer:Epoch[66/200] Train Loss: 0.0160, Train Acc: 99.39%
-INFO:utils.trainer:Epoch[66/200] Val Loss: 1.3770, Val Acc: 80.31%
-INFO:utils.trainer:No improvement for 6 epoch(s).
-Epochs:  33%|███▎      | 66/200 [04:45<09:37,  4.31s/it]INFO:utils.trainer:Epoch[67/200] Train Loss: 0.0247, Train Acc: 99.26%
-INFO:utils.trainer:Epoch[67/200] Val Loss: 1.3331, Val Acc: 83.08%
-INFO:utils.trainer:No improvement for 7 epoch(s).
-Epochs:  34%|███▎      | 67/200 [04:49<09:33,  4.31s/it]INFO:utils.trainer:Epoch[68/200] Train Loss: 0.0147, Train Acc: 99.52%
-INFO:utils.trainer:Epoch[68/200] Val Loss: 1.4694, Val Acc: 82.23%
-INFO:utils.trainer:No improvement for 8 epoch(s).
-Epochs:  34%|███▍      | 68/200 [04:54<09:29,  4.31s/it]INFO:utils.trainer:Epoch[69/200] Train Loss: 0.0122, Train Acc: 99.53%
-INFO:utils.trainer:Epoch[69/200] Val Loss: 1.3743, Val Acc: 82.46%
-INFO:utils.trainer:No improvement for 9 epoch(s).
-Epochs:  34%|███▍      | 69/200 [04:58<09:24,  4.31s/it]INFO:utils.trainer:Epoch[70/200] Train Loss: 0.0172, Train Acc: 99.35%
-INFO:utils.trainer:Epoch[70/200] Val Loss: 1.3868, Val Acc: 82.46%
-INFO:utils.trainer:No improvement for 10 epoch(s).
-Epochs:  35%|███▌      | 70/200 [05:02<09:20,  4.31s/it]INFO:utils.trainer:Epoch[71/200] Train Loss: 0.0098, Train Acc: 99.57%
-INFO:utils.trainer:Epoch[71/200] Val Loss: 1.4099, Val Acc: 80.58%
-INFO:utils.trainer:No improvement for 11 epoch(s).
-Epochs:  36%|███▌      | 71/200 [05:07<09:15,  4.30s/it]INFO:utils.trainer:Epoch[72/200] Train Loss: 0.0095, Train Acc: 99.65%
-INFO:utils.trainer:Epoch[72/200] Val Loss: 1.3474, Val Acc: 83.71%
-INFO:utils.trainer:No improvement for 12 epoch(s).
-Epochs:  36%|███▌      | 72/200 [05:11<09:11,  4.31s/it]INFO:utils.trainer:Epoch[73/200] Train Loss: 0.0114, Train Acc: 99.66%
-INFO:utils.trainer:Epoch[73/200] Val Loss: 1.3431, Val Acc: 84.64%
-INFO:utils.trainer:No improvement for 13 epoch(s).
-Epochs:  36%|███▋      | 73/200 [05:15<09:04,  4.29s/it]INFO:utils.trainer:Epoch[74/200] Train Loss: 0.0079, Train Acc: 99.65%
-INFO:utils.trainer:Epoch[74/200] Val Loss: 1.3297, Val Acc: 82.37%
-INFO:utils.trainer:No improvement for 14 epoch(s).
-Epochs:  37%|███▋      | 74/200 [05:19<08:59,  4.28s/it]INFO:utils.trainer:Epoch[75/200] Train Loss: 0.0067, Train Acc: 99.74%
-INFO:utils.trainer:Epoch[75/200] Val Loss: 1.3399, Val Acc: 82.99%
-INFO:utils.trainer:No improvement for 15 epoch(s).
-Epochs:  38%|███▊      | 75/200 [05:24<08:55,  4.28s/it]INFO:utils.trainer:Epoch[76/200] Train Loss: 0.0092, Train Acc: 99.66%
-INFO:utils.trainer:Epoch[76/200] Val Loss: 1.3286, Val Acc: 83.71%
-INFO:utils.trainer:No improvement for 16 epoch(s).
-Epochs:  38%|███▊      | 76/200 [05:28<08:51,  4.28s/it]INFO:utils.trainer:Epoch[77/200] Train Loss: 0.0092, Train Acc: 99.74%
-INFO:utils.trainer:Epoch[77/200] Val Loss: 1.4067, Val Acc: 84.02%
-INFO:utils.trainer:No improvement for 17 epoch(s).
-Epochs:  38%|███▊      | 77/200 [05:32<08:48,  4.30s/it]INFO:utils.trainer:Epoch[78/200] Train Loss: 0.0069, Train Acc: 99.70%
-INFO:utils.trainer:Epoch[78/200] Val Loss: 1.3095, Val Acc: 84.96%
-INFO:utils.trainer:No improvement for 18 epoch(s).
-Epochs:  39%|███▉      | 78/200 [05:37<08:43,  4.29s/it]INFO:utils.trainer:Epoch[79/200] Train Loss: 0.0057, Train Acc: 99.57%
-INFO:utils.trainer:Epoch[79/200] Val Loss: 1.4055, Val Acc: 84.24%
-INFO:utils.trainer:No improvement for 19 epoch(s).
-Epochs:  40%|███▉      | 79/200 [05:41<08:40,  4.30s/it]INFO:utils.trainer:Epoch[80/200] Train Loss: 0.0079, Train Acc: 99.66%
-INFO:utils.trainer:Epoch[80/200] Val Loss: 1.3377, Val Acc: 84.33%
-INFO:utils.trainer:No improvement for 20 epoch(s).
-Epochs:  40%|████      | 80/200 [05:45<08:36,  4.30s/it]INFO:utils.trainer:Epoch[81/200] Train Loss: 0.0047, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[81/200] Val Loss: 1.3059, Val Acc: 83.84%
-INFO:utils.trainer:No improvement for 21 epoch(s).
-Epochs:  40%|████      | 81/200 [05:50<08:30,  4.29s/it]INFO:utils.trainer:Epoch[82/200] Train Loss: 0.0039, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[82/200] Val Loss: 1.3027, Val Acc: 84.87%
-INFO:utils.trainer:No improvement for 22 epoch(s).
-Epochs:  41%|████      | 82/200 [05:54<08:27,  4.30s/it]INFO:utils.trainer:Epoch[83/200] Train Loss: 0.0049, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[83/200] Val Loss: 1.2722, Val Acc: 85.18%
-INFO:utils.trainer:No improvement for 23 epoch(s).
-Epochs:  42%|████▏     | 83/200 [05:58<08:22,  4.29s/it]INFO:utils.trainer:Epoch[84/200] Train Loss: 0.0045, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[84/200] Val Loss: 1.2737, Val Acc: 85.18%
-INFO:utils.trainer:No improvement for 24 epoch(s).
-Epochs:  42%|████▏     | 84/200 [06:02<08:19,  4.31s/it]INFO:utils.trainer:Epoch[85/200] Train Loss: 0.0051, Train Acc: 99.78%
-INFO:utils.trainer:Epoch[85/200] Val Loss: 1.2485, Val Acc: 85.18%
-INFO:utils.trainer:No improvement for 25 epoch(s).
-Epochs:  42%|████▎     | 85/200 [06:07<08:15,  4.31s/it]INFO:utils.trainer:Epoch[86/200] Train Loss: 0.0029, Train Acc: 99.96%
-INFO:utils.trainer:Epoch[86/200] Val Loss: 1.1794, Val Acc: 86.21%
-INFO:utils.trainer:No improvement for 26 epoch(s).
-Epochs:  43%|████▎     | 86/200 [06:11<08:09,  4.29s/it]INFO:utils.trainer:Epoch[87/200] Train Loss: 0.0038, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[87/200] Val Loss: 1.1665, Val Acc: 86.21%
-INFO:utils.trainer:No improvement for 27 epoch(s).
-Epochs:  44%|████▎     | 87/200 [06:15<08:06,  4.31s/it]INFO:utils.trainer:Epoch[88/200] Train Loss: 0.0031, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[88/200] Val Loss: 1.1643, Val Acc: 86.21%
-INFO:utils.trainer:No improvement for 28 epoch(s).
-Epochs:  44%|████▍     | 88/200 [06:20<08:02,  4.30s/it]INFO:utils.trainer:Epoch[89/200] Train Loss: 0.0032, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[89/200] Val Loss: 1.1712, Val Acc: 86.21%
-INFO:utils.trainer:No improvement for 29 epoch(s).
-Epochs:  44%|████▍     | 89/200 [06:24<07:56,  4.29s/it]INFO:utils.trainer:Epoch[90/200] Train Loss: 0.0045, Train Acc: 99.74%
-INFO:utils.trainer:Epoch[90/200] Val Loss: 1.2224, Val Acc: 84.87%
-INFO:utils.trainer:No improvement for 30 epoch(s).
-Epochs:  45%|████▌     | 90/200 [06:28<07:52,  4.29s/it]INFO:utils.trainer:Epoch[91/200] Train Loss: 0.0050, Train Acc: 99.74%
-INFO:utils.trainer:Epoch[91/200] Val Loss: 1.2477, Val Acc: 84.87%
-INFO:utils.trainer:No improvement for 31 epoch(s).
-Epochs:  46%|████▌     | 91/200 [06:33<07:48,  4.30s/it]INFO:utils.trainer:Epoch[92/200] Train Loss: 0.0033, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[92/200] Val Loss: 1.2597, Val Acc: 84.55%
-INFO:utils.trainer:No improvement for 32 epoch(s).
-Epochs:  46%|████▌     | 92/200 [06:37<07:44,  4.31s/it]INFO:utils.trainer:Epoch[93/200] Train Loss: 0.0030, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[93/200] Val Loss: 1.2574, Val Acc: 85.18%
-INFO:utils.trainer:No improvement for 33 epoch(s).
-Epochs:  46%|████▋     | 93/200 [06:41<07:40,  4.30s/it]INFO:utils.trainer:Epoch[94/200] Train Loss: 0.0038, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[94/200] Val Loss: 1.2497, Val Acc: 85.49%
-INFO:utils.trainer:No improvement for 34 epoch(s).
-Epochs:  47%|████▋     | 94/200 [06:45<07:35,  4.30s/it]INFO:utils.trainer:Epoch[95/200] Train Loss: 0.0047, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[95/200] Val Loss: 1.2451, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 35 epoch(s).
-Epochs:  48%|████▊     | 95/200 [06:50<07:32,  4.31s/it]INFO:utils.trainer:Epoch[96/200] Train Loss: 0.0026, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[96/200] Val Loss: 1.2481, Val Acc: 84.87%
-INFO:utils.trainer:No improvement for 36 epoch(s).
-Epochs:  48%|████▊     | 96/200 [06:54<07:28,  4.32s/it]INFO:utils.trainer:Epoch[97/200] Train Loss: 0.0025, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[97/200] Val Loss: 1.2454, Val Acc: 85.18%
-INFO:utils.trainer:No improvement for 37 epoch(s).
-Epochs:  48%|████▊     | 97/200 [06:58<07:23,  4.31s/it]INFO:utils.trainer:Epoch[98/200] Train Loss: 0.0038, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[98/200] Val Loss: 1.2412, Val Acc: 85.49%
-INFO:utils.trainer:No improvement for 38 epoch(s).
-Epochs:  49%|████▉     | 98/200 [07:03<07:18,  4.30s/it]INFO:utils.trainer:Epoch[99/200] Train Loss: 0.0052, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[99/200] Val Loss: 1.2374, Val Acc: 85.49%
-INFO:utils.trainer:No improvement for 39 epoch(s).
-Epochs:  50%|████▉     | 99/200 [07:07<07:13,  4.30s/it]INFO:utils.trainer:Epoch[100/200] Train Loss: 0.0032, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[100/200] Val Loss: 1.2317, Val Acc: 85.49%
-INFO:utils.trainer:No improvement for 40 epoch(s).
-Epochs:  50%|█████     | 100/200 [07:11<07:10,  4.31s/it]INFO:utils.trainer:Epoch[101/200] Train Loss: 0.0049, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[101/200] Val Loss: 1.2214, Val Acc: 85.80%
-INFO:utils.trainer:No improvement for 41 epoch(s).
-Epochs:  50%|█████     | 101/200 [07:16<07:03,  4.28s/it]INFO:utils.trainer:Epoch[102/200] Train Loss: 0.0042, Train Acc: 99.78%
-INFO:utils.trainer:Epoch[102/200] Val Loss: 1.2298, Val Acc: 86.83%
-INFO:utils.trainer:Validation accuracy improved (86.2054 -> 86.8304).
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/best_checkpoint.pth
-Epochs:  51%|█████     | 102/200 [07:20<07:02,  4.31s/it]INFO:utils.trainer:Epoch[103/200] Train Loss: 0.0025, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[103/200] Val Loss: 1.2325, Val Acc: 86.52%
-INFO:utils.trainer:No improvement for 1 epoch(s).
-Epochs:  52%|█████▏    | 103/200 [07:24<06:57,  4.30s/it]INFO:utils.trainer:Epoch[104/200] Train Loss: 0.0033, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[104/200] Val Loss: 1.2228, Val Acc: 86.52%
-INFO:utils.trainer:No improvement for 2 epoch(s).
-Epochs:  52%|█████▏    | 104/200 [07:28<06:51,  4.29s/it]INFO:utils.trainer:Epoch[105/200] Train Loss: 0.0034, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[105/200] Val Loss: 1.2149, Val Acc: 86.52%
-INFO:utils.trainer:No improvement for 3 epoch(s).
-Epochs:  52%|█████▎    | 105/200 [07:33<06:47,  4.29s/it]INFO:utils.trainer:Epoch[106/200] Train Loss: 0.0024, Train Acc: 99.96%
-INFO:utils.trainer:Epoch[106/200] Val Loss: 1.2137, Val Acc: 85.49%
-INFO:utils.trainer:No improvement for 4 epoch(s).
-Epochs:  53%|█████▎    | 106/200 [07:37<06:43,  4.30s/it]INFO:utils.trainer:Epoch[107/200] Train Loss: 0.0025, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[107/200] Val Loss: 1.2199, Val Acc: 86.21%
-INFO:utils.trainer:No improvement for 5 epoch(s).
-Epochs:  54%|█████▎    | 107/200 [07:41<06:40,  4.31s/it]INFO:utils.trainer:Epoch[108/200] Train Loss: 0.0023, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[108/200] Val Loss: 1.2269, Val Acc: 85.49%
-INFO:utils.trainer:No improvement for 6 epoch(s).
-Epochs:  54%|█████▍    | 108/200 [07:46<06:36,  4.31s/it]INFO:utils.trainer:Epoch[109/200] Train Loss: 0.0039, Train Acc: 99.78%
-INFO:utils.trainer:Epoch[109/200] Val Loss: 1.2339, Val Acc: 85.18%
-INFO:utils.trainer:No improvement for 7 epoch(s).
-Epochs:  55%|█████▍    | 109/200 [07:50<06:31,  4.30s/it]INFO:utils.trainer:Epoch[110/200] Train Loss: 0.0059, Train Acc: 99.74%
-INFO:utils.trainer:Epoch[110/200] Val Loss: 1.2375, Val Acc: 85.49%
-INFO:utils.trainer:No improvement for 8 epoch(s).
-Epochs:  55%|█████▌    | 110/200 [07:54<06:27,  4.30s/it]INFO:utils.trainer:Epoch[111/200] Train Loss: 0.0018, Train Acc: 99.96%
-INFO:utils.trainer:Epoch[111/200] Val Loss: 1.2387, Val Acc: 85.49%
-INFO:utils.trainer:No improvement for 9 epoch(s).
-Epochs:  56%|█████▌    | 111/200 [07:59<06:22,  4.30s/it]INFO:utils.trainer:Epoch[112/200] Train Loss: 0.0043, Train Acc: 99.74%
-INFO:utils.trainer:Epoch[112/200] Val Loss: 1.2401, Val Acc: 85.58%
-INFO:utils.trainer:No improvement for 10 epoch(s).
-Epochs:  56%|█████▌    | 112/200 [08:03<06:18,  4.30s/it]INFO:utils.trainer:Epoch[113/200] Train Loss: 0.0033, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[113/200] Val Loss: 1.2315, Val Acc: 84.64%
-INFO:utils.trainer:No improvement for 11 epoch(s).
-Epochs:  56%|█████▋    | 113/200 [08:07<06:14,  4.31s/it]INFO:utils.trainer:Epoch[114/200] Train Loss: 0.0035, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[114/200] Val Loss: 1.2313, Val Acc: 84.96%
-INFO:utils.trainer:No improvement for 12 epoch(s).
-Epochs:  57%|█████▋    | 114/200 [08:12<06:16,  4.38s/it]INFO:utils.trainer:Epoch[115/200] Train Loss: 0.0033, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[115/200] Val Loss: 1.2311, Val Acc: 85.27%
-INFO:utils.trainer:No improvement for 13 epoch(s).
-Epochs:  57%|█████▊    | 115/200 [08:16<06:11,  4.37s/it]INFO:utils.trainer:Epoch[116/200] Train Loss: 0.0032, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[116/200] Val Loss: 1.2283, Val Acc: 85.27%
-INFO:utils.trainer:No improvement for 14 epoch(s).
-Epochs:  58%|█████▊    | 116/200 [08:20<06:05,  4.35s/it]INFO:utils.trainer:Epoch[117/200] Train Loss: 0.0024, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[117/200] Val Loss: 1.2345, Val Acc: 85.27%
-INFO:utils.trainer:No improvement for 15 epoch(s).
-Epochs:  58%|█████▊    | 117/200 [08:25<05:59,  4.33s/it]INFO:utils.trainer:Epoch[118/200] Train Loss: 0.0022, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[118/200] Val Loss: 1.2366, Val Acc: 85.27%
-INFO:utils.trainer:No improvement for 16 epoch(s).
-Epochs:  59%|█████▉    | 118/200 [08:29<05:57,  4.36s/it]INFO:utils.trainer:Epoch[119/200] Train Loss: 0.0024, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[119/200] Val Loss: 1.2320, Val Acc: 85.58%
-INFO:utils.trainer:No improvement for 17 epoch(s).
-Epochs:  60%|█████▉    | 119/200 [08:33<05:53,  4.36s/it]INFO:utils.trainer:Epoch[120/200] Train Loss: 0.0015, Train Acc: 100.00%
-INFO:utils.trainer:Epoch[120/200] Val Loss: 1.2370, Val Acc: 85.27%
-INFO:utils.trainer:No improvement for 18 epoch(s).
-Epochs:  60%|██████    | 120/200 [08:38<05:48,  4.36s/it]INFO:utils.trainer:Epoch[121/200] Train Loss: 0.0020, Train Acc: 99.96%
-INFO:utils.trainer:Epoch[121/200] Val Loss: 1.2372, Val Acc: 85.27%
-INFO:utils.trainer:No improvement for 19 epoch(s).
-Epochs:  60%|██████    | 121/200 [08:42<05:43,  4.35s/it]INFO:utils.trainer:Epoch[122/200] Train Loss: 0.0038, Train Acc: 99.74%
-INFO:utils.trainer:Epoch[122/200] Val Loss: 1.2445, Val Acc: 85.27%
-INFO:utils.trainer:No improvement for 20 epoch(s).
-Epochs:  61%|██████    | 122/200 [08:46<05:38,  4.34s/it]INFO:utils.trainer:Epoch[123/200] Train Loss: 0.0029, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[123/200] Val Loss: 1.2500, Val Acc: 85.27%
-INFO:utils.trainer:No improvement for 21 epoch(s).
-Epochs:  62%|██████▏   | 123/200 [08:51<05:32,  4.32s/it]INFO:utils.trainer:Epoch[124/200] Train Loss: 0.0027, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[124/200] Val Loss: 1.2436, Val Acc: 85.27%
-INFO:utils.trainer:No improvement for 22 epoch(s).
-Epochs:  62%|██████▏   | 124/200 [08:55<05:33,  4.39s/it]INFO:utils.trainer:Epoch[125/200] Train Loss: 0.0035, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[125/200] Val Loss: 1.2407, Val Acc: 85.27%
-INFO:utils.trainer:No improvement for 23 epoch(s).
-Epochs:  62%|██████▎   | 125/200 [09:01<05:50,  4.67s/it]INFO:utils.trainer:Epoch[126/200] Train Loss: 0.0024, Train Acc: 99.96%
-INFO:utils.trainer:Epoch[126/200] Val Loss: 1.2316, Val Acc: 85.58%
-INFO:utils.trainer:No improvement for 24 epoch(s).
-Epochs:  63%|██████▎   | 126/200 [09:06<06:08,  4.98s/it]INFO:utils.trainer:Epoch[127/200] Train Loss: 0.0057, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[127/200] Val Loss: 1.2194, Val Acc: 85.58%
-INFO:utils.trainer:No improvement for 25 epoch(s).
-Epochs:  64%|██████▎   | 127/200 [09:12<06:13,  5.12s/it]INFO:utils.trainer:Epoch[128/200] Train Loss: 0.0024, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[128/200] Val Loss: 1.2082, Val Acc: 85.58%
-INFO:utils.trainer:No improvement for 26 epoch(s).
-Epochs:  64%|██████▍   | 128/200 [09:17<06:19,  5.27s/it]INFO:utils.trainer:Epoch[129/200] Train Loss: 0.0031, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[129/200] Val Loss: 1.2060, Val Acc: 85.58%
-INFO:utils.trainer:No improvement for 27 epoch(s).
-Epochs:  64%|██████▍   | 129/200 [09:23<06:22,  5.38s/it]INFO:utils.trainer:Epoch[130/200] Train Loss: 0.0033, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[130/200] Val Loss: 1.2043, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 28 epoch(s).
-Epochs:  65%|██████▌   | 130/200 [09:29<06:22,  5.46s/it]INFO:utils.trainer:Epoch[131/200] Train Loss: 0.0023, Train Acc: 100.00%
-INFO:utils.trainer:Epoch[131/200] Val Loss: 1.2070, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 29 epoch(s).
-Epochs:  66%|██████▌   | 131/200 [09:34<06:15,  5.44s/it]INFO:utils.trainer:Epoch[132/200] Train Loss: 0.0024, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[132/200] Val Loss: 1.2102, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 30 epoch(s).
-Epochs:  66%|██████▌   | 132/200 [09:40<06:11,  5.46s/it]INFO:utils.trainer:Epoch[133/200] Train Loss: 0.0029, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[133/200] Val Loss: 1.2096, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 31 epoch(s).
-Epochs:  66%|██████▋   | 133/200 [09:45<06:10,  5.52s/it]INFO:utils.trainer:Epoch[134/200] Train Loss: 0.0021, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[134/200] Val Loss: 1.2066, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 32 epoch(s).
-Epochs:  67%|██████▋   | 134/200 [09:51<06:03,  5.51s/it]INFO:utils.trainer:Epoch[135/200] Train Loss: 0.0026, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[135/200] Val Loss: 1.2055, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 33 epoch(s).
-Epochs:  68%|██████▊   | 135/200 [09:56<05:56,  5.49s/it]INFO:utils.trainer:Epoch[136/200] Train Loss: 0.0046, Train Acc: 99.78%
-INFO:utils.trainer:Epoch[136/200] Val Loss: 1.2060, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 34 epoch(s).
-Epochs:  68%|██████▊   | 136/200 [10:02<05:49,  5.46s/it]INFO:utils.trainer:Epoch[137/200] Train Loss: 0.0031, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[137/200] Val Loss: 1.2056, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 35 epoch(s).
-Epochs:  68%|██████▊   | 137/200 [10:07<05:44,  5.47s/it]INFO:utils.trainer:Epoch[138/200] Train Loss: 0.0028, Train Acc: 99.96%
-INFO:utils.trainer:Epoch[138/200] Val Loss: 1.2078, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 36 epoch(s).
-Epochs:  69%|██████▉   | 138/200 [10:13<05:42,  5.52s/it]INFO:utils.trainer:Epoch[139/200] Train Loss: 0.0046, Train Acc: 99.78%
-INFO:utils.trainer:Epoch[139/200] Val Loss: 1.2046, Val Acc: 85.18%
-INFO:utils.trainer:No improvement for 37 epoch(s).
-Epochs:  70%|██████▉   | 139/200 [10:18<05:40,  5.58s/it]INFO:utils.trainer:Epoch[140/200] Train Loss: 0.0027, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[140/200] Val Loss: 1.2037, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 38 epoch(s).
-Epochs:  70%|███████   | 140/200 [10:24<05:34,  5.57s/it]INFO:utils.trainer:Epoch[141/200] Train Loss: 0.0017, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[141/200] Val Loss: 1.2042, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 39 epoch(s).
-Epochs:  70%|███████   | 141/200 [10:29<05:26,  5.53s/it]INFO:utils.trainer:Epoch[142/200] Train Loss: 0.0031, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[142/200] Val Loss: 1.2072, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 40 epoch(s).
-Epochs:  71%|███████   | 142/200 [10:35<05:20,  5.53s/it]INFO:utils.trainer:Epoch[143/200] Train Loss: 0.0022, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[143/200] Val Loss: 1.2095, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 41 epoch(s).
-Epochs:  72%|███████▏  | 143/200 [10:40<05:14,  5.52s/it]INFO:utils.trainer:Epoch[144/200] Train Loss: 0.0028, Train Acc: 99.78%
-INFO:utils.trainer:Epoch[144/200] Val Loss: 1.2095, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 42 epoch(s).
-Epochs:  72%|███████▏  | 144/200 [10:46<05:07,  5.49s/it]INFO:utils.trainer:Epoch[145/200] Train Loss: 0.0030, Train Acc: 99.87%
-INFO:utils.trainer:Epoch[145/200] Val Loss: 1.2128, Val Acc: 85.18%
-INFO:utils.trainer:No improvement for 43 epoch(s).
-Epochs:  72%|███████▎  | 145/200 [10:51<05:02,  5.50s/it]INFO:utils.trainer:Epoch[146/200] Train Loss: 0.0043, Train Acc: 99.78%
-INFO:utils.trainer:Epoch[146/200] Val Loss: 1.2134, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 44 epoch(s).
-Epochs:  73%|███████▎  | 146/200 [10:57<04:56,  5.49s/it]INFO:utils.trainer:Epoch[147/200] Train Loss: 0.0031, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[147/200] Val Loss: 1.2137, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 45 epoch(s).
-Epochs:  74%|███████▎  | 147/200 [11:02<04:52,  5.52s/it]INFO:utils.trainer:Epoch[148/200] Train Loss: 0.0016, Train Acc: 99.96%
-INFO:utils.trainer:Epoch[148/200] Val Loss: 1.2136, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 46 epoch(s).
-Epochs:  74%|███████▍  | 148/200 [11:08<04:46,  5.50s/it]INFO:utils.trainer:Epoch[149/200] Train Loss: 0.0022, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[149/200] Val Loss: 1.2141, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 47 epoch(s).
-Epochs:  74%|███████▍  | 149/200 [11:13<04:39,  5.49s/it]INFO:utils.trainer:Epoch[150/200] Train Loss: 0.0047, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[150/200] Val Loss: 1.2165, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 48 epoch(s).
-Epochs:  75%|███████▌  | 150/200 [11:19<04:33,  5.46s/it]INFO:utils.trainer:Epoch[151/200] Train Loss: 0.0034, Train Acc: 99.91%
-INFO:utils.trainer:Epoch[151/200] Val Loss: 1.2157, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 49 epoch(s).
-Epochs:  76%|███████▌  | 151/200 [11:24<04:26,  5.44s/it]INFO:utils.trainer:Epoch[152/200] Train Loss: 0.0038, Train Acc: 99.83%
-INFO:utils.trainer:Epoch[152/200] Val Loss: 1.2152, Val Acc: 85.89%
-INFO:utils.trainer:No improvement for 50 epoch(s).
-INFO:utils.trainer:Early stopping triggered. No improvement in validation acc for 50 epochs.
-Epochs:  76%|███████▌  | 151/200 [11:30<03:43,  4.57s/it]
-INFO:utils.trainer:Saved checkpoint: /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/last_checkpoint.pth
-INFO:utils.trainer:Training finished. Best val acc: 86.8304 at epoch 102
-INFO:utils.trainer:Saved training plot to /media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small/seed_43/run_20260513-024119/loss_acc_plot.png

@@ -4,7 +4,7 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from collections import Counter
 
-cropped_data_path = Path(__file__).resolve().parents[2] / 'data' / 'tomato_only'
+cropped_data_path = Path(__file__).resolve().parents[2] / 'data' / 'tomato-plantdoc-mod'
 
 # Augmentation cho tập huấn luyện
 train_transform = A.Compose([

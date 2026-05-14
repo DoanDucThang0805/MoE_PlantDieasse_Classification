@@ -10,7 +10,7 @@ SRC_DIR = Path(__file__).resolve().parents[1]
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from models.moe.modelv2 import MoEModel
+from models.moe.model_adapt_onnx import MoEModel
 
 
 def load_checkpoint(model: torch.nn.Module, checkpoint_path: Path) -> None:

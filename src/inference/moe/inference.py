@@ -19,7 +19,7 @@ import pandas as pd
 import numpy as np
 
 from dataset.plantdoc_dataset import build_datasets
-from models.moe.modelv2 import MoEModel
+from models.moe.model import MoEModel
 
 # Configure logging
 logging.basicConfig(
