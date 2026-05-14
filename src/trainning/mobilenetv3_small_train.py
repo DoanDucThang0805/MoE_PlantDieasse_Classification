@@ -10,7 +10,6 @@ import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
 
 from utils.trainer import Trainer
-from dataset.plantdoc_dataset import train_dataset, validation_dataset, test_dataset
 from models.pretrained_model.mobilenetv3_small import model
 
 
@@ -29,10 +28,16 @@ def set_seed(seed=42):
 parse = ArgumentParser()
 parse.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
 args = parse.parse_args()
+
+# Set seed BEFORE building datasets to ensure reproducible splits
 set_seed(args.seed)
 
+# Import and build datasets AFTER seed is set
+from dataset.plantdoc_datasetv2 import build_datasets
 
-BATCH_SIZE = 32
+train_dataset, validation_dataset, test_dataset = build_datasets(use_context=False)
+
+BATCH_SIZE = 64
 
 generator = torch.Generator()
 generator.manual_seed(args.seed)
@@ -78,7 +83,7 @@ trainer = Trainer(
         output_dir
         / "checkpoints"
         / "plantdoc"
-        / "pretrain_weight"
+        / "pretrain_models"
         / "mobilenetv3_small"
         / f"seed_{args.seed}"
     )

@@ -1,495 +1,401 @@
 """
-MoE Model Inference and Evaluation Module
-========================================
+MoE Model Inference and Evaluation
 
-This module performs inference on a test dataset using a trained MoE model
-and generates comprehensive evaluation reports including classification metrics,
-confusion matrices, and performance visualizations.
-
-Features:
-    - Load trained model checkpoints
-    - Batch inference on test data
-    - Generate classification reports
-    - Visualize confusion matrices
-    - Create performance heatmaps
-    - Export detailed results to reports directory
+Performs inference and comprehensive evaluation of trained MoE models on test datasets.
+Generates classification reports, confusion matrices, and performance visualizations.
 """
 
 import logging
 from pathlib import Path
-from typing import List, Tuple, Dict, Any
-from argparse import ArgumentParser
+from typing import Tuple, Dict, List
+import argparse
+
 import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+import numpy as np
 
-from dataset.plantdoc_dataset import test_dataset
-from models.moe.model import MoEModel
+from dataset.plantdoc_datasetv2 import build_datasets
+from models.moe.linear_model import MoEModel
 
-
-# ============================================================================
-# Logging Configuration
-# ============================================================================
-
-logger = logging.getLogger(__name__)
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-# ============================================================================
-# Constants
-# ============================================================================
+logger = logging.getLogger(__name__)
 
-# Model and checkpoint information
-MODEL_NAME = 'mobilenetv3large_moe'
-RUN_TIME = 'run_20260320-155951'  # Timestamp of training run
-DATASET_NAME = 'plantdoc'
-
-# Data loading parameters
-BATCH_SIZE = 32
-SHUFFLE_TEST = True
-
-# Visualization parameters
-CONFUSION_MATRIX_FIGSIZE = (12, 10)
-CLASSIFICATION_REPORT_FIGSIZE = (10, 6)
-REPORT_DPI = 300
-PLOT_FORMAT = 'png'
-
-# Device configuration
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-logger.info(f"Using device: {DEVICE}")
 
 # ============================================================================
-# CLI and Path Configuration
+# Configuration
 # ============================================================================
 
-def get_args() -> Any:
-    parser = ArgumentParser(
-        description="Run MoE inference for a saved checkpoint and generate evaluation reports."
+class Config:
+    """Inference configuration management."""
+    
+    # Model parameters
+    model_name: str = 'mobilenetv3large_moe'
+    type_model: str = 'MoE'
+    run_time: str = 'run_20260402-170406'
+    dataset_name: str = 'plantdoc'
+    seed: int = 42
+    
+    # Model hyperparameters (from checkpoint)
+    num_classes: int = 8
+    num_experts: int = 8
+    context_dim: int = 6
+    top_k: int = 2
+    temperature: float = 1.0
+    router_mode: str = 'context_aware'
+    use_context: bool = True
+    
+    # Data & visualization
+    batch_size: int = 32
+    shuffle_test: bool = True
+    confusion_matrix_figsize: Tuple[int, int] = (12, 10)
+    classification_report_figsize: Tuple[int, int] = (10, 6)
+    report_dpi: int = 300
+    
+    # Device
+    device: str = "cuda" if torch.cuda.is_available() else "cpu"
+
+    @classmethod
+    def update_from_args(cls, args: argparse.Namespace) -> None:
+        """Update configuration from CLI arguments."""
+        for key, value in vars(args).items():
+            if hasattr(cls, key) and value is not None:
+                setattr(cls, key, value)
+        
+        logger.info(f"Config: model={cls.model_name}, experts={cls.num_experts}, "
+                   f"top_k={cls.top_k}, device={cls.device}")
+
+    @classmethod
+    def get_checkpoint_path(cls) -> Path:
+        """Get checkpoint path."""
+        path = (
+            Path(__file__).resolve().parents[3] / 'checkpoints' / cls.dataset_name / 
+            cls.type_model / cls.model_name / f'{cls.num_experts}_experts' / 
+            f'top_{cls.top_k}' / f'seed_{cls.seed}' / cls.run_time / 'best_checkpoint.pth'
+        )
+        if not path.exists():
+            raise FileNotFoundError(f"Checkpoint not found: {path}")
+        return path
+
+    @classmethod
+    def get_report_dir(cls) -> Path:
+        """Get or create report directory."""
+        path = (
+            Path(__file__).resolve().parents[3] / 'reports' / cls.dataset_name / 
+            cls.type_model / cls.model_name / f'{cls.num_experts}_experts' / 
+            f'top_{cls.top_k}' / f'seed_{cls.seed}' / cls.run_time
+        )
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+
+# ============================================================================
+# Argument Parser
+# ============================================================================
+
+def parse_arguments() -> argparse.Namespace:
+    """Parse command-line arguments for inference."""
+    parser = argparse.ArgumentParser(
+        description="Evaluate trained MoE model on test dataset",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python context_aware_moe_inference.py --run_time run_20260320-155951
+  python context_aware_moe_inference.py --model_name mobilenetv3small_moe --run_time run_20260317-224514
+        """
     )
-    parser.add_argument(
-        "--model-name",
-        "--modelname",
-        dest="model_name",
-        type=str,
-        default=MODEL_NAME,
-        help="Model directory name under checkpoints/MoE and reports/MoE."
-    )
-    parser.add_argument(
-        '--type-model',
-        dest="type_model",
-        type=str,
-        default="MoE",
-        help='Loại mô hình để huấn luyện (ví dụ: MoE, pretrauined, v.v.)'
-    )
-    parser.add_argument(
-        "--run-time",
-        "--runtime",
-        dest="run_time",
-        type=str,
-        default=RUN_TIME,
-        help="Training run timestamp folder name."
-    )
-    parser.add_argument(
-        "--dataset-name",
-        "--datasetname",
-        dest="dataset_name",
-        type=str,
-        default=DATASET_NAME,
-        help="Dataset name used under checkpoints and reports directories."
-    )
-    parser.add_argument(
-        "--topk",
-        dest="top_k",
-        type=int,
-        default=None,
-        help="Number of top experts to load for the MoE model."
-    )
-    parser.add_argument(
-        "--numexpert",
-        "--num-expert",
-        dest="num_experts",
-        type=int,
-        default=None,
-        help="Number of experts used by the MoE model."
-    )
+    
+    parser.add_argument("--model_name", type=str, help="Model architecture name")
+    parser.add_argument("--type_model", type=str, help="Model type")
+    parser.add_argument("--run_time", type=str, required=True, help="Training run timestamp (REQUIRED)")
+    parser.add_argument("--dataset_name", type=str, help="Dataset name")
+    parser.add_argument("--num_experts", type=int, help="Number of experts")
+    parser.add_argument("--top_k", type=int, help="Number of top experts to select")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed (default: 42)")
+    parser.add_argument("--router_mode", type=str, choices=["context_aware", "noisy"], 
+                       help="Router mode for MoE gating")
+    parser.add_argument("--use_context", action="store_true", default=True, 
+                       help="Use context features (default: True)")
+    parser.add_argument("--no_context", action="store_false", dest="use_context", 
+                       help="Disable context features")
+    
     return parser.parse_args()
 
 
-def get_checkpoint_path(
-    dataset_name: str,
-    model_name: str,
-    type_model: str,
-    run_time: str,
-    num_experts: int = None,
-    top_k: int = None
-) -> Path:
-    """
-    Get the checkpoint file path based on configuration.
-    
-    Args:
-        dataset_name: Dataset name under checkpoints.
-        model_name: Model folder name under MoE.
-        run_time: Training run timestamp folder name.
-        num_experts: Number of experts (optional).
-        top_k: Number of top experts (optional).
+# ============================================================================
+# Data Loading & Utilities
+# ============================================================================
+
+def setup_test_dataloader(use_context: bool) -> Tuple[DataLoader, object]:
+    """Setup test data loader."""
+    try:
+        logger.info("Loading test dataset...")
+        _, _, test_dataset = build_datasets(use_context=use_context)
         
-    Returns:
-        Path to the checkpoint file
-    """
-    checkpoint_base = (
-        Path(__file__).resolve().parents[3] / 'checkpoints' / dataset_name / type_model / model_name
-    )
-
-    if num_experts is not None and top_k is not None:
-        return checkpoint_base / f"{num_experts}_experts" / f"top_{top_k}" / run_time / 'best_checkpoint.pth'
-
-    if not checkpoint_base.exists():
-        raise FileNotFoundError(
-            f"Checkpoint directory does not exist: {checkpoint_base}"
+        test_loader = DataLoader(
+            test_dataset,
+            batch_size=Config.batch_size,
+            shuffle=Config.shuffle_test,
+            num_workers=0,
+            pin_memory='cuda' in Config.device
         )
-
-    for expert_dir in sorted(checkpoint_base.iterdir()):
-        if not expert_dir.is_dir() or not expert_dir.name.endswith("_experts"):
-            continue
-        if num_experts is not None and expert_dir.name != f"{num_experts}_experts":
-            continue
-        for top_dir in sorted(expert_dir.iterdir()):
-            if not top_dir.is_dir() or not top_dir.name.startswith("top_"):
-                continue
-            if top_k is not None and top_dir.name != f"top_{top_k}":
-                continue
-            candidate = top_dir / run_time / 'best_checkpoint.pth'
-            if candidate.exists():
-                return candidate
-
-    raise FileNotFoundError(
-        f"No matching checkpoint found in {checkpoint_base} for num_experts={num_experts}, top_k={top_k}, run_time={run_time}"
-    )
+        
+        logger.info(f"Dataset loaded: {len(test_dataset)} samples")
+        return test_loader, test_dataset
+    except Exception as e:
+        logger.error(f"Failed to load dataset: {e}")
+        raise RuntimeError(f"Dataset loading failed: {e}") from e
 
 
-def get_report_dir(
-    dataset_name: str,
-    model_name: str,
-    type_model: str,
-    run_time: str,
-    num_experts: int,
-    top_k: int
-) -> Path:
-    """Get the report directory path based on model configuration."""
-    return (
-        Path(__file__).resolve().parents[3] / 'reports' / dataset_name / type_model / 
-        model_name / f"{num_experts}_experts" / f"top_{top_k}" / run_time
-    )
+def get_class_names(test_dataset: object) -> List[str]:
+    """Extract class names from dataset."""
+    try:
+        class_names = [test_dataset.idx_to_class[i] for i in range(len(test_dataset.idx_to_class))]
+        logger.info(f"Found {len(class_names)} disease classes")
+        return class_names
+    except (AttributeError, KeyError) as e:
+        logger.error(f"Failed to extract class names: {e}")
+        raise
 
 
 # ============================================================================
-# Helper Functions
+# Model Loading
 # ============================================================================
 
-def load_checkpoint(checkpoint_path: Path) -> Tuple[Dict[str, Any], int, int, int]:
-    """
-    Load model checkpoint and extract model configuration.
-    
-    Args:
-        checkpoint_path: Path to the checkpoint file
+def create_model(num_classes: int, num_experts: int, top_k: int, context_dim: int, 
+                router_mode: str, temperature: float) -> MoEModel:
+    """Create MoE model instance."""
+    try:
+        logger.info(f"Creating MoE model: experts={num_experts}, top_k={top_k}, mode={router_mode}, temp={temperature}")
+        model = MoEModel(
+            context_dim=context_dim,
+            num_classes=num_classes,
+            num_experts=num_experts,
+            top_k=top_k,
+            router_mode=router_mode,
+            temperature=temperature
+        )
+        model = model.to(Config.device)
+        logger.info(f"Model created on {Config.device}")
+        return model
+    except Exception as e:
+        logger.error(f"Failed to create model: {e}")
+        raise RuntimeError(f"Model creation failed: {e}") from e
+
+
+def extract_checkpoint_metadata(checkpoint_path: Path) -> Dict:
+    """Extract model hyperparameters from checkpoint."""
+    try:
+        logger.info(f"Loading checkpoint metadata...")
+        checkpoint = torch.load(checkpoint_path, map_location=Config.device)
         
-    Returns:
-        Tuple of (state_dict, num_classes, num_experts, top_k)
+        metadata = {
+            'num_classes': Config.num_classes,
+            'num_experts': Config.num_experts,
+            'context_dim': Config.context_dim,
+            'top_k': Config.top_k,
+            'router_mode': Config.router_mode,
+            'temperature': Config.temperature
+        }
         
-    Raises:
-        FileNotFoundError: If checkpoint file doesn't exist
-        KeyError: If required keys are missing in checkpoint
-    """
-    logger.info(f"Loading checkpoint from: {checkpoint_path}")
-    
-    if not checkpoint_path.exists():
-        raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
-    
-    checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
-    
-    # Support different state_dict key formats
-    if "model_state_dict" in checkpoint:
-        state_dict = checkpoint["model_state_dict"]
-    elif "state_dict" in checkpoint:
-        state_dict = checkpoint["state_dict"]
-    else:
-        state_dict = checkpoint
-    
-    top_k = checkpoint.get("top_k")
-    num_experts = checkpoint.get("num_experts")
-    num_classes = checkpoint.get("num_classes")
-    
-    logger.info(
-        f"Checkpoint loaded: num_classes={num_classes}, "
-        f"num_experts={num_experts}, top_k={top_k}"
-    )
-    
-    return state_dict, num_classes, num_experts, top_k
-
-
-def initialize_model(
-    state_dict: Dict[str, Any],
-    num_classes: int,
-    num_experts: int,
-    top_k: int
-) -> torch.nn.Module:
-    """
-    Initialize and load the MoE model.
-    
-    Args:
-        state_dict: Model state dictionary
-        num_classes: Number of output classes
-        num_experts: Number of expert networks
-        top_k: Number of top experts to select
+        # Override with checkpoint values if available
+        if isinstance(checkpoint, dict):
+            for key in ['num_classes', 'num_experts', 'context_dim', 'top_k', 'router_mode', 'temperature']:
+                if key in checkpoint:
+                    metadata[key] = checkpoint[key]
         
-    Returns:
-        Loaded model on the configured device in eval mode
-    """
-    model = MoEModel(
-        num_classes=num_classes,
-        num_experts=num_experts,
-        top_k=top_k
-    )
-    model.load_state_dict(state_dict)
-    model = model.to(DEVICE)
-    model.eval()
-    
-    logger.info("Model initialized and loaded successfully")
-    return model
+        logger.info(f"Checkpoint: classes={metadata['num_classes']}, experts={metadata['num_experts']}, "
+                   f"context_dim={metadata['context_dim']}, top_k={metadata['top_k']}, "
+                   f"router_mode={metadata['router_mode']}, temperature={metadata['temperature']}")
+        return metadata
+    except Exception as e:
+        logger.error(f"Failed to extract checkpoint metadata: {e}")
+        raise RuntimeError(f"Checkpoint metadata extraction failed: {e}") from e
 
 
-def create_test_dataloader() -> DataLoader:
-    """
-    Create a dataloader for the test dataset.
-    
-    Returns:
-        DataLoader configured for test inference
-    """
-    logger.info(f"Creating test dataloader with batch_size={BATCH_SIZE}")
-    return DataLoader(
-        test_dataset,
-        batch_size=BATCH_SIZE,
-        shuffle=SHUFFLE_TEST
-    )
-
-
-def perform_inference(
-    model: torch.nn.Module,
-    test_loader: DataLoader
-) -> Tuple[List, List]:
-    """
-    Perform inference on test dataset.
-    
-    Args:
-        model: Trained MoE model
-        test_loader: DataLoader with test samples
+def load_checkpoint(model: MoEModel, checkpoint_path: Path) -> MoEModel:
+    """Load model weights from checkpoint."""
+    try:
+        logger.info(f"Loading model weights...")
+        checkpoint = torch.load(checkpoint_path, map_location=Config.device)
         
-    Returns:
-        Tuple of (all_predictions, all_labels) as lists
-    """
-    all_preds = []
-    all_labels = []
-    
-    logger.info("Starting inference on test dataset...")
-    
-    with torch.inference_mode(True):
-        for batch_idx, (images, labels) in enumerate(test_loader):
-            images, labels = images.to(DEVICE), labels.to(DEVICE)
-            
-            # Model returns: logits, auxiliary_loss, expert_assignment
-            logits, _, _ = model(images)
-            
-            # Compute predictions from logits
-            probs = torch.softmax(logits, dim=1)
-            preds = torch.argmax(probs, dim=1)
-            
-            all_labels.extend(labels.cpu().numpy())
-            all_preds.extend(preds.cpu().numpy())
-            
-            if (batch_idx + 1) % 10 == 0:
-                logger.info(f"Processed {batch_idx + 1} batches")
-    
-    logger.info(f"Inference complete. Total samples processed: {len(all_labels)}")
-    return all_preds, all_labels
-
-
-def save_plot(
-    filepath: Path,
-    filename: str,
-    description: str = "plot"
-) -> None:
-    """
-    Save and display current matplotlib figure.
-    
-    Args:
-        filepath: Directory where file will be saved
-        filename: Name of the output file (without extension)
-        description: Human-readable description of the plot
-    """
-    output_path = filepath / f"{filename}.{PLOT_FORMAT}"
-    plt.savefig(output_path, dpi=REPORT_DPI, bbox_inches="tight")
-    logger.info(f"Saved {description}: {output_path}")
-    plt.show()
-
-
-def visualize_confusion_matrix(
-    labels: List,
-    predictions: List,
-    target_names: List[str],
-    report_dir: Path
-) -> None:
-    """
-    Create and save confusion matrix visualization.
-    
-    Args:
-        labels: True labels
-        predictions: Predicted labels
-        target_names: Names of target classes
-        report_dir: Directory to save the visualization
-    """
-    logger.info("Generating confusion matrix...")
-    
-    cm = confusion_matrix(labels, predictions)
-    
-    plt.figure(figsize=CONFUSION_MATRIX_FIGSIZE)
-    sns.heatmap(
-        cm,
-        annot=True,
-        fmt="d",
-        cmap="Blues",
-        xticklabels=target_names,
-        yticklabels=target_names
-    )
-    
-    plt.xlabel("Predicted Label", fontsize=12)
-    plt.ylabel("True Label", fontsize=12)
-    plt.title("Confusion Matrix - Plant Disease Classification", fontsize=14)
-    plt.xticks(rotation=45, ha="right")
-    plt.yticks(rotation=0)
-    plt.tight_layout()
-    
-    save_plot(report_dir, "confusion_matrix", "confusion matrix")
-
-
-def visualize_classification_report(
-    labels: List,
-    predictions: List,
-    target_names: List[str],
-    report_dir: Path
-) -> None:
-    """
-    Create and save classification report heatmap.
-    
-    Args:
-        labels: True labels
-        predictions: Predicted labels
-        target_names: Names of target classes
-        report_dir: Directory to save the visualization
-    """
-    logger.info("Generating classification report heatmap...")
-    
-    report_dict = classification_report(
-        labels,
-        predictions,
-        target_names=target_names,
-        output_dict=True
-    )
-    
-    df = pd.DataFrame(report_dict).transpose()
-    
-    plt.figure(figsize=CLASSIFICATION_REPORT_FIGSIZE)
-    sns.heatmap(
-        df.iloc[:-1, :-1],
-        annot=True,
-        cmap="Blues",
-        fmt=".2f",
-        cbar_kws={"label": "Value"}
-    )
-    
-    plt.title("Classification Report (Precision / Recall / F1-score)", fontsize=12)
-    plt.xlabel("Evaluation Metrics")
-    plt.ylabel("Disease Classes")
-    plt.tight_layout()
-    
-    save_plot(report_dir, "classification_report_heatmap", "classification report")
+        # Handle multiple checkpoint formats
+        if isinstance(checkpoint, dict):
+            state_dict = checkpoint.get("model_state_dict") or checkpoint.get("state_dict") or checkpoint
+        else:
+            state_dict = checkpoint
+        
+        model.load_state_dict(state_dict)
+        model = model.to(Config.device)
+        model.eval()
+        logger.info("Model weights loaded and set to eval mode")
+        return model
+    except Exception as e:
+        logger.error(f"Failed to load checkpoint: {e}")
+        raise RuntimeError(f"Checkpoint loading failed: {e}") from e
 
 
 # ============================================================================
-# Main Execution
+# Inference
 # ============================================================================
 
-def main() -> None:
-    """
-    Main inference pipeline: load model, perform inference, generate reports.
-    """
-    logger.info("=" * 80)
-    logger.info("Starting MoE Model Inference and Evaluation")
-    logger.info("=" * 80)
+def run_inference(model: MoEModel, test_loader: DataLoader, use_context: bool) -> Tuple[np.ndarray, np.ndarray]:
+    """Perform inference on test dataset."""
+    all_preds, all_labels = [], []
     
     try:
-        args = get_args()
-        logger.info(
-            f"Inference configuration: dataset_name={args.dataset_name}, model_name={args.model_name}, type_model={args.type_model}, "
-            f"run_time={args.run_time}, num_experts={args.num_experts}, top_k={args.top_k}"
-        )
-
-        # Load checkpoint and extract configuration
-        checkpoint_path = get_checkpoint_path(
-            dataset_name=args.dataset_name,
-            model_name=args.model_name,
-            type_model=args.type_model,
-            run_time=args.run_time,
-            num_experts=args.num_experts,
-            top_k=args.top_k
-        )
-        state_dict, num_classes, num_experts, top_k = load_checkpoint(checkpoint_path)
+        logger.info("Running inference...")
+        with torch.inference_mode():
+            for batch_idx, batch in enumerate(test_loader):
+                if use_context:
+                    images, labels, context = batch
+                    images, labels, context = images.to(Config.device), labels.to(Config.device), context.to(Config.device) if context is not None else None
+                    logits, _, _ = model(images, context)
+                else:
+                    images, labels, _ = batch
+                    images, labels = images.to(Config.device), labels.to(Config.device)
+                    logits, _, _ = model(images)
+                
+                preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
+                all_labels.extend(labels.cpu().numpy())
+                all_preds.extend(preds.cpu().numpy())
+                
+                if (batch_idx + 1) % 10 == 0:
+                    logger.debug(f"Processed {(batch_idx + 1) * Config.batch_size} samples")
         
-        # Initialize model
-        model = initialize_model(state_dict, num_classes, num_experts, top_k)
-        
-        # Load test data
-        test_loader = create_test_dataloader()
-        
-        # Perform inference
-        all_preds, all_labels = perform_inference(model, test_loader)
-        
-        # Get class names
-        target_names = [test_dataset.idx_to_class[i] for i in range(len(test_dataset.idx_to_class))]
-        logger.info(f"Total classes: {len(target_names)}")
-        
-        # Create and setup report directory
-        report_dir = get_report_dir(
-            dataset_name=args.dataset_name,
-            model_name=args.model_name,
-            type_model=args.type_model,
-            run_time=args.run_time,
-            num_experts=num_experts,
-            top_k=top_k
-        )
-        report_dir.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Report directory: {report_dir}")
-        
-        # Print classification report to console
-        logger.info("\n" + "=" * 80)
-        logger.info("CLASSIFICATION REPORT")
-        logger.info("=" * 80)
-        report_text = classification_report(all_labels, all_preds, target_names=target_names)
-        logger.info("\n" + report_text)
-        
-        # Generate visualizations
-        visualize_confusion_matrix(all_labels, all_preds, target_names, report_dir)
-        visualize_classification_report(all_labels, all_preds, target_names, report_dir)
-        
-        logger.info("=" * 80)
-        logger.info("Model Evaluation Complete")
-        logger.info("=" * 80)
-        
+        all_preds = np.array(all_preds)
+        all_labels = np.array(all_labels)
+        acc = (all_preds == all_labels).mean()
+        logger.info(f"Inference completed: {len(all_labels)} samples, accuracy={acc:.4f}")
+        return all_preds, all_labels
     except Exception as e:
-        logger.error(f"Error during inference: {e}", exc_info=True)
+        logger.error(f"Inference failed: {e}")
+        raise RuntimeError(f"Inference failed: {e}") from e
+
+
+# ============================================================================
+# Reporting
+# ============================================================================
+
+def generate_classification_report(all_labels: np.ndarray, all_preds: np.ndarray, 
+                                  target_names: List[str]) -> Dict:
+    """Generate classification report."""
+    logger.info("Generating classification report...")
+    report_text = classification_report(all_labels, all_preds, target_names=target_names)
+    print("\n" + "=" * 80)
+    print("CLASSIFICATION REPORT")
+    print("=" * 80)
+    print(report_text)
+    return classification_report(all_labels, all_preds, target_names=target_names, output_dict=True)
+
+
+def save_confusion_matrix(all_labels: np.ndarray, all_preds: np.ndarray, 
+                         target_names: List[str], report_dir: Path) -> None:
+    """Generate and save confusion matrix visualization."""
+    try:
+        logger.info("Saving confusion matrix...")
+        cm = confusion_matrix(all_labels, all_preds)
+        
+        plt.figure(figsize=Config.confusion_matrix_figsize)
+        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=target_names, yticklabels=target_names)
+        plt.xlabel("Predicted Label", fontsize=12)
+        plt.ylabel("True Label", fontsize=12)
+        plt.title("Confusion Matrix - Plant Disease Classification", fontsize=14)
+        plt.xticks(rotation=45, ha="right")
+        plt.yticks(rotation=0)
+        plt.tight_layout()
+        
+        output_path = report_dir / "confusion_matrix.png"
+        plt.savefig(output_path, dpi=Config.report_dpi, bbox_inches="tight")
+        logger.info(f"✓ Confusion matrix saved: {output_path}")
+        plt.close()
+    except Exception as e:
+        logger.error(f"Failed to save confusion matrix: {e}")
+        raise RuntimeError(f"Confusion matrix visualization failed: {e}") from e
+
+
+def save_classification_report_heatmap(report_dict: Dict, target_names: List[str], report_dir: Path) -> None:
+    """Generate and save classification report heatmap."""
+    try:
+        logger.info("Saving classification report heatmap...")
+        df = pd.DataFrame(report_dict).transpose()
+        
+        plt.figure(figsize=Config.classification_report_figsize)
+        sns.heatmap(df.iloc[:-1, :-1], annot=True, cmap="Blues", fmt=".2f", cbar_kws={"label": "Score"})
+        plt.title("Classification Report (Precision / Recall / F1-score)", fontsize=12)
+        plt.xlabel("Evaluation Metric")
+        plt.ylabel("Disease Class")
+        plt.tight_layout()
+        
+        output_path = report_dir / "classification_report_heatmap.png"
+        plt.savefig(output_path, dpi=Config.report_dpi, bbox_inches="tight")
+        logger.info(f"✓ Classification report saved: {output_path}")
+        plt.close()
+    except Exception as e:
+        logger.error(f"Failed to save classification report heatmap: {e}")
+        raise RuntimeError(f"Classification report visualization failed: {e}") from e
+
+
+# ============================================================================
+# Main
+# ============================================================================
+
+def main():
+    """Main inference pipeline orchestration."""
+    try:
+        logger.info("=" * 80)
+        logger.info("Starting MoE Model Evaluation")
+        logger.info("=" * 80)
+        
+        # Parse and configure
+        args = parse_arguments()
+        Config.update_from_args(args)
+        
+        # Load data
+        test_loader, test_dataset = setup_test_dataloader(args.use_context)
+        target_names = get_class_names(test_dataset)
+        
+        # Load checkpoint & extract metadata
+        checkpoint_path = Config.get_checkpoint_path()
+        metadata = extract_checkpoint_metadata(checkpoint_path)
+        Config.num_classes = metadata['num_classes']
+        Config.num_experts = metadata['num_experts']
+        Config.context_dim = metadata['context_dim']
+        Config.top_k = metadata['top_k']
+        Config.router_mode = metadata['router_mode']
+        Config.temperature = metadata['temperature']
+        
+        # Create and load model
+        model = create_model(
+            num_classes=metadata['num_classes'],
+            num_experts=metadata['num_experts'],
+            top_k=metadata['top_k'],
+            context_dim=metadata['context_dim'],
+            router_mode=metadata['router_mode'],
+            temperature=metadata['temperature']
+        )
+        model = load_checkpoint(model, checkpoint_path)
+        
+        # Inference & reporting
+        all_preds, all_labels = run_inference(model, test_loader, args.use_context)
+        report_dict = generate_classification_report(all_labels, all_preds, target_names)
+        report_dir = Config.get_report_dir()
+        save_confusion_matrix(all_labels, all_preds, target_names, report_dir)
+        save_classification_report_heatmap(report_dict, target_names, report_dir)
+        
+        logger.info("=" * 80)
+        logger.info(f"Evaluation completed successfully")
+        logger.info(f"Reports saved to: {report_dir}")
+        logger.info("=" * 80)
+    except Exception as e:
+        logger.critical(f"Fatal error: {e}", exc_info=True)
         raise
 
 

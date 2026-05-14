@@ -11,13 +11,14 @@ import warnings
 import argparse
 
 import torch
+from torchinfo import summary
 from torch.utils.data import DataLoader
 import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
 
 from utils.moe_trainer import MoETrainer
-from dataset.plantdoc_dataset import train_dataset, validation_dataset
-from models.moe.model import MoEModel
+from dataset.plantdoc_datasetv2 import build_datasets
+from models.moe.linear_model import MoEModel
 from loss.loss_fn import MoELoss
 
 warnings.filterwarnings("ignore")
@@ -47,13 +48,13 @@ BATCH_SIZE = 32
 SHUFFLE_TRAIN = True
 SHUFFLE_VAL = False
 
-NUM_EXPERTS = 2
+NUM_EXPERTS = 4
 TOP_K = 2
 
 NUM_EPOCHS = 300
 LEARNING_RATE = 0.001
 WEIGHT_DECAY = 0.001
-MOE_LOSS_ALPHA = 0.05
+MOE_LOSS_ALPHA = 0.01
 
 
 # =============================================================================
@@ -124,6 +125,42 @@ def get_args():
         help="MoE auxiliary loss weight"
     )
 
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=1.0,
+        help="Temperature for gating softmax"
+    )
+
+    parser.add_argument(
+        "--router_mode",
+        type=str,
+        default="context_aware",
+        choices=["noisy", "context_aware"],
+        help="Router type for expert selection"
+    )
+
+    parser.add_argument(
+        '--context_dim',
+        type=int,
+        default=6,
+        help="Dimension of context features (only for context-aware gating)"
+    )
+
+    parser.add_argument(
+        "--use_context",
+        action="store_true",
+        help="Whether to use context features for gating"
+    )
+
+    parser.add_argument(
+        "--no_context",
+        dest="use_context",
+        action="store_false",
+        help="Whether to use context features for gating"
+    )
+
+    parser.set_defaults(use_context=True)
     return parser.parse_args()
 
 
@@ -134,6 +171,10 @@ def get_args():
 def main():
 
     args = get_args()
+    print("\n===== Training Configuration =====")
+    for k, v in vars(args).items():
+        print(f"{k:<15}: {v}")
+    print("==================================\n")
 
     # -------------------------------------------------------------------------
     # Seed
@@ -148,7 +189,7 @@ def main():
     # -------------------------------------------------------------------------
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-
+    print(f"Using device: {device}")
     # -------------------------------------------------------------------------
     # Output Directory
     # -------------------------------------------------------------------------
@@ -169,7 +210,9 @@ def main():
     # -------------------------------------------------------------------------
     # DataLoader (seeded)
     # -------------------------------------------------------------------------
-
+    train_dataset, validation_dataset, _ = build_datasets(use_context=args.use_context)
+    g = torch.Generator()
+    g.manual_seed(args.seed)
     train_loader = DataLoader(
         train_dataset,
         batch_size=args.batch_size,
@@ -189,6 +232,7 @@ def main():
 
     labels = train_dataset.labels
     num_classes = len(set(labels))
+    classes = np.unique(labels)
 
     print(f"Number of classes: {num_classes}")
 
@@ -198,40 +242,45 @@ def main():
 
     class_weights = compute_class_weight(
         class_weight="balanced",
-        classes=np.arange(num_classes),
+        classes=classes,
         y=labels
     )
 
     class_weights = torch.tensor(
         class_weights,
-        dtype=torch.float32
-    ).to(device)
+        dtype=torch.float32,
+        device=device
+    )
 
     # -------------------------------------------------------------------------
     # Model
     # -------------------------------------------------------------------------
 
     model = MoEModel(
+        context_dim= args.context_dim if args.use_context else None,
         num_classes=num_classes,
         num_experts=args.num_experts,
-        top_k=args.top_k
+        top_k=args.top_k,
+        router_mode=args.router_mode,
+        temperature=args.temperature,
     )
 
     # -------------------------------------------------------------------------
     # Loss
     # -------------------------------------------------------------------------
 
-    criterion = MoELoss(alpha=args.moe_alpha)
+    criterion = MoELoss(alpha=args.moe_alpha, class_weights=class_weights)
 
     # -------------------------------------------------------------------------
     # Optimizer
     # -------------------------------------------------------------------------
 
-    optimizer = optim.Adam(
-        model.parameters(),
-        lr=args.lr,
-        weight_decay=args.weight_decay
-    )
+    # optimizer = optim.Adam(
+    #     model.parameters(),
+    #     lr=args.lr,
+    #     weight_decay=args.weight_decay
+    # )
+    optimizer = optim.AdamW(params=model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     # -------------------------------------------------------------------------
     # Trainer
