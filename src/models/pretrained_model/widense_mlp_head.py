@@ -1,26 +1,37 @@
-from torchvision.models import mobilenet_v3_small, MobileNet_V3_Small_Weights
+import timm
+import torch
 import torch.nn as nn
 from torchinfo import summary
 
-
-weights = MobileNet_V3_Small_Weights.DEFAULT
 num_classes = 8
 
-model = mobilenet_v3_small(weights=weights)
+# remove classifier
+model = timm.create_model(
+    "mobilenetv3_small_100",
+    pretrained=True,
+    num_classes=0
+)
 
-in_features = model.classifier[0].in_features   # 576
+# remove conv head 576 -> 1024
+model.conv_head = nn.Identity()
+model.act2 = nn.Identity()
 
-
-# widened dense classifier head
+# custom classifier
 model.classifier = nn.Sequential(
-    nn.Linear(in_features, 2048),
+    nn.Linear(576, 2048),
     nn.Hardswish(),
     nn.Dropout(0.2),
+
     nn.Linear(2048, 512),
     nn.Hardswish(),
     nn.Dropout(0.2),
+
     nn.Linear(512, num_classes)
 )
 
-
-summary(model, input_size=(1, 3, 224, 224), col_names=["input_size", "output_size", "num_params", "trainable"], col_width=20)
+summary(
+    model,
+    input_size=(1, 3, 224, 224),
+    col_names=["input_size", "output_size", "num_params", "trainable"],
+    col_width=20
+)

@@ -4,7 +4,7 @@ from torchvision.models import squeezenet1_1, SqueezeNet1_1_Weights
 from torchinfo import summary
 
 # load pretrained
-weights = SqueezeNet1_1_Weights.DEFAULT
+weights = SqueezeNet1_1_Weights.IMAGENET1K_V1
 model = squeezenet1_1(weights=weights)
 
 # sửa output thành 8 class

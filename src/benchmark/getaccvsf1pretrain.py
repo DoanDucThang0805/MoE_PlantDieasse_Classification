@@ -20,7 +20,7 @@ if str(SRC_DIR) not in sys.path:
 from dataset.plantdoc_dataset import build_datasets
 
 with redirect_stdout(io.StringIO()):
-    from models.pretrained_model.widense_mlp_head import model as pretrained_model
+    from models.pretrained_model.mobilenetv3_small import model as pretrained_model
 
 
 logger = logging.getLogger(__name__)

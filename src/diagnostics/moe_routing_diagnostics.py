@@ -135,7 +135,7 @@ class MoeRoutingDiagnostics:
         )
         plt.xlabel("Expert")
         plt.ylabel("Usage (%)")
-        plt.title(f"Global Expert Utilization")
+        plt.title(f"Expert Utilization")
         plt.ylim(0, 100)
         plt.tight_layout()
         plt.savefig(plot_path, dpi=300)

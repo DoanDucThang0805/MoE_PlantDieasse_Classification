@@ -18,3 +18,4 @@ memory_profiler
 onnx
 onnxscript
 onnxruntime
+tabulate

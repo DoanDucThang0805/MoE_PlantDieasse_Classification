@@ -33,8 +33,8 @@ args = parse.parse_args()
 set_seed(args.seed)
 
 # Import and build datasets AFTER seed is set
-from dataset.plantdoc_datasetv2 import build_datasets
-train_dataset, validation_dataset, _ = build_datasets()
+from dataset.plantdoc_dataset import build_datasets
+train_dataset, validation_dataset, _ = build_datasets(use_context=False)
 
 BATCH_SIZE = 64
 
@@ -83,7 +83,7 @@ trainer = Trainer(
         / "checkpoints"
         / "plantdoc"
         / "pretrain_models"
-        / "mobilenetv3_small"
+        / "mobilenetv3_small_ImageNet1K"
         / f"seed_{args.seed}"
     )
 )

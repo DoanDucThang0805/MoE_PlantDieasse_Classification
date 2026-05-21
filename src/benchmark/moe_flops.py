@@ -24,7 +24,7 @@ def complete_flops_analysis():
 
     print("=" * 60)
     flops, params = profile(model, inputs=(x, context), verbose=True)
-    print(f"Total FLOPs: {flops / 1e9:.3f} GFLOPs")
+    print(f"Total FLOPs: {flops / 1e9:.4f} GFLOPs")
     print(f"Total Params: {params}")
     
 

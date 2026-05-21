@@ -88,7 +88,7 @@ trainer = Trainer(
         output_dir
         / "checkpoints"
         / "plantdoc"
-        / "pretrain_weight"
+        / "pretrain_models"
         / "ghostnet"
         / f"seed_{args.seed}"
     ),

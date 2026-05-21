@@ -4,7 +4,7 @@ source venv1/bin/activate
 source venv/Scripts/activate
 cd src
 clear
-python -m benchmark.getaccvsf1 \
+python -m benchmark.getaccvsf1moe \
     --model_name mobilenetv3small_moe \
     --type_model moe_contextaware_temp0.5 \
     --dataset_name plantdoc \

@@ -107,7 +107,7 @@ class LoadDataset(Dataset):
         labels = []
         for class_name in class_names:
             class_dir = os.path.join(root_dir, class_name)
-            for fname in sorted(os.listdir(class_dir)):
+            for fname in os.listdir(class_dir):
                 if fname.lower().endswith(('.png', '.jpg', '.jpeg')):
                     image_paths.append(os.path.join(class_dir, fname))
                     labels.append(class_to_idx[class_name])

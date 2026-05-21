@@ -1,24 +1,12 @@
-import torch.nn as nn
+import timm
 from torchinfo import summary
-from torchvision import models
 
 
-num_classes = 8
-
-try:
-    weights = models.EfficientNet_B0_Weights.DEFAULT
-    model = models.efficientnet_b0(weights=weights)
-except AttributeError:
-    # Fallback for older torchvision versions.
-    model = models.efficientnet_b0(pretrained=True)
-
-# Replace classification head for the target number of classes.
-in_features = model.classifier[1].in_features
-model.classifier[1] = nn.Linear(
-    in_features=in_features,
-    out_features=num_classes,
+model = timm.create_model(
+    model_name='efficientnet_b0.ra_in1k',
+    pretrained=True,
+    num_classes=8
 )
-
 summary(
     model,
     input_size=(1, 3, 224, 224),

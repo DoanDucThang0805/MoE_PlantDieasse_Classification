@@ -115,7 +115,7 @@ class GetAccvsMacroF1DenseMultiBranch:
 
         num_classes = checkpoint.get("num_classes")
         if num_classes is None:
-            classifier_weight = state_dict["experts.0.classifier.3.weight"]
+            classifier_weight = state_dict["experts.0.classifier.4.weight"]
             num_classes = classifier_weight.shape[0]
 
         return {

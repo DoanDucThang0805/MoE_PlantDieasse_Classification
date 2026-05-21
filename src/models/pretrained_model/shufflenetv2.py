@@ -4,7 +4,7 @@ import torch.nn as nn
 
 
 num_classes = 8
-weights = ShuffleNet_V2_X2_0_Weights.DEFAULT
+weights = ShuffleNet_V2_X2_0_Weights.IMAGENET1K_V1
 model = shufflenet_v2_x2_0(weights=weights)
 model.fc = nn.Linear(model.fc.in_features, num_classes)
 

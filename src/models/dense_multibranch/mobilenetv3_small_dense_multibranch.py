@@ -9,11 +9,11 @@ class Expert(nn.Module):
         super().__init__()
 
         self.classifier = nn.Sequential(
-            nn.Linear(in_features, 512),
-            nn.Hardswish(),
-            nn.Dropout(0.2),
-
-            nn.Linear(512, num_classes)
+            nn.Linear(in_features, 1024),
+            nn.LayerNorm(1024),
+            nn.GELU(),
+            nn.Dropout(0.1),
+            nn.Linear(1024, num_classes)
         )
 
     def forward(self, x):
@@ -78,4 +78,4 @@ if __name__ == "__main__":
         num_experts=4
     )
 
-    summary(model, input_size=(1, 3, 224, 224))
+    summary(model, input_size=(1, 3, 224, 224), col_names=["input_size", "output_size", "num_params", "trainable"], depth=3)

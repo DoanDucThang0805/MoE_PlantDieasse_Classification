@@ -86,8 +86,8 @@ trainer = Trainer(
         output_dir /
         "checkpoints" /
         "plantdoc" /
-        "pretrain_weight" /
-        "custom_mobilenetv3_smallv1" /
+        "pretrain_models" /
+        "widense_mlp_head" /
         f"seed_{args.seed}"
     )
 )
