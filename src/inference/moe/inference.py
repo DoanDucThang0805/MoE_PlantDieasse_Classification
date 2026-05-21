@@ -55,7 +55,7 @@ class Config:
     # Data & visualization
     batch_size: int = 32
     shuffle_test: bool = True
-    confusion_matrix_figsize: Tuple[int, int] = (12, 10)
+    confusion_matrix_figsize: Tuple[int, int] = (10, 8)
     classification_report_figsize: Tuple[int, int] = (10, 6)
     report_dpi: int = 300
     
@@ -303,13 +303,26 @@ def save_confusion_matrix(all_labels: np.ndarray, all_preds: np.ndarray,
         logger.info("Saving confusion matrix...")
         cm = confusion_matrix(all_labels, all_preds)
         
-        plt.figure(figsize=Config.confusion_matrix_figsize)
-        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=target_names, yticklabels=target_names)
-        plt.xlabel("Predicted Label", fontsize=12)
-        plt.ylabel("True Label", fontsize=12)
-        plt.title("Confusion Matrix - Plant Disease Classification", fontsize=14)
-        plt.xticks(rotation=45, ha="right")
-        plt.yticks(rotation=0)
+        fig, ax = plt.subplots(figsize=Config.confusion_matrix_figsize)  # ← đổi sang fig, ax
+        
+        sns.heatmap(
+            cm, annot=True, fmt="d", cmap="Blues",
+            xticklabels=target_names, yticklabels=target_names,
+            annot_kws={"size": 15}, linewidths=0.5,
+            ax=ax,                                                        # ← truyền ax vào
+        )
+        
+        ax.set_xlabel("Predicted Label", fontsize=15, labelpad=10)
+        ax.set_ylabel("True Label", fontsize=15, labelpad=10)
+        ax.tick_params(axis='x', labelsize=15, rotation=45)
+        ax.tick_params(axis='y', labelsize=15, rotation=0)
+        ax.set_xticklabels(ax.get_xticklabels(), ha='right', fontsize=15)
+        ax.set_yticklabels(ax.get_yticklabels(), fontsize=15)
+        
+        # Colorbar font
+        cbar = ax.collections[0].colorbar
+        cbar.ax.tick_params(labelsize=15)
+        
         plt.tight_layout()
         
         output_path = report_dir / "confusion_matrix.png"
@@ -319,7 +332,6 @@ def save_confusion_matrix(all_labels: np.ndarray, all_preds: np.ndarray,
     except Exception as e:
         logger.error(f"Failed to save confusion matrix: {e}")
         raise RuntimeError(f"Confusion matrix visualization failed: {e}") from e
-
 
 def save_classification_report_heatmap(report_dict: Dict, target_names: List[str], report_dir: Path) -> None:
     """Generate and save classification report heatmap."""

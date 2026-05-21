@@ -27,12 +27,12 @@ usage() {
     echo "    --heatmap_name class_wise_routing_seed43.png"
 }
 
-CHECKPOINT="/media/data/minhht/context_moe/checkpoints/plantdoc/moe_linearcontextaware_temp0.5/mobilenetv3small_moe/4_experts/top_2/seed_43/run_20260504-214159/best_checkpoint.pth"
+CHECKPOINT="/media/data/minhht/context_moe/checkpoints/plantdoc/moe_contextaware_temp0.5/mobilenetv3small_moe/4_experts/top_2/seed_46/run_20260423-003538/best_checkpoint.pth"
 OUTPUT_DIR="/media/data/minhht/context_moe/diagnostics"
 SPLIT="test"
 BATCH_SIZE=32
-CSV_NAME="linear_class_wise_routing.csv"
-HEATMAP_NAME="linear_class_wise_routing_heatmap.png"
+CSV_NAME="mlp_class_wise_routing.csv"
+HEATMAP_NAME="mlp_class_wise_routing_heatmap.png"
 REPO_ROOT="$(pwd)"
 
 while [ $# -gt 0 ]; do

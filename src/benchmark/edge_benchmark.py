@@ -104,7 +104,7 @@ class EdgeBenchmark:
             max_usage=True,
             include_children=True,
         )
-        return round(peak - baseline, 3)
+        return round(peak - baseline, 4)
 
     def caculate_inference_time_cpu(
         self,
@@ -124,7 +124,7 @@ class EdgeBenchmark:
         end_time = time.perf_counter()
 
         avg_time_ms = ((end_time - start_time) / num_runs) * 1000
-        return round(avg_time_ms, 3)
+        return round(avg_time_ms, 4)
 
     def run_benchmarks(self):
         results = []
@@ -153,7 +153,7 @@ class EdgeBenchmark:
 
             row = {
                 "model_name": model_name,
-                "model_size_mb": round(model_size_mb, 3),
+                "model_size_mb": round(model_size_mb, 4),
                 "cpu_peak_memory_mb": peak_memory_mb,
                 "cpu_inference_time_ms": inference_time_ms,
             }

@@ -131,7 +131,7 @@ class MoEClassWiseRouting:
 
         routing_df.to_csv(csv_path, index=False)
 
-        plt.figure(figsize=(8, max(5, len(class_names) * 0.45)))
+        fig, ax = plt.subplots(figsize=(10, 8))
         sns.heatmap(
             rho_np,
             annot=True,
@@ -141,17 +141,30 @@ class MoEClassWiseRouting:
             vmax=1.0,
             xticklabels=[str(expert_id + 1) for expert_id in range(rho_np.shape[1])],
             yticklabels=class_names,
-            cbar_kws={"label": "Activation rate"},
+            annot_kws={"size": 15},
+            linewidths=0.5,
+            cbar_kws={"label": "Activation rate", "shrink": 0.8},
+            ax=ax,
         )
-        plt.xlabel("Expert")
-        plt.ylabel("Class")
-        plt.title(f"Class-wise Expert Activation Heatmap")
+
+        ax.set_xlabel("Expert", fontsize=15, labelpad=10)
+        ax.set_ylabel("Class", fontsize=15, labelpad=10)
+        # ax.set_title("Class-wise Expert Activation Heatmap", fontsize=14, pad=12)
+        ax.tick_params(axis='x', labelsize=15, rotation=0)
+        ax.tick_params(axis='y', labelsize=15, rotation=0)
+        ax.set_xticklabels(ax.get_xticklabels(), fontsize=15)
+        ax.set_yticklabels(ax.get_yticklabels(), fontsize=15)
+
+        # Colorbar font
+        cbar = ax.collections[0].colorbar
+        cbar.ax.tick_params(labelsize=15)
+        cbar.set_label("Activation rate", fontsize=15)
+
         plt.tight_layout()
-        plt.savefig(heatmap_path, dpi=300)
+        plt.savefig(heatmap_path, dpi=300, bbox_inches="tight")
         plt.close()
-
         return csv_path, heatmap_path, routing_df
-
+    
     def run(self, batch_size: int):
         checkpoint_info = self.extract_checkpoint()
         model = self.create_model(checkpoint_info)

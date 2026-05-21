@@ -42,7 +42,7 @@ BATCH_SIZE = 32
 SHUFFLE_TEST = True
 
 # Plot image parameters
-CONFUSION_MATRIX_FIGSIZE = (12, 10)
+CONFUSION_MATRIX_FIGSIZE = (10,8)
 CLASSIFICATION_REPORT_FIGSIZE = (10, 6)
 REPORT_DPI = 300
 
@@ -165,28 +165,37 @@ print(f"\nSaving reports to: {report_dir}")
 cm = confusion_matrix(all_labels, all_preds)
 
 # Create confusion matrix plot
-plt.figure(figsize=CONFUSION_MATRIX_FIGSIZE)
+fig, ax = plt.subplots(figsize=CONFUSION_MATRIX_FIGSIZE)
+
 sns.heatmap(
     cm,
     annot=True,
     fmt="d",
     cmap="Blues",
     xticklabels=target_names,
-    yticklabels=target_names
+    yticklabels=target_names,
+    annot_kws={"size": 15},
+    linewidths=0.5,
+    ax=ax,
 )
 
-plt.xlabel("Predicted Label", fontsize=12)
-plt.ylabel("True Label", fontsize=12)
-plt.title("Confusion Matrix - Tomato Disease Classification", fontsize=14)
-plt.xticks(rotation=45, ha="right")
-plt.yticks(rotation=0)
+ax.set_xlabel("Predicted Label", fontsize=15, labelpad=10)
+ax.set_ylabel("True Label", fontsize=15, labelpad=10)
+# ax.set_title("Confusion Matrix - Tomato Disease Classification", fontsize=14, pad=12)
+ax.tick_params(axis='x', labelsize=15, rotation=45)
+ax.tick_params(axis='y', labelsize=15, rotation=0)
+ax.set_xticklabels(ax.get_xticklabels(), ha='right', fontsize=15)
+ax.set_yticklabels(ax.get_yticklabels(), fontsize=15)
+
+# Colorbar font
+cbar = ax.collections[0].colorbar
+cbar.ax.tick_params(labelsize=15)
+
 plt.tight_layout()
 
-# Save image
 plt.savefig(report_dir / "confusion_matrix.png", dpi=REPORT_DPI, bbox_inches="tight")
 print(f"✓ Saved confusion matrix: {report_dir / 'confusion_matrix.png'}")
 plt.show()
-
 # ============================================================================
 # Visualize Classification Report
 # ============================================================================
