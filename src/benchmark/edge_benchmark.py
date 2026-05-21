@@ -124,7 +124,7 @@ class EdgeBenchmark:
         end_time = time.perf_counter()
 
         avg_time_ms = ((end_time - start_time) / num_runs) * 1000
-        return round(avg_time_ms, 4)
+        return round(avg_time_ms, 5)
 
     def run_benchmarks(self):
         results = []
