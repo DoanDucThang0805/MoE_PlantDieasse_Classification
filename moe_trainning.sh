@@ -17,7 +17,7 @@ run_training() {
     
     echo "🚀 Running: $num_experts experts, top_k=$top_k, seed=$seed"
     python -m trainning.moe_train \
-        --type_model moe_contextaware_temp0.5ImageNet1K \
+        --type_model moe_contextaware_temp0.5_nonpretrainbackbone \
         --num_experts $num_experts \
         --top_k $top_k \
         --router_mode context_aware \

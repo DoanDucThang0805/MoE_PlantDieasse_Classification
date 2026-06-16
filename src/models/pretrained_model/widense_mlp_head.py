@@ -7,7 +7,7 @@ num_classes = 8
 
 # remove classifier
 model = timm.create_model(
-    "mobilenetv3_small_100",
+    "mobilenetv3_small_100.lamb_in1k",
     pretrained=True,
     num_classes=0
 )

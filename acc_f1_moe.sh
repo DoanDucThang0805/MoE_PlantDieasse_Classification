@@ -6,9 +6,9 @@ cd src
 clear
 python -m benchmark.getaccvsf1moe \
     --model_name mobilenetv3small_moe \
-    --type_model moe_contextaware_temp0.5 \
+    --type_model moe_contextaware_temp0.5_nonpretrainbackbone \
     --dataset_name plantdoc \
     --export_to_csv \
     --csv_store_dir "/media/data/minhht/context_moe" \
-    --csv_filename "moe_contextaware_temp0.5.csv"
+    --csv_filename "moe_contextaware_temp0.5_nonpretrainbackbone.csv"
     
