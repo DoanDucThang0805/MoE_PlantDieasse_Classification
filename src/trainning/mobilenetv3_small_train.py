@@ -33,7 +33,7 @@ args = parse.parse_args()
 set_seed(args.seed)
 
 # Import and build datasets AFTER seed is set
-from dataset.plantdoc_dataset import build_datasets
+from dataset.slif_tomato_dataset import build_datasets
 train_dataset, validation_dataset, _ = build_datasets(use_context=False)
 
 BATCH_SIZE = 64
@@ -81,9 +81,9 @@ trainer = Trainer(
     checkpoints_dir=str(
         output_dir
         / "checkpoints"
-        / "plantdoc"
+        / "slif_tomato_dataset_phase1"
         / "pretrain_models"
-        / "mobilenetv3_small_ImageNet1K"
+        / "mobilenetv3_small"
         / f"seed_{args.seed}"
     )
 )

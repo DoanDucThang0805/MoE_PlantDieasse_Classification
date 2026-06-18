@@ -17,10 +17,10 @@ SRC_DIR = Path(__file__).resolve().parents[1]
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from dataset.plantdoc_dataset import build_datasets
+from dataset.slif_tomato_dataset import build_datasets
 
 with redirect_stdout(io.StringIO()):
-    from models.pretrained_model.mobilenetv3_small import model as pretrained_model
+    from models.pretrained_model.mobilevitxs import model as pretrained_model
 
 
 logger = logging.getLogger(__name__)

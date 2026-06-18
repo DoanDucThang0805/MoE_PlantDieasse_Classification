@@ -17,8 +17,8 @@ import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
 
 from utils.moe_trainer import MoETrainer
-from dataset.plantdoc_dataset import build_datasets
-from models.moe.model import MoEModel
+from dataset.slif_tomato_dataset import build_datasets
+from models.moe.linear_model import MoEModel
 from loss.loss_fn import MoELoss
 
 warnings.filterwarnings("ignore")
@@ -199,7 +199,7 @@ def main():
     checkpoint_dir = (
         output_dir
         / "checkpoints"
-        / "plantdoc"
+        / "slif_tomato_dataset_phase1"
         / args.type_model
         / "mobilenetv3small_moe"
         / f"{args.num_experts}_experts"

@@ -9,7 +9,7 @@ import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
 from torch.utils.data import DataLoader
 
-from dataset.plantdoc_dataset import build_datasets
+from dataset.slif_tomato_dataset import build_datasets
 from models.pretrained_model.ghostnet import model
 from utils.trainer import Trainer
 
@@ -87,7 +87,7 @@ trainer = Trainer(
     checkpoints_dir=str(
         output_dir
         / "checkpoints"
-        / "plantdoc"
+        / "slif_tomato_dataset_phase1"
         / "pretrain_models"
         / "ghostnet"
         / f"seed_{args.seed}"

@@ -1,13 +1,12 @@
-#!/bin/bash
-
 source venv1/bin/activate
 cd src
 
 models=(
-"trainning.widense_mlp_head_train"
+"trainning.mobilevits_train"
+"trainning.mobilevitxs_train"
 )
 
-seeds=(43)
+seeds=(42 43 44 45 46)
 
 for model in "${models[@]}"; do
   for seed in "${seeds[@]}"; do

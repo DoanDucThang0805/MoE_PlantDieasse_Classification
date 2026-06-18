@@ -8,7 +8,7 @@ source venv1/bin/activate
 
 # Run the script
 python src/benchmark/getaccvsf1pretrain.py \
-    --checkpoint_dirs "/media/data/minhht/context_moe/checkpoints/plantdoc/pretrain_models/mobilenetv3_small" \
+    --checkpoint_dirs "/media/data/minhht/context_moe/checkpoints/slif_tomato_dataset_phase1/pretrain_models/mobilevitxs" \
     --csv_store_dir "./results" \
-    --csv_filename "mobilenetv3_small.csv" \
+    --csv_filename "mobilevitxs_slif_tomato_dataset.csv" \
     --export_csv

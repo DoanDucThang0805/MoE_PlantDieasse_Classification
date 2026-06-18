@@ -4,14 +4,13 @@ from argparse import ArgumentParser
 
 import numpy as np
 import torch
+from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
-from torch.utils.data import DataLoader
 
-from dataset.slif_tomato_dataset import build_datasets
-from models.pretrained_model.shufflenetv2 import model
 from utils.trainer import Trainer
+from models.pretrained_model.mobilevitxs import model
 
 
 def set_seed(seed=42):
@@ -29,11 +28,16 @@ def set_seed(seed=42):
 parse = ArgumentParser()
 parse.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
 args = parse.parse_args()
+
+# Set seed BEFORE building datasets to ensure reproducible splits
 set_seed(args.seed)
 
+# Import and build datasets AFTER seed is set
+from dataset.plantdoc_dataset import build_datasets
 train_dataset, validation_dataset, _ = build_datasets(use_context=False)
 
 BATCH_SIZE = 64
+
 generator = torch.Generator()
 generator.manual_seed(args.seed)
 
@@ -57,23 +61,13 @@ labels = train_dataset.labels
 num_classes = len(set(labels))
 
 class_weights = compute_class_weight(
-    class_weight="balanced",
+    class_weight='balanced',
     classes=np.arange(num_classes),
-    y=labels,
+    y=labels
 )
-
-class_weights = torch.tensor(
-    class_weights,
-    dtype=torch.float32,
-).to(device)
-
+class_weights = torch.tensor(class_weights, dtype=torch.float32).to(device)
 criterion = nn.CrossEntropyLoss(weight=class_weights)
-
-optimizer = optim.AdamW(
-    model.parameters(),
-    lr=0.001,
-    weight_decay=0.001,
-)
+optimizer = optim.AdamW(model.parameters(), lr=0.001, weight_decay=0.001)
 
 trainer = Trainer(
     num_epochs=200,
@@ -87,11 +81,11 @@ trainer = Trainer(
     checkpoints_dir=str(
         output_dir
         / "checkpoints"
-        / "slif_tomato_dataset_phase1"
+        / "plantdoc"
         / "pretrain_models"
-        / "shufflenetv2"
+        / "mobilevitxs"
         / f"seed_{args.seed}"
-    ),
+    )
 )
 
 if __name__ == "__main__":
