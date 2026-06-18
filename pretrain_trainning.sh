@@ -2,8 +2,7 @@ source venv1/bin/activate
 cd src
 
 models=(
-"trainning.mobilevits_train"
-"trainning.mobilevitxs_train"
+"trainning.squeezenet_train"
 )
 
 seeds=(42 43 44 45 46)

@@ -20,7 +20,7 @@ if str(SRC_DIR) not in sys.path:
 from dataset.slif_tomato_dataset import build_datasets
 
 with redirect_stdout(io.StringIO()):
-    from models.pretrained_model.mobilevitxs import model as pretrained_model
+    from models.pretrained_model.squeezenet import model as pretrained_model
 
 
 logger = logging.getLogger(__name__)
