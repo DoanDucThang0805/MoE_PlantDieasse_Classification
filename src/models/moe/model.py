@@ -84,7 +84,7 @@ class MoELayer(nn.Module):
                 temperature=self.temperature
             )
         elif self.router_mode == "context_aware":
-            self.gating = ContextAwareGating(
+            self.gating = ContextAwareLinearGating(
                 model_dim=model_dim,
                 context_dim=context_dim,
                 num_experts=self.num_experts,
