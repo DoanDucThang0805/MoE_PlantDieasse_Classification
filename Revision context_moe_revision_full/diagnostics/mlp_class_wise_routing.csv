@@ -1,0 +1,9 @@
+class_id,class_name,num_samples,expert_0,expert_1,expert_2,expert_3
+0,Tomato Early blight leaf,20,0.7,0.4,0.35,0.55
+1,Tomato Septoria leaf spot,42,0.8333333,0.023809524,0.16666667,0.97619045
+2,Tomato leaf,40,0.025,0.525,0.65,0.8
+3,Tomato leaf bacterial spot,27,0.8148148,0.2962963,0.14814815,0.7407407
+4,Tomato leaf late blight,22,0.18181819,0.6363636,0.6818182,0.5
+5,Tomato leaf mosaic virus,26,0.3846154,0.96153843,0.26923078,0.3846154
+6,Tomato leaf yellow virus,79,0.49367088,0.89873415,0.39240506,0.21518987
+7,Tomato mold leaf,29,0.06896552,0.6551724,0.86206895,0.41379312

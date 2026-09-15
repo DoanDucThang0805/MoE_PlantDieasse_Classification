@@ -1,0 +1,21 @@
+pandas
+numpy
+matplotlib
+seaborn
+scikit-learn
+torch --index-url https://download.pytorch.org/whl/cu128
+torchvision --index-url https://download.pytorch.org/whl/cu128
+torchinfo
+tqdm
+ipykernel
+pathlib
+pillow
+albumentations
+timm
+scikit-fuzzy
+thop
+memory_profiler
+onnx
+onnxscript
+onnxruntime
+tabulate
