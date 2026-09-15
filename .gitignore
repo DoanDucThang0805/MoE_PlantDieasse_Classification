@@ -1,12 +1,27 @@
-checkpoints/
-data/
+# Python
 __pycache__/
-nohup.out/
+*.pyc
+
+# Virtual environments
 venv/
+venv1/
+venv2/
+.venv/
+.venv_revision/
+
+# Data & checkpoints (large, regenerable/dataset artifacts)
+data/
+checkpoints/
+nohup.out/
+
+# Model weights kept out of git history
 expert_0.pth
 expert_1.pth
 expert_2.pth
 vit_b16_plant.pth
+
+# Archives (duplicates of tracked source directories)
+*.zip
+
+# Editor
 .vscode/
-venv1/
-venv2/
