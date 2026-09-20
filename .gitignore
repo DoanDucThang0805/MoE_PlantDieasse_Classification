@@ -23,5 +23,19 @@ vit_b16_plant.pth
 # Archives (duplicates of tracked source directories)
 *.zip
 
+# Local benchmark bundles and generated evaluation outputs
+/pi_pytorch_cpu_runtime_bundle/
+/context_moe/diagnostics/inference/
+/context_moe/reports/**/run_*/
+
+# Legacy/generated report exports; the authoritative source is
+# /baocaorevisionmoe.tex and its frozen reviewer-evidence snapshot.
+/Revision_context_moe_revision_full/reports/
+/baocaorevisionmoe*.pdf
+
+# Preserve the original Raspberry Pi evidence archive inside the reviewer
+# snapshot even though other ZIP archives are ignored.
+!Revision_context_moe_revision_full/reviewer_evidence/plantdoc_revision_results_20260920/run_04_pytorch_runtime_pi/pi_benchmark_results.zip
+
 # Editor
 .vscode/

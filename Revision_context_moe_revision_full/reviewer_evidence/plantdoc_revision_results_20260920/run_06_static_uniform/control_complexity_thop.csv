@@ -1,0 +1,4 @@
+model,thop_profiled_params,thop_flops,thop_gflops,stored_trainable_params,thop_version
+MoE Top-2,3484472,63427536,0.063427536,5853496,0.1.1
+Static-uniform 4-expert,5844904,65786488,0.065786488,5844904,0.1.1
+Matched torchvision MNV3-Small,1526056,61462136,0.061462136,1526056,0.1.1

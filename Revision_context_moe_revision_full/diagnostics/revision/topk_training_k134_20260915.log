@@ -1,0 +1,5 @@
+START k=1 seed=42 2026-09-15T17:36:50+07:00
+MobileNetV3-Small output feature dimension: 576
+Checkpoint root: ../checkpoints/plantdoc/revision_topk_linear/mobilenetv3small_moe/4_experts/top_1/seed_42
+Total parameters: 5,853,496
+Epochs:   0%|          | 0/300 [00:00<?, ?it/s]

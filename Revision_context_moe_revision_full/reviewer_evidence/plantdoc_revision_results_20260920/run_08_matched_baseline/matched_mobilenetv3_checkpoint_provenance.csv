@@ -1,0 +1,6 @@
+seed,accuracy,macro_f1,checkpoint
+42,0.8210526315789474,0.7756032572572038,/media/data/minhht/train_pd/checkpoints/plantdoc/pretrain_models/mobilenetv3_small_torchvision/seed_42/run_20260920-112504/best_checkpoint.pth
+43,0.7929824561403509,0.758558231447584,/media/data/minhht/train_pd/checkpoints/plantdoc/pretrain_models/mobilenetv3_small_torchvision/seed_43/run_20260920-114136/best_checkpoint.pth
+44,0.8526315789473684,0.8221482924347534,/media/data/minhht/train_pd/checkpoints/plantdoc/pretrain_models/mobilenetv3_small_torchvision/seed_44/run_20260920-103609/best_checkpoint.pth
+45,0.8385964912280702,0.8010902875829528,/media/data/minhht/train_pd/checkpoints/plantdoc/pretrain_models/mobilenetv3_small_torchvision/seed_45/run_20260920-104427/best_checkpoint.pth
+46,0.8280701754385965,0.7897332976369835,/media/data/minhht/train_pd/checkpoints/plantdoc/pretrain_models/mobilenetv3_small_torchvision/seed_46/run_20260920-105217/best_checkpoint.pth

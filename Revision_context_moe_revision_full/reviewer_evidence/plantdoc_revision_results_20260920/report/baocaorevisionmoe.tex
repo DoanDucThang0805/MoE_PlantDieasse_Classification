@@ -1,0 +1,559 @@
+\documentclass[conference]{IEEEtran}
+
+% Vietnamese text and typography
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage{lmodern}
+
+% Mathematics, tables, and links
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\meanstd}{trung bình $\pm$ độ lệch chuẩn}
+\newcommand{\best}[1]{\textbf{#1}}
+
+\title{Báo cáo Thực nghiệm Bổ sung cho Mô hình\\
+MoE--MobileNetV3 trên Tập dữ liệu PlantDoc}
+
+\author{%
+\IEEEauthorblockN{Van-Hau Bui, Duc-Thang Doan, Duc-Minh Tran, and Trong-Minh Hoang}
+\IEEEauthorblockA{Posts and Telecommunications Institute of Technology, Hanoi, Vietnam\\
+University of Economics--Technology for Industries (UNETI), Hanoi, Vietnam\\
+Faculty of Data Science and Artificial Intelligence, College of Technology, National Economics University, Hanoi, Vietnam\\
+Corresponding author: Trong-Minh Hoang (e-mail: hoangtrongminh@ptit.edu.vn)}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Báo cáo này tổng hợp tám nhóm thực nghiệm bổ sung phục vụ quá trình
+revision của mô hình Mixture-of-Experts (MoE) dựa trên MobileNetV3-Small.
+Các thí nghiệm lần lượt kiểm tra tính nhất quán của kiến trúc, mức sử dụng
+expert, vai trò của routing phụ thuộc đầu vào, chi phí thực thi sparse động,
+ảnh hưởng của Top-$k$, đối chứng static-uniform có dung lượng tương đương,
+ảnh hưởng của context 6 chiều và baseline MobileNetV3-Small đồng nhất về
+implementation. Ablation có kiểm soát cho thấy Top-2 đạt Accuracy
+$0.8596\pm0.0124$ và Macro-F1 $0.8275\pm0.0153$, cao nhất trong các cấu hình
+$k\in\{1,2,3,4\}$. Nhánh context 6-D tạo chênh lệch trung bình $0.0267$
+Accuracy và $0.0257$ Macro-F1 so với zero-context, đồng thời có độ lệch
+chuẩn thấp hơn trên cả hai metric.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Mixture-of-Experts, MobileNetV3, dynamic sparse routing, Top-$k$,
+PlantDoc, ablation study, context-aware routing.
+\end{IEEEkeywords}
+
+\section{Mục tiêu và phạm vi}
+
+Mục tiêu của đợt thực nghiệm là cung cấp bằng chứng định lượng cho các câu
+hỏi Q1, Q4, Q7 và Q8, đồng thời đồng bộ mô tả phương pháp với implementation
+thực tế. Cấu hình chính sử dụng bốn expert, routing Top-2, cổng tuyến tính có
+context ảnh 6 chiều và backbone MobileNetV3-Small. Các phép so sánh có huấn
+luyện dùng năm seed $\{42,43,44,45,46\}$. Báo cáo chỉ dành cho PlantDoc;
+kết quả SLIF, nếu được thực hiện, cần trình bày riêng để tránh trộn tập dữ liệu.
+
+Bảng~\ref{tab:overview} liệt kê tám nhóm thực nghiệm. PASS biểu thị tiêu chí
+được đáp ứng; TREND biểu thị chênh lệch trung bình theo hướng kỳ vọng nhưng
+còn nhỏ so với mức biến thiên thể hiện qua độ lệch chuẩn.
+
+\begin{table}[H]
+\caption{Tổng quan tám nhóm thực nghiệm}
+\label{tab:overview}
+\centering
+\footnotesize
+\begin{tabular}{@{}clcc@{}}
+\toprule
+STT & Nhóm thực nghiệm & Train & Trạng thái \\
+\midrule
+1 & Audit kiến trúc/tham số & Không & \textbf{PASS} \\
+2 & Q7: mức sử dụng expert & Không & \textbf{PASS} \\
+3 & Q8: shuffled routing & Không & \textbf{PASS} \\
+4 & Q1: sparse runtime & Không & \textbf{PASS} \\
+5 & Q4: controlled Top-$k$ & Có & \textbf{PASS} \\
+6 & Q8: static-uniform control & Có & \textbf{TREND} \\
+7 & Ablation context 6-D & Có & \textbf{TREND} \\
+8 & Matched MobileNetV3 baseline & Có & \textbf{PASS} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Thiết lập thực nghiệm}
+
+\subsection{Dữ liệu và đánh giá}
+
+Tập dữ liệu mặc định là PlantDoc tomato subset. Phân hoạch dữ liệu, số lớp,
+số mẫu train/validation/test và quy trình tiền xử lý phải lấy từ log của lần
+chạy chính thức; không suy ra từ checkpoint hoặc từ một phiên bản dữ liệu
+khác. Các chỉ số chính cho bài toán phân loại là Accuracy và Macro-F1.
+
+\begin{table}[H]
+\caption{Thông tin dữ liệu và môi trường chạy}
+\label{tab:setup}
+\centering
+\footnotesize
+\begin{tabular}{@{}p{0.44\columnwidth}p{0.47\columnwidth}@{}}
+\toprule
+Thuộc tính & Giá trị \\
+\midrule
+Tập dữ liệu & PlantDoc tomato subset \\
+Số lớp & 8 \\
+Số mẫu train & 2,274 \\
+Số mẫu validation & 284 \\
+Số mẫu test & 285 \\
+Input resolution & $224\times224$ \\
+GPU cho huấn luyện & NVIDIA GB10 (CUDA) \\
+Môi trường benchmark Q1 & Raspberry Pi 5, CPU aarch64 \\
+PyTorch benchmark Q1 & 2.14.0+cpu; không có CUDA \\
+Seed & 42, 43, 44, 45, 46 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Cấu hình mô hình chính}
+
+Mô hình chính có $E=4$ expert với cấu trúc mỗi expert
+$576\rightarrow1024\rightarrow576$, sử dụng $k=2$ expert cho mỗi mẫu.
+Cụ thể, bộ định tuyến chấm điểm bốn expert và chọn hai expert có điểm cao
+nhất để xử lý mẫu; hai expert này được gọi là \emph{tập expert được chọn}.
+Cổng routing là cổng tuyến tính context-aware với vector context 6 chiều.
+Các phép audit không huấn luyện và các đối chứng phải dùng đúng checkpoint
+thuộc nhánh \texttt{moe\_linearcontextaware\_temp0.5}; không thay bằng
+checkpoint từ MLP gate.
+
+\subsection{Quy ước báo cáo}
+
+Mọi kết quả phân loại từ các thí nghiệm năm seed được báo dưới dạng
+\meanstd{}. Phần phân tích và kết luận chỉ dựa trên trung bình, độ lệch chuẩn
+và chênh lệch giữa các giá trị tổng hợp; không phân tích riêng từng seed.
+Mọi giá trị trong các bảng dưới đây phải được chép từ đúng tệp CSV được nêu
+ở cột ``Nguồn''.
+
+\section{Kết quả}
+
+\subsection{Run 1: Audit kiến trúc và số tham số}
+
+\textbf{Mục đích.} Run 1 là bước kiểm tra tính nhất quán bắt buộc trước khi
+thực hiện các phân tích còn lại. Nó xác nhận checkpoint chính thực sự thuộc
+mô hình MoE được mô tả trong báo cáo, tránh trường hợp dùng nhầm checkpoint,
+nhầm loại gating hoặc nhầm cấu hình số expert và Top-$k$.
+
+\textbf{Cách thực hiện.} Mô hình được instantiate từ code hiện tại rồi nạp
+checkpoint đại diện, không huấn luyện lại. Audit kiểm tra metadata
+$E$, $k$, kích thước context, cấu trúc từng expert, loại gating, tổng tham số
+lưu trữ, số tham số được kích hoạt trong forward pass và FLOPs. Tổng tham số
+trainable phải được lấy từ mô hình đã instantiate bằng
+$\sum_{p\in\mathcal{P}}\mathrm{numel}(p)$, không dùng tổng tensor trong
+\texttt{state\_dict} làm đại diện trực tiếp vì giá trị đó có thể chứa buffer.
+Chỉ khi audit đạt yêu cầu mới tiếp tục diễn giải các run phụ thuộc checkpoint.
+
+\begin{table}[H]
+\caption{Kết quả audit mô hình}
+\label{tab:audit}
+\centering
+\footnotesize
+\begin{tabular}{@{}p{0.48\columnwidth}p{0.24\columnwidth}p{0.17\columnwidth}@{}}
+\toprule
+Hạng mục & Giá trị & Kiểm tra \\
+\midrule
+Số expert & 4 & $=4$ \\
+Top-$k$ & 2 & $=2$ \\
+Kích thước context & 6 & $=6$ \\
+Cấu trúc expert & $576$--$1024$--$576$ & $576$--$1024$--$576$ \\
+Loại gating & Linear context-aware & Linear context-aware \\
+Stored parameters & $5.8535$ M & Xác nhận \\
+Activated parameters (Top-2) & $3.4845$ M & Xác nhận \\
+FLOPs & $0.0634$ G & Xác nhận \\
+Kết luận audit & \textbf{PASS} & Pass \\
+\bottomrule
+\end{tabular}
+\vspace{2pt}
+
+\raggedright\scriptsize Nguồn: \texttt{diagnostics/revision/model\_audit.csv}
+và \texttt{diagnostics/revision/active\_complexity\_thop.csv}.
+\end{table}
+
+\textbf{Kết luận Run 1: PASS.} Checkpoint phù hợp với cấu hình $E=4$, $k=2$,
+\texttt{context\_dim=6}, cấu trúc expert $576$--$1024$--$576$ và cổng
+Linear context-aware. Mô hình có $3.4845$ triệu tham số activated và
+$5.8535$ triệu tham số lưu trữ; forward pass Top-2 có $0.0634$ GFLOPs.
+
+\subsection{Run 2: Q7--Mức sử dụng expert}
+
+\textbf{Mục đích.} Run 2 kiểm tra bộ định tuyến có phân phối dữ liệu đến cả
+bốn expert hay không, qua đó phát hiện hiện tượng \emph{global expert
+collapse}, tức một hoặc nhiều expert gần như không bao giờ được chọn. Run này
+cũng mô tả sự khác biệt về tần suất kích hoạt expert giữa các lớp bệnh, nhưng
+không nhằm chứng minh chuyên môn hóa ngữ nghĩa.
+
+\textbf{Cách thực hiện.} Toàn bộ dữ liệu đánh giá được forward qua năm
+checkpoint tương ứng với các seed 42--46, không huấn luyện lại. Với mỗi mẫu,
+audit ghi lại các
+expert nằm trong Top-2 rồi tổng hợp hai đại lượng. \emph{Global selection
+share} là tỷ trọng lượt chọn của mỗi expert trên toàn bộ dữ liệu và có tổng
+qua bốn expert bằng 1. \emph{Class activation rate} là xác suất một expert
+được kích hoạt trong từng lớp; do mỗi mẫu chọn hai expert, tổng mỗi hàng lớp
+bằng $k=2$. Đại lượng thứ hai không được gọi là routing weight.
+
+\begin{table}[H]
+\caption{Tỷ lệ lựa chọn chuyên gia toàn cục trên 5 seed}
+\label{tab:usage-global}
+\centering
+\footnotesize
+\begin{tabular}{@{}lc@{}}
+\toprule
+Chuyên gia & Global selection share \\
+\midrule
+Expert 1 & $0.2446 \pm 0.0237$ \\
+Expert 2 & $0.2554 \pm 0.0190$ \\
+Expert 3 & $0.2495 \pm 0.0165$ \\
+Expert 4 & $0.2505 \pm 0.0134$ \\
+Tổng & $1.0000$ \\
+\bottomrule
+\end{tabular}
+\vspace{2pt}
+
+\raggedright\scriptsize Nguồn: \texttt{global\_selection\_share\_summary.csv}.
+\end{table}
+
+\begin{table}[H]
+\caption{Tỷ lệ kích hoạt theo lớp trên 5 seed}
+\label{tab:usage-class}
+\centering
+\scriptsize
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Lớp bệnh & E1 & E2 & E3 & E4 \\
+\midrule
+Early blight & $0.4600\pm0.4037$ & $0.4100\pm0.3765$ & $0.3300\pm0.3667$ & $0.8000\pm0.2264$ \\
+Septoria leaf spot & $0.3524\pm0.4424$ & $0.4095\pm0.2092$ & $0.5048\pm0.3160$ & $0.7333\pm0.3331$ \\
+Tomato leaf & $0.4450\pm0.2546$ & $0.5100\pm0.3955$ & $0.4200\pm0.3781$ & $0.6250\pm0.2867$ \\
+Bacterial spot & $0.4000\pm0.3092$ & $0.5481\pm0.1420$ & $0.3185\pm0.1563$ & $0.7333\pm0.1841$ \\
+Late blight & $0.4000\pm0.4058$ & $0.6273\pm0.3585$ & $0.4455\pm0.3614$ & $0.5273\pm0.2813$ \\
+Mosaic virus & $0.6846\pm0.3936$ & $0.5769\pm0.2747$ & $0.5077\pm0.3368$ & $0.2308\pm0.1586$ \\
+Yellow virus & $0.5468\pm0.4033$ & $0.4810\pm0.2688$ & $0.6835\pm0.3940$ & $0.2886\pm0.2578$ \\
+Mold leaf & $0.5862\pm0.1443$ & $0.6276\pm0.1895$ & $0.4138\pm0.1857$ & $0.3724\pm0.2031$ \\
+\bottomrule
+\end{tabular}}
+\vspace{2pt}
+
+\raggedright\scriptsize Mỗi ô là \meanstd{} tổng hợp từ năm seed. Tổng tỷ lệ
+kích hoạt của mỗi hàng bằng $2.0000$, phù hợp với Top-2. Nguồn:
+\texttt{class\_activation\_rate\_summary.csv}.
+\end{table}
+
+\textbf{Kết luận Run 2: PASS.} Global selection share trung bình của bốn
+chuyên gia nằm trong khoảng $0.2446$--$0.2554$, với độ lệch chuẩn
+$0.0134$--$0.0237$. Vì tất cả giá trị đều xấp xỉ $0.2500$ và không chuyên gia
+nào có mức sử dụng trung bình gần $0.0000$, không có dấu hiệu global expert collapse.
+Tuy nhiên, độ lệch chuẩn theo lớp còn khá lớn, nên kết quả tổng hợp này chưa
+đủ để khẳng định mỗi chuyên gia đã học một vai trò ngữ nghĩa bệnh ổn định.
+
+\subsection{Run 3: Q8--Shuffled-routing counterfactual}
+
+\textbf{Mục đích.} Run 3 kiểm tra liệu ánh xạ phụ thuộc đầu vào
+$\text{input}\rightarrow\text{tập expert được chọn}$ có thực sự đóng góp vào
+hiệu năng hay không. Đây là đối chứng phản thực tế: nếu chỉ cần có nhiều
+expert mà không cần lựa chọn đúng expert cho từng mẫu, việc phá vỡ ánh xạ này
+sẽ không làm giảm hiệu năng trung bình.
+
+\textbf{Cách thực hiện.} Thí nghiệm giữ nguyên kiến trúc, trọng số và đầu ra
+của bộ định tuyến, nhưng xáo trộn quyết định định tuyến giữa các input; nói
+cách khác, một mẫu không còn được xử lý bởi tập expert Top-2 vốn được chọn cho
+chính mẫu đó. Mỗi checkpoint được thực hiện 100 lần xáo trộn, không huấn
+luyện lại. Kết quả cuối cùng của learned routing và shuffled routing đều được
+tổng hợp dưới dạng trung bình $\pm$ độ lệch chuẩn từ năm checkpoint. Hai độ
+chênh chính là
+\begin{align}
+\Delta_{\mathrm{Acc}} &= \mathrm{Acc}_{\mathrm{learned}}
+- \mathrm{Acc}_{\mathrm{shuffled}},\\
+\Delta_{\mathrm{F1}} &= \mathrm{F1}_{\mathrm{learned}}
+- \mathrm{F1}_{\mathrm{shuffled}}.
+\end{align}
+
+\begin{table}[H]
+\caption{Tổng hợp shuffled routing trên năm seed}
+\label{tab:shuffle-summary}
+\centering
+\scriptsize
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Metric & Learned & Shuffled & Chênh lệch \\
+\midrule
+Accuracy & $0.8596\pm0.0124$ & $0.8287\pm0.0102$ & $+0.0309$ \\
+Macro-F1 & $0.8275\pm0.0153$ & $0.7912\pm0.0129$ & $+0.0363$ \\
+\bottomrule
+\end{tabular}
+\vspace{2pt}
+
+\raggedright\scriptsize Learned và Shuffled được báo dưới dạng \meanstd{}
+tổng hợp từ năm seed; mỗi checkpoint dùng 100 lần hoán vị. Nguồn:
+\texttt{shuffle\_seed\_summary.csv}.
+\end{table}
+
+\textbf{Kết luận Run 3: PASS.} Khi phá vỡ quan hệ giữa ảnh đầu vào và tập
+expert được chọn, Accuracy trung bình giảm từ $0.8596\pm0.0124$ xuống
+$0.8287\pm0.0102$, còn Macro-F1 giảm từ $0.8275\pm0.0153$ xuống
+$0.7912\pm0.0129$. Các chênh lệch trung bình tương ứng là $0.0309$ và
+$0.0363$, cho thấy định tuyến phụ thuộc đầu vào có đóng góp vào hiệu năng mô
+hình. Kết quả này không phải bằng chứng rằng từng chuyên gia đã học được một
+ý nghĩa bệnh riêng biệt.
+
+\subsection{Run 4: Q1--Dynamic sparse runtime}
+
+\textbf{Mục đích.} Run 4 đo quan hệ giữa số expert được kích hoạt và thời gian
+thực thi của mô hình bằng PyTorch eager. Khi Top-$k$ tăng, số expert tham gia
+forward pass tăng và thời gian thực thi được kỳ vọng tăng tương ứng. Run này
+không đánh giá lại chất lượng phân loại và không huấn luyện mô hình.
+
+\textbf{Cách thực hiện.} Cùng một checkpoint và cùng bộ trọng số được dùng
+cho $k\in\{1,2,3,4\}$; script chỉ thay đổi số expert active nên kích thước và
+số tham số lưu trữ không đổi. Benchmark được thực hiện trực tiếp bằng
+PyTorch eager trên Raspberry Pi 5 với CPU aarch64, PyTorch 2.14.0+cpu và
+không có CUDA; mô hình không được xuất sang ONNX cho phép đo này. Mỗi cấu
+hình dùng batch size 1, một CPU thread, 30 lượt warm-up và 300 lượt đo. Input
+tensor được chuẩn bị sẵn; thời gian chỉ tính forward pass, không gồm đọc ảnh,
+tiền xử lý hoặc I/O. Các đại lượng được báo gồm mean, median, P95 và độ lệch
+chuẩn.
+
+\begin{table}[H]
+\caption{PyTorch eager runtime trên Raspberry Pi 5}
+\label{tab:runtime}
+\centering
+\footnotesize
+\begin{tabular}{@{}crrrr@{}}
+\toprule
+Top-$k$ & Mean (ms) & Median (ms) & P95 (ms) & Std. (ms) \\
+\midrule
+1 & $23.8236$ & $23.7939$ & $24.0175$ & $0.1520$ \\
+\textbf{2} & \textbf{25.4065} & \textbf{25.3656} & \textbf{25.6108} & \textbf{0.3042} \\
+3 & $27.4678$ & $27.3820$ & $27.6219$ & $1.0129$ \\
+4 & $31.6735$ & $31.6358$ & $31.9404$ & $0.1958$ \\
+\bottomrule
+\end{tabular}
+\vspace{2pt}
+
+\raggedright\scriptsize Batch size 1, một CPU thread, 30 lượt warm-up và 300
+lượt đo cho mỗi $k$. Thời gian chỉ gồm forward pass. Nguồn:
+\texttt{pi\_runtime/sparse\_runtime\_pi.csv}.
+\end{table}
+
+\textbf{Kết luận Run 4: PASS.} Latency trung bình tăng đơn điệu từ
+$23.8236$ ms tại $k=1$ lên $31.6735$ ms tại $k=4$, tương ứng tăng
+$32.9499\%$. Cấu hình chính Top-2 đạt $25.4065$ ms, cao hơn Top-1
+$6.6440\%$. Kết quả cho thấy trong phép đo bằng PyTorch eager, thời gian thực
+thi tăng khi số expert được kích hoạt tăng. Kết quả không bao gồm đọc ảnh,
+tiền xử lý hoặc I/O và không đại diện cho ONNX runtime.
+
+\subsection{Run 5: Q4--Controlled Top-\texorpdfstring{$k$}{k} ablation}
+
+\textbf{Mục đích.} Run 5 xác định Top-2 có phải operating point hợp lý giữa
+độ chính xác và chi phí tính toán hay không. Khác với Run 4 chỉ thay đổi $k$
+khi benchmark cùng trọng số, Run này huấn luyện riêng từng cấu hình để đo
+đúng ảnh hưởng của $k$ đến chất lượng mô hình sau tối ưu hóa.
+
+\textbf{Cách thực hiện.} Thí nghiệm giữ cố định $E=4$, cổng Linear
+context-aware, backbone, expert, dữ liệu và thiết lập huấn luyện; chỉ thay đổi
+$k=1,2,3,4$. Mỗi giá trị $k$ được huấn luyện với năm seed 42--46, tạo tổng
+cộng 20 run. Accuracy và Macro-F1 được báo bằng trung bình $\pm$ độ lệch
+chuẩn của năm seed rồi đối chiếu với runtime của Run 4 để phân tích
+trade-off. Bảng~\ref{tab:topk} phải lấy từ kết
+quả revision mới, không dùng tệp kết quả cũ thuộc gate hoặc cấu hình khác.
+
+\begin{table}[H]
+\caption{Ablation Top-$k$ có kiểm soát}
+\label{tab:topk}
+\centering
+\footnotesize
+\begin{tabular}{@{}ccc@{}}
+\toprule
+$k$ & Accuracy & Macro-F1 \\
+\midrule
+1 & $0.8309\pm0.0169$ & $0.7927\pm0.0126$ \\
+2 & \best{$0.8596\pm0.0124$} & \best{$0.8275\pm0.0153$} \\
+3 & $0.8540\pm0.0231$ & $0.8243\pm0.0268$ \\
+4 & $0.8491\pm0.0197$ & $0.8124\pm0.0291$ \\
+\bottomrule
+\end{tabular}
+\vspace{2pt}
+
+\raggedright\scriptsize Accuracy và Macro-F1 được báo dưới dạng \meanstd{}
+qua 5 seed. Nguồn: \texttt{diagnostics/revision/topk/topk\_summary.csv}.
+\end{table}
+
+\textbf{Operating point được chọn:} $k=2$. \textbf{Kết luận Run 5: PASS.}
+Top-2 đạt Accuracy $0.8596\pm0.0124$ và Macro-F1 $0.8275\pm0.0153$. Top-3
+cho kết quả trung bình gần Top-2 nhưng dùng thêm một expert và có độ lệch
+chuẩn lớn hơn; Top-4 không cải thiện hiệu năng trung bình dù kích hoạt toàn
+bộ expert. Vì vậy,
+Top-2 là operating point hợp lý trong các cấu hình đã thử.
+
+\subsection{Run 6: Q8--Static-uniform 4-expert control}
+
+\textbf{Mục đích.} Run 6 tách đóng góp của routing phụ thuộc đầu vào khỏi lợi
+ích đơn thuần do mô hình lưu trữ bốn expert. Đây là đối chứng matched-capacity
+trực tiếp cho Q8: nếu Main MoE tốt hơn ổn định, cải thiện khó có thể chỉ được
+giải thích bằng số tham số expert được lưu trữ.
+
+\textbf{Cách thực hiện.} Đối chứng static-uniform giữ cùng backbone, bốn
+expert $576\rightarrow1024\rightarrow576$, residual path và classifier cuối,
+nhưng bỏ input-dependent gate và kết hợp expert bằng trọng số cố định đồng
+đều. Năm checkpoint control được huấn luyện độc lập với các seed 42--46.
+Sau huấn luyện, Accuracy và Macro-F1 của mỗi cấu hình được tổng hợp thành
+trung bình $\pm$ độ lệch chuẩn trên năm seed trong
+\texttt{control\_summary.csv}.
+
+\textbf{Cách diễn giải.} So sánh trung bình và độ lệch chuẩn cho biết learned
+routing có cải thiện hiệu năng tổng hợp so với kết hợp expert bằng trọng số
+cố định hay không, trong điều kiện hai cấu hình có dung lượng lưu trữ gần
+tương đương.
+
+\begin{table}[H]
+\caption{So sánh Main MoE với static-uniform control}
+\label{tab:static-summary}
+\centering
+\footnotesize
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Mô hình & Accuracy & Macro-F1 \\
+\midrule
+Main MoE & \textbf{$0.8596\pm0.0124$} & \textbf{$0.8275\pm0.0153$} \\
+Static-uniform 4-expert & $0.8365\pm0.0234$ & $0.8019\pm0.0247$ \\
+\textbf{MoE $-$ Static} & \textbf{$+0.0232$} & \textbf{$+0.0256$} \\
+\bottomrule
+\end{tabular}
+\vspace{2pt}
+
+\raggedright\scriptsize Kết quả là \meanstd{} tổng hợp từ năm seed. Nguồn:
+\texttt{control\_summary.csv}.
+\end{table}
+
+\textbf{Kết luận Run 6: TREND.} Main MoE đạt Accuracy
+$0.8596\pm0.0124$ và Macro-F1 $0.8275\pm0.0153$, so với
+$0.8365\pm0.0234$ và $0.8019\pm0.0247$ của static-uniform. Chênh lệch trung
+bình lần lượt là $0.0232$ và $0.0256$, đồng thời độ lệch chuẩn của Main MoE
+thấp hơn trên cả hai metric. Vì hai mô hình cùng sử dụng
+backbone và bốn expert có cấu trúc tương đương, các kết quả tổng hợp này cho
+thấy routing phụ thuộc đầu vào cải thiện hiệu năng trung bình và giảm biến
+thiên so với static-uniform.
+
+\subsection{Run 7: Ablation context ảnh 6 chiều}
+
+\textbf{Mục đích.} Run 7 định lượng mức đóng góp của sáu đặc trưng context
+suy ra từ ảnh được đưa vào cổng routing. Ablation này đặc biệt cần thiết vì
+implementation chính sử dụng nhánh context 6-D trong khi mô tả cũ của
+manuscript chưa phản ánh đầy đủ nhánh này.
+
+\textbf{Cách thực hiện.} Mô hình đối chứng giữ nguyên backbone, kiến trúc MoE,
+số expert, Top-2 và số tham số, nhưng đặt toàn bộ vector context về 0 trong cả
+train, validation và test. Zero-context MoE được huấn luyện trên năm seed
+42--46. Accuracy và Macro-F1 của hai cấu hình được tổng hợp thành trung bình
+$\pm$ độ lệch chuẩn để đánh giá ảnh hưởng của tín hiệu context. Nhánh context
+6 chiều vẫn phải được mô tả đúng vì checkpoint chính sử dụng cổng
+context-aware.
+
+\begin{table}[H]
+\caption{Ảnh hưởng của context 6 chiều}
+\label{tab:context}
+\centering
+\footnotesize
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Cấu hình & Accuracy & Macro-F1 \\
+\midrule
+Main MoE (context 6-D) & \best{$0.8596\pm0.0124$} & \best{$0.8275\pm0.0153$} \\
+Zero-context MoE & $0.8330\pm0.0343$ & $0.8018\pm0.0342$ \\
+\bottomrule
+\end{tabular}
+\vspace{2pt}
+
+\raggedright\scriptsize Các ô hiệu năng báo \meanstd{} qua 5 seed. Nguồn:
+\texttt{context\_seed\_metrics.csv}.
+\end{table}
+
+\textbf{Kết luận Run 7:} Main MoE sử dụng context 6-D đạt Accuracy
+$0.8596\pm0.0124$ và Macro-F1 $0.8275\pm0.0153$, cao hơn zero-context lần
+lượt $0.0267$ và $0.0257$. Độ lệch chuẩn của context-aware cũng thấp hơn trên
+cả Accuracy và Macro-F1, cho thấy độ biến thiên tổng hợp thấp hơn. Kết quả
+này cho thấy sáu đặc trưng context có đóng góp tích cực vào hiệu năng trung
+bình của mô hình. Vì checkpoint chính sử dụng cổng context-aware, nhánh
+context 6 chiều phải được mô tả đầy đủ trong manuscript.
+
+\subsection{Run 8: Matched MobileNetV3-Small baseline}
+
+\begin{table}[H]
+\caption{Kết quả MobileNetV3-Small pretrained cùng họ torchvision}
+\label{tab:baseline}
+\centering
+\footnotesize
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Mô hình & Accuracy & Macro-F1 \\
+\midrule
+MobileNetV3-Small & $0.8267\pm0.0223$ & $0.7894\pm0.0242$ \\
+\bottomrule
+\end{tabular}
+\vspace{2pt}
+
+\raggedright\scriptsize Nguồn: \texttt{diagnostics/revision/controls/control\_summary.csv}.
+\end{table}
+
+\section{Thảo luận tổng hợp}
+
+Các giá trị tổng hợp cho thấy Main MoE có Accuracy và Macro-F1 trung bình cao
+hơn static-uniform 4-expert, đồng thời learned routing cao hơn shuffled
+routing trên cả hai metric. Kết hợp hai kết quả này cho thấy routing phụ
+thuộc đầu vào đóng góp vượt ra ngoài lợi ích do dung lượng expert được lưu
+trữ. Kết quả này vẫn không phải bằng chứng trực tiếp rằng các expert đã học
+được chuyên môn hóa ngữ nghĩa.
+
+\begin{table}[H]
+\caption{Ma trận bằng chứng và kết luận cuối}
+\label{tab:evidence}
+\centering
+\footnotesize
+\begin{tabular}{@{}p{0.53\columnwidth}p{0.35\columnwidth}@{}}
+\toprule
+Điều kiện & Kết quả \\
+\midrule
+Audit checkpoint/architecture đạt yêu cầu & \textbf{PASS} \\
+Runtime tăng hợp lý theo $k$ & \textbf{PASS} \\
+Top-2 là operating point hợp lý & \textbf{PASS} \\
+Không có expert collapse toàn cục & \textbf{PASS} \\
+Learned routing $>$ shuffled routing & \textbf{PASS} \\
+Main MoE $>$ static-uniform control & \textbf{TREND} \\
+Context 6-D tạo cải thiện trung bình & \textbf{TREND} \\
+\midrule
+Kết luận tổng hợp & \textbf{PASS có giới hạn} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Hạn chế}
+
+Các giá trị trung bình và độ lệch chuẩn chỉ được ước lượng từ năm seed nên độ
+chắc chắn của phân phối thực nghiệm còn hạn chế. Benchmark latency phụ thuộc
+phần cứng, power mode, số thread và phiên bản PyTorch; do đó chỉ so sánh các
+cấu hình được đo trong cùng điều kiện. Phép đo runtime trong báo cáo chỉ đại
+diện cho PyTorch eager trên Raspberry Pi 5, không phải ONNX runtime. Các kết
+luận của báo cáo hiện giới hạn ở PlantDoc và không tự động khái quát sang SLIF
+hoặc tập dữ liệu khác.
+
+\section{Kết luận}
+
+Báo cáo đã tổng hợp tám nhóm thực nghiệm revision và gắn từng bảng với đầu ra
+CSV tương ứng. Top-2 là operating point tốt nhất trong ablation có kiểm soát,
+đồng thời learned routing tốt hơn shuffled routing và không xuất hiện global
+expert collapse. Nhánh context 6-D cho Accuracy và Macro-F1 trung bình cao
+hơn zero-context, đồng thời có độ lệch chuẩn thấp hơn trên cả hai metric. Các
+kết luận hiện giới hạn ở PlantDoc và cần giữ nguyên các lưu ý về số lượng
+seed, runtime và implementation.
+
+\end{document}

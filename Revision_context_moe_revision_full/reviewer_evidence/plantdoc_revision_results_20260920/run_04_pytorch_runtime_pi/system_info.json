@@ -1,0 +1,18 @@
+{
+  "timestamp_utc": "2026-09-20T07:42:05.243371+00:00",
+  "platform": "Linux-6.12.75+rpt-rpi-2712-aarch64-with-glibc2.41",
+  "machine": "aarch64",
+  "cpu_model": "Raspberry Pi 5 Model B Rev 1.1",
+  "logical_cpus": 4,
+  "python": "3.13.5 (main, Jun 25 2025, 18:55:22) [GCC 14.2.0]",
+  "torch": "2.14.0+cpu",
+  "torchvision": "0.29.0+cpu",
+  "device": "cpu",
+  "torch_cuda_build": null,
+  "cuda_available": false,
+  "threads": 1,
+  "warmup": 30,
+  "runs": 300,
+  "checkpoint": "best_checkpoint.pth",
+  "checkpoint_sha256": "e7683d54bc2457c8ae4664db14fcf271a2a940b71d01b66f8895fc0fc5cc3678"
+}

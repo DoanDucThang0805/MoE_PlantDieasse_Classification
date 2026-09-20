@@ -2,6 +2,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import numpy as np, pandas as pd, torch
+from thop import profile
 from scipy.stats import ttest_rel, wilcoxon
 from sklearn.metrics import accuracy_score, f1_score
 from models.moe.linear_model import MoEModel
@@ -12,6 +13,15 @@ from revision.common import SEEDS, make_loader, find_checkpoint
 
 def load_state(path):
     x=torch.load(path,map_location='cpu'); return x.get('model_state_dict',x)
+
+
+def thop_parameter_count(model, moe=False):
+    """Count modules executed by THOP on the actual inference path."""
+    model.cpu().eval()
+    image=torch.randn(1,3,224,224)
+    inputs=(image,torch.randn(1,6)) if moe else (image,)
+    _,params=profile(model,inputs=inputs,verbose=False)
+    return int(params)
 
 @torch.inference_mode()
 def eval_model(model, loader, device, moe=False):
@@ -31,7 +41,7 @@ def main():
       'Static-uniform 4-expert': args.checkpoint_root/'plantdoc'/'revision_controls'/'static_uniform_4expert',
       'Matched torchvision MNV3-Small': args.checkpoint_root/'plantdoc'/'revision_controls'/'matched_torchvision_mnv3small',
     }
-    rows=[]
+    rows=[]; thop_params={}
     for seed in SEEDS:
       for name,root in roots.items():
         try: ck=find_checkpoint(root,seed)
@@ -42,14 +52,19 @@ def main():
           model=StaticUniformExpertModel(8,4,pretrained=False); model.load_state_dict(load_state(ck)); is_moe=False
         else:
           model=build_matched_baseline(8,pretrained=False); model.load_state_dict(load_state(ck)); is_moe=False
-        a,f=eval_model(model,loader,dev,is_moe); rows.append({'seed':seed,'model':name,'accuracy':a,'macro_f1':f,'parameters':sum(p.numel() for p in model.parameters())}); print(seed,name,a,f)
+        if name not in thop_params:
+          thop_params[name]=thop_parameter_count(model,is_moe)
+        a,f=eval_model(model,loader,dev,is_moe); rows.append({'seed':seed,'model':name,'accuracy':a,'macro_f1':f,'parameters':thop_params[name]}); print(seed,name,a,f)
     args.output_dir.mkdir(parents=True,exist_ok=True); df=pd.DataFrame(rows); df.to_csv(args.output_dir/'control_seed_metrics.csv',index=False)
     if df.empty: return
     summary=df.groupby('model').agg(n_seeds=('seed','count'),parameters=('parameters','first'),accuracy_mean=('accuracy','mean'),accuracy_std=('accuracy','std'),macro_f1_mean=('macro_f1','mean'),macro_f1_std=('macro_f1','std')).reset_index(); summary.to_csv(args.output_dir/'control_summary.csv',index=False)
     stats=[]
     for control in ['Static-uniform 4-expert','Matched torchvision MNV3-Small']:
       for metric in ['accuracy','macro_f1']:
-        p=df.pivot(index='seed',columns='model',values=metric).dropna(subset=['MoE',control]);
+        p=df.pivot(index='seed',columns='model',values=metric)
+        if 'MoE' not in p.columns or control not in p.columns:
+            continue
+        p=p.dropna(subset=['MoE',control]);
         if len(p)<2: continue
         d=p['MoE'].to_numpy()-p[control].to_numpy(); pt=ttest_rel(p['MoE'],p[control]).pvalue
         try: pw=wilcoxon(d).pvalue
