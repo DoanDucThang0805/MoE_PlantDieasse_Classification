@@ -1,0 +1,64 @@
+{
+  "dataset": "slif",
+  "data_root": "data/slif_tomato_dataset/Phase_I-Dataset",
+  "method": "sklearn.train_test_split, stratified, shuffle=True, random_state=42; train 80% / validation 10% / test 10% (utils.load_dataset.LoadDataset)",
+  "train_ratio": 0.8,
+  "sklearn_version_at_freeze": "1.6.1",
+  "class_to_idx": {
+    "Bacterial_Spot": 0,
+    "Early_Blight": 1,
+    "Healthy": 2,
+    "Late_Blight": 3,
+    "Mosaic": 4,
+    "Powdery_Mildew": 5,
+    "Septoria": 6,
+    "Wilt": 7
+  },
+  "splits": {
+    "train": {
+      "file": "train.csv",
+      "n": 2136,
+      "per_class": {
+        "Bacterial_Spot": 50,
+        "Early_Blight": 1231,
+        "Healthy": 106,
+        "Late_Blight": 82,
+        "Mosaic": 475,
+        "Powdery_Mildew": 55,
+        "Septoria": 29,
+        "Wilt": 108
+      },
+      "sha256": "034146ab6599f08914f44d876516b1139d66701bf1ed382a7b4121f4a5aea680"
+    },
+    "validation": {
+      "file": "validation.csv",
+      "n": 267,
+      "per_class": {
+        "Bacterial_Spot": 6,
+        "Early_Blight": 154,
+        "Healthy": 13,
+        "Late_Blight": 10,
+        "Mosaic": 60,
+        "Powdery_Mildew": 7,
+        "Septoria": 3,
+        "Wilt": 14
+      },
+      "sha256": "1e848426020319903b4d169da8e14caf1591bab26bae2560619e45c5c99df856"
+    },
+    "test": {
+      "file": "test.csv",
+      "n": 267,
+      "per_class": {
+        "Bacterial_Spot": 7,
+        "Early_Blight": 154,
+        "Healthy": 13,
+        "Late_Blight": 10,
+        "Mosaic": 59,
+        "Powdery_Mildew": 7,
+        "Septoria": 4,
+        "Wilt": 13
+      },
+      "sha256": "b42abba55a40c67931082fce7e8f27a6a2553e4bd89f0eabc901c2b360907e41"
+    }
+  }
+}

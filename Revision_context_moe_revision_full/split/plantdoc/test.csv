@@ -1,0 +1,286 @@
+path,label,class_name
+Tomato leaf mosaic virus/train_7799.jpg,5,Tomato leaf mosaic virus
+Tomato leaf bacterial spot/train_6307.jpg,3,Tomato leaf bacterial spot
+Tomato Septoria leaf spot/train_6147.jpg,1,Tomato Septoria leaf spot
+Tomato leaf late blight/train_5457.jpg,4,Tomato leaf late blight
+Tomato leaf yellow virus/train_6568.jpg,6,Tomato leaf yellow virus
+Tomato leaf bacterial spot/train_5309.jpg,3,Tomato leaf bacterial spot
+Tomato leaf/train_450.jpg,2,Tomato leaf
+Tomato Septoria leaf spot/train_2848.jpg,1,Tomato Septoria leaf spot
+Tomato leaf bacterial spot/train_934.jpg,3,Tomato leaf bacterial spot
+Tomato leaf yellow virus/train_2680.jpg,6,Tomato leaf yellow virus
+Tomato leaf bacterial spot/train_7221.jpg,3,Tomato leaf bacterial spot
+Tomato leaf/train_5461.jpg,2,Tomato leaf
+Tomato leaf mosaic virus/train_7974.jpg,5,Tomato leaf mosaic virus
+Tomato leaf bacterial spot/train_3362.jpg,3,Tomato leaf bacterial spot
+Tomato Early blight leaf/test_196.jpg,0,Tomato Early blight leaf
+Tomato leaf bacterial spot/train_1003.jpg,3,Tomato leaf bacterial spot
+Tomato Septoria leaf spot/train_4609.jpg,1,Tomato Septoria leaf spot
+Tomato leaf late blight/train_3819.jpg,4,Tomato leaf late blight
+Tomato leaf yellow virus/train_2807.jpg,6,Tomato leaf yellow virus
+Tomato leaf/train_2194.jpg,2,Tomato leaf
+Tomato leaf/train_7080.jpg,2,Tomato leaf
+Tomato leaf yellow virus/train_2243.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_4826.jpg,6,Tomato leaf yellow virus
+Tomato leaf mosaic virus/test_84.jpg,5,Tomato leaf mosaic virus
+Tomato leaf mosaic virus/test_183.jpg,5,Tomato leaf mosaic virus
+Tomato Septoria leaf spot/train_5645.jpg,1,Tomato Septoria leaf spot
+Tomato mold leaf/train_1718.jpg,7,Tomato mold leaf
+Tomato Early blight leaf/train_1488.jpg,0,Tomato Early blight leaf
+Tomato mold leaf/test_343.jpg,7,Tomato mold leaf
+Tomato leaf/test_315.jpg,2,Tomato leaf
+Tomato leaf bacterial spot/train_1001.jpg,3,Tomato leaf bacterial spot
+Tomato Septoria leaf spot/train_5646.jpg,1,Tomato Septoria leaf spot
+Tomato mold leaf/train_46.jpg,7,Tomato mold leaf
+Tomato leaf late blight/train_5599.jpg,4,Tomato leaf late blight
+Tomato leaf mosaic virus/train_5806.jpg,5,Tomato leaf mosaic virus
+Tomato Septoria leaf spot/train_3833.jpg,1,Tomato Septoria leaf spot
+Tomato Septoria leaf spot/train_6962.jpg,1,Tomato Septoria leaf spot
+Tomato leaf yellow virus/train_2245.jpg,6,Tomato leaf yellow virus
+Tomato leaf mosaic virus/test_77.jpg,5,Tomato leaf mosaic virus
+Tomato Septoria leaf spot/train_5779.jpg,1,Tomato Septoria leaf spot
+Tomato mold leaf/train_7096.jpg,7,Tomato mold leaf
+Tomato leaf mosaic virus/train_2534.jpg,5,Tomato leaf mosaic virus
+Tomato leaf late blight/train_7739.jpg,4,Tomato leaf late blight
+Tomato leaf yellow virus/train_5051.jpg,6,Tomato leaf yellow virus
+Tomato Early blight leaf/test_306.jpg,0,Tomato Early blight leaf
+Tomato leaf yellow virus/train_2883.jpg,6,Tomato leaf yellow virus
+Tomato leaf/train_7682.jpg,2,Tomato leaf
+Tomato leaf/train_5241.jpg,2,Tomato leaf
+Tomato leaf yellow virus/train_5284.jpg,6,Tomato leaf yellow virus
+Tomato leaf bacterial spot/train_3143.jpg,3,Tomato leaf bacterial spot
+Tomato leaf yellow virus/train_1310.jpg,6,Tomato leaf yellow virus
+Tomato leaf/train_2191.jpg,2,Tomato leaf
+Tomato leaf yellow virus/train_8301.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_402.jpg,6,Tomato leaf yellow virus
+Tomato Septoria leaf spot/train_821.jpg,1,Tomato Septoria leaf spot
+Tomato leaf/train_6585.jpg,2,Tomato leaf
+Tomato leaf/train_1032.jpg,2,Tomato leaf
+Tomato leaf/train_3856.jpg,2,Tomato leaf
+Tomato leaf yellow virus/train_173.jpg,6,Tomato leaf yellow virus
+Tomato Septoria leaf spot/train_1437.jpg,1,Tomato Septoria leaf spot
+Tomato leaf mosaic virus/train_6811.jpg,5,Tomato leaf mosaic virus
+Tomato leaf yellow virus/train_5947.jpg,6,Tomato leaf yellow virus
+Tomato Septoria leaf spot/train_7954.jpg,1,Tomato Septoria leaf spot
+Tomato leaf bacterial spot/train_7661.jpg,3,Tomato leaf bacterial spot
+Tomato leaf/train_5592.jpg,2,Tomato leaf
+Tomato leaf mosaic virus/train_3242.jpg,5,Tomato leaf mosaic virus
+Tomato mold leaf/train_1717.jpg,7,Tomato mold leaf
+Tomato leaf yellow virus/train_4845.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_2665.jpg,6,Tomato leaf yellow virus
+Tomato leaf/train_8219.jpg,2,Tomato leaf
+Tomato leaf mosaic virus/train_5809.jpg,5,Tomato leaf mosaic virus
+Tomato leaf/train_443.jpg,2,Tomato leaf
+Tomato Septoria leaf spot/train_2540.jpg,1,Tomato Septoria leaf spot
+Tomato leaf mosaic virus/train_514.jpg,5,Tomato leaf mosaic virus
+Tomato leaf yellow virus/train_1604.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_330.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_3029.jpg,6,Tomato leaf yellow virus
+Tomato leaf late blight/train_1921.jpg,4,Tomato leaf late blight
+Tomato Septoria leaf spot/train_6223.jpg,1,Tomato Septoria leaf spot
+Tomato leaf bacterial spot/train_3394.jpg,3,Tomato leaf bacterial spot
+Tomato Septoria leaf spot/train_820.jpg,1,Tomato Septoria leaf spot
+Tomato Septoria leaf spot/train_1294.jpg,1,Tomato Septoria leaf spot
+Tomato leaf yellow virus/train_3556.jpg,6,Tomato leaf yellow virus
+Tomato mold leaf/train_1819.jpg,7,Tomato mold leaf
+Tomato leaf bacterial spot/test_417.jpg,3,Tomato leaf bacterial spot
+Tomato leaf yellow virus/train_6378.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_6370.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_182.jpg,6,Tomato leaf yellow virus
+Tomato leaf mosaic virus/train_7973.jpg,5,Tomato leaf mosaic virus
+Tomato leaf bacterial spot/train_7752.jpg,3,Tomato leaf bacterial spot
+Tomato leaf mosaic virus/train_7386.jpg,5,Tomato leaf mosaic virus
+Tomato leaf mosaic virus/train_7754.jpg,5,Tomato leaf mosaic virus
+Tomato leaf yellow virus/train_175.jpg,6,Tomato leaf yellow virus
+Tomato leaf late blight/train_4572.jpg,4,Tomato leaf late blight
+Tomato leaf late blight/train_5802.jpg,4,Tomato leaf late blight
+Tomato leaf/train_6055.jpg,2,Tomato leaf
+Tomato leaf yellow virus/train_1964.jpg,6,Tomato leaf yellow virus
+Tomato Septoria leaf spot/train_8368.jpg,1,Tomato Septoria leaf spot
+Tomato leaf bacterial spot/train_93.jpg,3,Tomato leaf bacterial spot
+Tomato mold leaf/train_8154.jpg,7,Tomato mold leaf
+Tomato leaf mosaic virus/train_7390.jpg,5,Tomato leaf mosaic virus
+Tomato Early blight leaf/train_386.jpg,0,Tomato Early blight leaf
+Tomato leaf/train_8222.jpg,2,Tomato leaf
+Tomato leaf/train_4062.jpg,2,Tomato leaf
+Tomato leaf bacterial spot/train_3144.jpg,3,Tomato leaf bacterial spot
+Tomato leaf yellow virus/train_2567.jpg,6,Tomato leaf yellow virus
+Tomato Septoria leaf spot/train_1391.jpg,1,Tomato Septoria leaf spot
+Tomato leaf yellow virus/train_786.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_6484.jpg,6,Tomato leaf yellow virus
+Tomato leaf mosaic virus/train_8181.jpg,5,Tomato leaf mosaic virus
+Tomato mold leaf/train_5344.jpg,7,Tomato mold leaf
+Tomato leaf/train_7233.jpg,2,Tomato leaf
+Tomato leaf/train_1210.jpg,2,Tomato leaf
+Tomato leaf yellow virus/train_4872.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_2810.jpg,6,Tomato leaf yellow virus
+Tomato leaf mosaic virus/train_1738.jpg,5,Tomato leaf mosaic virus
+Tomato leaf bacterial spot/train_881.jpg,3,Tomato leaf bacterial spot
+Tomato mold leaf/train_498.jpg,7,Tomato mold leaf
+Tomato Septoria leaf spot/train_7496.jpg,1,Tomato Septoria leaf spot
+Tomato leaf bacterial spot/train_4354.jpg,3,Tomato leaf bacterial spot
+Tomato Septoria leaf spot/train_818.jpg,1,Tomato Septoria leaf spot
+Tomato leaf yellow virus/train_2305.jpg,6,Tomato leaf yellow virus
+Tomato leaf/train_1507.jpg,2,Tomato leaf
+Tomato Septoria leaf spot/test_439.jpg,1,Tomato Septoria leaf spot
+Tomato leaf yellow virus/train_3051.jpg,6,Tomato leaf yellow virus
+Tomato leaf mosaic virus/train_3231.jpg,5,Tomato leaf mosaic virus
+Tomato Septoria leaf spot/train_8363.jpg,1,Tomato Septoria leaf spot
+Tomato leaf yellow virus/train_2817.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/test_269.jpg,6,Tomato leaf yellow virus
+Tomato Early blight leaf/test_370.jpg,0,Tomato Early blight leaf
+Tomato leaf yellow virus/train_378.jpg,6,Tomato leaf yellow virus
+Tomato leaf/train_7287.jpg,2,Tomato leaf
+Tomato leaf yellow virus/train_347.jpg,6,Tomato leaf yellow virus
+Tomato leaf/train_2508.jpg,2,Tomato leaf
+Tomato leaf/train_5922.jpg,2,Tomato leaf
+Tomato leaf/train_7290.jpg,2,Tomato leaf
+Tomato leaf late blight/train_8033.jpg,4,Tomato leaf late blight
+Tomato leaf yellow virus/train_3652.jpg,6,Tomato leaf yellow virus
+Tomato leaf late blight/train_7194.jpg,4,Tomato leaf late blight
+Tomato leaf yellow virus/train_6803.jpg,6,Tomato leaf yellow virus
+Tomato Early blight leaf/train_8052.jpg,0,Tomato Early blight leaf
+Tomato Early blight leaf/train_7198.jpg,0,Tomato Early blight leaf
+Tomato leaf mosaic virus/train_4596.jpg,5,Tomato leaf mosaic virus
+Tomato mold leaf/train_47.jpg,7,Tomato mold leaf
+Tomato leaf/train_6301.jpg,2,Tomato leaf
+Tomato leaf/train_4065.jpg,2,Tomato leaf
+Tomato leaf late blight/train_7195.jpg,4,Tomato leaf late blight
+Tomato leaf yellow virus/train_4809.jpg,6,Tomato leaf yellow virus
+Tomato Septoria leaf spot/train_3287.jpg,1,Tomato Septoria leaf spot
+Tomato mold leaf/train_678.jpg,7,Tomato mold leaf
+Tomato leaf yellow virus/train_6353.jpg,6,Tomato leaf yellow virus
+Tomato leaf late blight/train_5582.jpg,4,Tomato leaf late blight
+Tomato leaf/train_1875.jpg,2,Tomato leaf
+Tomato Early blight leaf/train_3359.jpg,0,Tomato Early blight leaf
+Tomato mold leaf/train_7587.jpg,7,Tomato mold leaf
+Tomato leaf late blight/train_6963.jpg,4,Tomato leaf late blight
+Tomato leaf mosaic virus/train_3233.jpg,5,Tomato leaf mosaic virus
+Tomato Early blight leaf/train_5754.jpg,0,Tomato Early blight leaf
+Tomato Early blight leaf/train_1487.jpg,0,Tomato Early blight leaf
+Tomato leaf yellow virus/train_2894.jpg,6,Tomato leaf yellow virus
+Tomato leaf mosaic virus/train_6417.jpg,5,Tomato leaf mosaic virus
+Tomato mold leaf/train_6512.jpg,7,Tomato mold leaf
+Tomato leaf yellow virus/train_1324.jpg,6,Tomato leaf yellow virus
+Tomato leaf late blight/train_3849.jpg,4,Tomato leaf late blight
+Tomato leaf yellow virus/train_806.jpg,6,Tomato leaf yellow virus
+Tomato mold leaf/train_835.jpg,7,Tomato mold leaf
+Tomato leaf late blight/train_3965.jpg,4,Tomato leaf late blight
+Tomato leaf mosaic virus/train_5190.jpg,5,Tomato leaf mosaic virus
+Tomato leaf yellow virus/train_6377.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_3557.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_341.jpg,6,Tomato leaf yellow virus
+Tomato leaf bacterial spot/train_6501.jpg,3,Tomato leaf bacterial spot
+Tomato leaf late blight/train_7310.jpg,4,Tomato leaf late blight
+Tomato leaf/train_453.jpg,2,Tomato leaf
+Tomato leaf yellow virus/train_4527.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_2887.jpg,6,Tomato leaf yellow virus
+Tomato leaf/train_7692.jpg,2,Tomato leaf
+Tomato leaf yellow virus/train_5952.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_2676.jpg,6,Tomato leaf yellow virus
+Tomato Septoria leaf spot/train_3290.jpg,1,Tomato Septoria leaf spot
+Tomato Septoria leaf spot/train_3908.jpg,1,Tomato Septoria leaf spot
+Tomato Septoria leaf spot/train_2967.jpg,1,Tomato Septoria leaf spot
+Tomato leaf late blight/train_7699.jpg,4,Tomato leaf late blight
+Tomato leaf late blight/train_5004.jpg,4,Tomato leaf late blight
+Tomato Septoria leaf spot/train_2864.jpg,1,Tomato Septoria leaf spot
+Tomato leaf mosaic virus/train_4629.jpg,5,Tomato leaf mosaic virus
+Tomato leaf/train_7280.jpg,2,Tomato leaf
+Tomato leaf yellow virus/train_2309.jpg,6,Tomato leaf yellow virus
+Tomato Septoria leaf spot/train_2850.jpg,1,Tomato Septoria leaf spot
+Tomato leaf yellow virus/train_4868.jpg,6,Tomato leaf yellow virus
+Tomato leaf/train_7641.jpg,2,Tomato leaf
+Tomato leaf/train_5919.jpg,2,Tomato leaf
+Tomato Early blight leaf/train_3853.jpg,0,Tomato Early blight leaf
+Tomato leaf bacterial spot/train_1029.jpg,3,Tomato leaf bacterial spot
+Tomato leaf/test_88.jpg,2,Tomato leaf
+Tomato Septoria leaf spot/train_6964.jpg,1,Tomato Septoria leaf spot
+Tomato leaf late blight/train_1144.jpg,4,Tomato leaf late blight
+Tomato leaf yellow virus/train_5287.jpg,6,Tomato leaf yellow virus
+Tomato Septoria leaf spot/train_2987.jpg,1,Tomato Septoria leaf spot
+Tomato mold leaf/train_501.jpg,7,Tomato mold leaf
+Tomato leaf yellow virus/train_349.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_2300.jpg,6,Tomato leaf yellow virus
+Tomato Septoria leaf spot/train_7937.jpg,1,Tomato Septoria leaf spot
+Tomato leaf yellow virus/train_2030.jpg,6,Tomato leaf yellow virus
+Tomato mold leaf/train_6164.jpg,7,Tomato mold leaf
+Tomato leaf/train_1209.jpg,2,Tomato leaf
+Tomato mold leaf/train_7585.jpg,7,Tomato mold leaf
+Tomato mold leaf/train_5349.jpg,7,Tomato mold leaf
+Tomato Early blight leaf/train_1696.jpg,0,Tomato Early blight leaf
+Tomato leaf/train_4063.jpg,2,Tomato leaf
+Tomato leaf mosaic virus/train_6255.jpg,5,Tomato leaf mosaic virus
+Tomato Septoria leaf spot/train_7672.jpg,1,Tomato Septoria leaf spot
+Tomato leaf/train_1037.jpg,2,Tomato leaf
+Tomato mold leaf/train_504.jpg,7,Tomato mold leaf
+Tomato leaf mosaic virus/train_82.jpg,5,Tomato leaf mosaic virus
+Tomato mold leaf/train_4317.jpg,7,Tomato mold leaf
+Tomato leaf yellow virus/train_809.jpg,6,Tomato leaf yellow virus
+Tomato Septoria leaf spot/train_2057.jpg,1,Tomato Septoria leaf spot
+Tomato mold leaf/train_4348.jpg,7,Tomato mold leaf
+Tomato leaf yellow virus/train_2329.jpg,6,Tomato leaf yellow virus
+Tomato mold leaf/train_45.jpg,7,Tomato mold leaf
+Tomato leaf late blight/train_6324.jpg,4,Tomato leaf late blight
+Tomato leaf bacterial spot/train_1217.jpg,3,Tomato leaf bacterial spot
+Tomato leaf/train_1543.jpg,2,Tomato leaf
+Tomato leaf late blight/train_7841.jpg,4,Tomato leaf late blight
+Tomato leaf/train_222.jpg,2,Tomato leaf
+Tomato leaf yellow virus/train_2278.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_1602.jpg,6,Tomato leaf yellow virus
+Tomato Early blight leaf/train_1814.jpg,0,Tomato Early blight leaf
+Tomato leaf late blight/train_3482.jpg,4,Tomato leaf late blight
+Tomato Septoria leaf spot/train_7984.jpg,1,Tomato Septoria leaf spot
+Tomato Septoria leaf spot/train_5357.jpg,1,Tomato Septoria leaf spot
+Tomato leaf bacterial spot/train_3389.jpg,3,Tomato leaf bacterial spot
+Tomato leaf yellow virus/train_7177.jpg,6,Tomato leaf yellow virus
+Tomato leaf/train_969.jpg,2,Tomato leaf
+Tomato leaf yellow virus/test_286.jpg,6,Tomato leaf yellow virus
+Tomato Early blight leaf/train_6300.jpg,0,Tomato Early blight leaf
+Tomato leaf yellow virus/train_769.jpg,6,Tomato leaf yellow virus
+Tomato Septoria leaf spot/train_4793.jpg,1,Tomato Septoria leaf spot
+Tomato leaf yellow virus/train_771.jpg,6,Tomato leaf yellow virus
+Tomato mold leaf/train_5333.jpg,7,Tomato mold leaf
+Tomato leaf yellow virus/train_3046.jpg,6,Tomato leaf yellow virus
+Tomato leaf bacterial spot/train_7782.jpg,3,Tomato leaf bacterial spot
+Tomato leaf yellow virus/train_1615.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_6360.jpg,6,Tomato leaf yellow virus
+Tomato Early blight leaf/train_7710.jpg,0,Tomato Early blight leaf
+Tomato leaf bacterial spot/train_1076.jpg,3,Tomato leaf bacterial spot
+Tomato leaf yellow virus/train_415.jpg,6,Tomato leaf yellow virus
+Tomato Septoria leaf spot/train_2061.jpg,1,Tomato Septoria leaf spot
+Tomato Early blight leaf/train_6296.jpg,0,Tomato Early blight leaf
+Tomato leaf yellow virus/train_772.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_6804.jpg,6,Tomato leaf yellow virus
+Tomato mold leaf/train_7767.jpg,7,Tomato mold leaf
+Tomato mold leaf/train_762.jpg,7,Tomato mold leaf
+Tomato leaf yellow virus/train_1968.jpg,6,Tomato leaf yellow virus
+Tomato leaf late blight/train_2696.jpg,4,Tomato leaf late blight
+Tomato leaf bacterial spot/train_4724.jpg,3,Tomato leaf bacterial spot
+Tomato Early blight leaf/train_6969.jpg,0,Tomato Early blight leaf
+Tomato Early blight leaf/train_3216.jpg,0,Tomato Early blight leaf
+Tomato leaf yellow virus/train_2746.jpg,6,Tomato leaf yellow virus
+Tomato mold leaf/train_5340.jpg,7,Tomato mold leaf
+Tomato leaf mosaic virus/train_3243.jpg,5,Tomato leaf mosaic virus
+Tomato leaf yellow virus/train_3295.jpg,6,Tomato leaf yellow virus
+Tomato leaf/train_2510.jpg,2,Tomato leaf
+Tomato Septoria leaf spot/train_723.jpg,1,Tomato Septoria leaf spot
+Tomato Early blight leaf/train_6304.jpg,0,Tomato Early blight leaf
+Tomato mold leaf/train_2919.jpg,7,Tomato mold leaf
+Tomato mold leaf/train_4730.jpg,7,Tomato mold leaf
+Tomato leaf bacterial spot/train_4713.jpg,3,Tomato leaf bacterial spot
+Tomato leaf yellow virus/train_4303.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_8436.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_4831.jpg,6,Tomato leaf yellow virus
+Tomato leaf bacterial spot/train_2511.jpg,3,Tomato leaf bacterial spot
+Tomato Early blight leaf/train_6052.jpg,0,Tomato Early blight leaf
+Tomato mold leaf/train_7105.jpg,7,Tomato mold leaf
+Tomato Septoria leaf spot/train_6900.jpg,1,Tomato Septoria leaf spot
+Tomato Septoria leaf spot/train_3118.jpg,1,Tomato Septoria leaf spot
+Tomato Septoria leaf spot/train_8413.jpg,1,Tomato Septoria leaf spot
+Tomato leaf bacterial spot/train_2745.jpg,3,Tomato leaf bacterial spot
+Tomato Septoria leaf spot/train_3407.jpg,1,Tomato Septoria leaf spot
+Tomato leaf yellow virus/test_337.jpg,6,Tomato leaf yellow virus
+Tomato leaf yellow virus/train_4802.jpg,6,Tomato leaf yellow virus
+Tomato leaf bacterial spot/train_8014.jpg,3,Tomato leaf bacterial spot
+Tomato Septoria leaf spot/train_5647.jpg,1,Tomato Septoria leaf spot
+Tomato leaf yellow virus/train_7181.jpg,6,Tomato leaf yellow virus
