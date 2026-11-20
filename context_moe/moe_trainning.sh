@@ -3,7 +3,7 @@ source venv1/Scripts/activate
 cd src
 
 # Config
-SEEDS=(42 43 44 45 46)
+SEEDS=(42)
 
 run_training() {
     local num_experts=$1

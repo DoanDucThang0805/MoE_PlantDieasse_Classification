@@ -17,7 +17,7 @@ import torch.optim as optim
 from sklearn.utils.class_weight import compute_class_weight
 
 from utils.moe_trainer import MoETrainer
-from dataset.slif_tomato_dataset import build_datasets
+from dataset.plantdoc_dataset import build_datasets
 from models.moe.linear_model import MoEModel
 from loss.loss_fn import MoELoss
 

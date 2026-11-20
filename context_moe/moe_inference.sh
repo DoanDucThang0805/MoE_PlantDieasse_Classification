@@ -20,11 +20,11 @@ echo ""
 
 DATASET_NAME="plantdoc"
 MODEL_NAME="mobilenetv3small_moe"
-TYPE_MODEL="moe_contextaware_temp0.5_nonpretrainbackbone"
+TYPE_MODEL="moe_linearcontextaware_temp0.5"
 NUM_EXPERTS=4
 TOP_K=2
-SEED=46
-RUN_TIME="run_20260609-175400"
+SEED=42
+RUN_TIME="run_20260920-110525"
 
 
 python -m inference.moe.inference \

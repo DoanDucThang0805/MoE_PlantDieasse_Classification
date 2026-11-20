@@ -21,7 +21,7 @@ from collections import Counter
 
 # Path to cropped tomato disease dataset
 cropped_data_path = Path(__file__).resolve().parents[2] / 'data' / 'tomato_only'
-
+print(f"Using cropped tomato dataset path: {cropped_data_path}")
 
 # Augmentation cho tập huấn luyện
 train_transform = A.Compose([

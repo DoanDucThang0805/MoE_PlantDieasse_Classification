@@ -11,4 +11,3 @@ for model in "${models[@]}"; do
   for seed in "${seeds[@]}"; do
     python -m "$model" --seed "$seed"
   done
-done
