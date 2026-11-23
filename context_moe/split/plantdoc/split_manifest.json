@@ -1,0 +1,64 @@
+{
+  "dataset": "plantdoc",
+  "data_root": "data/tomato_only",
+  "method": "sklearn.train_test_split, stratified, shuffle=True, random_state=42; train 80% / validation 10% / test 10% (utils.load_dataset.LoadDataset)",
+  "train_ratio": 0.8,
+  "sklearn_version_at_freeze": "1.9.1",
+  "class_to_idx": {
+    "Tomato Early blight leaf": 0,
+    "Tomato Septoria leaf spot": 1,
+    "Tomato leaf": 2,
+    "Tomato leaf bacterial spot": 3,
+    "Tomato leaf late blight": 4,
+    "Tomato leaf mosaic virus": 5,
+    "Tomato leaf yellow virus": 6,
+    "Tomato mold leaf": 7
+  },
+  "splits": {
+    "train": {
+      "file": "train.csv",
+      "n": 2274,
+      "per_class": {
+        "Tomato Early blight leaf": 165,
+        "Tomato Septoria leaf spot": 337,
+        "Tomato leaf": 318,
+        "Tomato leaf bacterial spot": 210,
+        "Tomato leaf late blight": 176,
+        "Tomato leaf mosaic virus": 209,
+        "Tomato leaf yellow virus": 633,
+        "Tomato mold leaf": 226
+      },
+      "sha256": "d6baad9cc7241e20f8d991e0cfa4e8957759748da198574a8d77357c75b1b5d3"
+    },
+    "validation": {
+      "file": "validation.csv",
+      "n": 284,
+      "per_class": {
+        "Tomato Early blight leaf": 21,
+        "Tomato Septoria leaf spot": 42,
+        "Tomato leaf": 40,
+        "Tomato leaf bacterial spot": 26,
+        "Tomato leaf late blight": 22,
+        "Tomato leaf mosaic virus": 26,
+        "Tomato leaf yellow virus": 79,
+        "Tomato mold leaf": 28
+      },
+      "sha256": "ea1d63cde721eff95359c690bbb3ee762157a1d20aafcf51362542e337bf7e54"
+    },
+    "test": {
+      "file": "test.csv",
+      "n": 285,
+      "per_class": {
+        "Tomato Early blight leaf": 20,
+        "Tomato Septoria leaf spot": 42,
+        "Tomato leaf": 40,
+        "Tomato leaf bacterial spot": 27,
+        "Tomato leaf late blight": 22,
+        "Tomato leaf mosaic virus": 26,
+        "Tomato leaf yellow virus": 79,
+        "Tomato mold leaf": 29
+      },
+      "sha256": "e7fc10fd8897935725f5468777902b08a42945f06cd4f1c1255fceb640ba9027"
+    }
+  }
+}

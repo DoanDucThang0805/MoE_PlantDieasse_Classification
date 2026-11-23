@@ -15,3 +15,13 @@ python split/verify_split.py                                      # check CSVs +
 
 Needs scikit-learn (torch is optional). The training code still calls `LoadDataset`
 directly; `verify_split.py` is what detects drift (different file list, sklearn version, ...).
+
+## Pre-split image folders
+
+```bash
+python split/materialize_split.py [--dataset plantdoc|slif] [--link] [--force]
+```
+
+Builds `data/tomato_only_split/` and `data/slif_tomato_dataset/Phase_I-Dataset_split/`, each laid out as
+`{train,validation,test}/<class>/<image>`, copied from the frozen CSVs (`--link` = symlinks).
+`data/` is git-ignored, so these folders are not committed; re-run the script on a new machine.
